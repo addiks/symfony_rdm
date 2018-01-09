@@ -1,0 +1,60 @@
+<?php
+/**
+ * Copyright (C) 2017  Gerrit Addiks.
+ * This package (including this file) was released under the terms of the GPL-3.0.
+ * You should have received a copy of the GNU General Public License along with this program.
+ * If not, see <http://www.gnu.org/licenses/> or send me a mail so i can send you a copy.
+ * @license GPL-3.0
+ * @author Gerrit Addiks <gerrit@addiks.de>
+ */
+
+namespace Addiks\RDMBundle\Mapping\Drivers;
+
+use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\Mapping\Annotation\Service;
+
+final class MappingPHPDriver implements MappingDriverInterface
+{
+
+    /**
+     * @var FileLocator
+     */
+    private $fileLocator;
+
+    public function __construct(FileLocator $fileLocator)
+    {
+        $this->fileLocator = $fileLocator;
+    }
+
+    public function loadRDMMetadataForClass($className): array
+    {
+        /** @var array<Service> $services */
+        $services = array();
+
+        if ($this->fileLocator->fileExists($className)) {
+            /** @var string $mappingFile */
+            $mappingFile = $this->fileLocator->findMappingFile($className);
+
+            if (file_exists($mappingFile)) {
+                /** @var array $rdmMapping */
+                $rdmMapping = array();
+
+                (function (&$rdmMapping) use ($mappingFile) {
+                    include $mappingFile;
+                })($rdmMapping);
+
+                foreach ($rdmMapping as $serviceCandidate) {
+                    /** @var Service $serviceCandidate */
+
+                    if ($serviceCandidate instanceof Service) {
+                        $services[] = $serviceCandidate;
+                    }
+                }
+            }
+        }
+
+        return $services;
+    }
+
+}

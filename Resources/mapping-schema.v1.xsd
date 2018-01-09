@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- @author gerrit addiks <gerrit.addiks@brille24.de> -->
+<xs:schema
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:rdm="http://github.com/addiks/rdm/tree/master/Resources/mapping-schema.xsd"
+    targetNamespace="http://github.com/addiks/rdm/tree/master/Resources/mapping-schema.xsd"
+    elementFormDefault="qualified"
+>
+
+    <import namespace="http://www.w3.org/1999/xhtml"/>
+
+    <xs:element name="service" type="rdm:service" />
+
+    <xs:complexType name="service">
+        <xs:attribute name="field" type="xs:string" />
+        <xs:attribute name="id"    type="xs:string" />
+        <xs:attribute name="lax"   type="xs:string" />
+    </xs:complexType>
+
+</xs:schema>

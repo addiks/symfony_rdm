@@ -1,0 +1,17 @@
+Addiks\RDMBundle\Tests\Hydration\EntityExample:
+    type: entity
+    table: example_entity
+    id:
+        id:
+            type: integer
+            generator:
+                strategy: AUTO
+    fields:
+        baz:
+            type: string
+            length: 50
+    services:
+        foo:
+            id: some_service
+        bar:
+            id: other_service

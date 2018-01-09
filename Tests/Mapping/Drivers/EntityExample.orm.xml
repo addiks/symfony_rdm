@@ -1,0 +1,19 @@
+<doctrine-mapping
+    xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:rdm="http://github.com/addiks/symfony_rdm/tree/master/Resources/mapping-schema.v1.xsd"
+>
+
+    <entity name="Addiks\RDMBundle\Tests\Hydration\EntityExample" table="entity_example">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO" />
+        </id>
+
+        <field type="string" nullable="false" name="baz" />
+
+        <rdm:service field="foo" id="some_service" />
+        <rdm:service field="bar" id="other_service" />
+
+    </entity>
+
+</doctrine-mapping>

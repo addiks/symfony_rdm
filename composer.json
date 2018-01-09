@@ -1,0 +1,40 @@
+{
+    "name":         "addiks/symfony_rdm",
+    "description":  "Helps with the use of domain driven design & rich domain model in symfony/doctrine applications.",
+    "keywords":     ["doctrine2", "symfony", "php", "orm", "domain driven design"],
+    "homepage":     "http://github.com/addiks/symfony_rdm",
+    "type":         "library",
+    "license":      "GPL-3.0",
+    "authors":      [
+        {
+            "name":      "Gerrit Addiks",
+            "email":     "gerrit@addiks.de",
+            "homepage":  "http://addiks.net"
+        }
+    ],
+
+    "require": {
+        "php": ">=7.1.0",
+        "doctrine/orm": "^2.5",
+        "symfony/yaml": "*",
+        "psr/cache": "*",
+        "symfony/framework-bundle": "^2.8 || ^3.0 || ^4.0"
+    },
+
+    "require-dev": {
+        "phpunit/phpunit": "6.*"
+    },
+
+    "autoload": {
+        "psr-4": {
+            "Addiks\\RDMBundle\\":  ""
+        }
+    },
+
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+
+}
