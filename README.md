@@ -1,4 +1,7 @@
 Symfony-RDM – Helper for using the Rich Domain Model in Symfony
+===================================
+
+[![Build Status](https://travis-ci.org/addiks/symfony_rdm.svg?branch=master)](https://travis-ci.org/addiks/symfony_rdm)
 
 ## What
 
@@ -106,7 +109,7 @@ Then [register the bundle in your symfony-application][1].
 Prior to symfony-4.0 this is done in the file "app/AppKernel.php" inside the method "registerBundles". From 4.0 onwards
 this is done in the file "config/bundles.php". (If you know how to automate this, please let me know.)
 
-[1] http://symfony.com/doc/current/bundles.html
+[1]: http://symfony.com/doc/current/bundles.html
 
 Symfony 2.x & 3.x:
 
@@ -157,7 +160,7 @@ This project was implemented because I think there are still some missing pieces
 perform domain driven design in software based on the symfony/doctrine2 framework(s) without the constant drive of
 falling back to the anti-pattern of [anemic-domain-model][2] (please do read this link).
 
-[2] https://martinfowler.com/bliki/AnemicDomainModel.html
+[2]: https://martinfowler.com/bliki/AnemicDomainModel.html
 
 In DDD you are supposed to put your domain logic into their corresponding designated domain objects responsible for that
 logic. These domain objects may be services, entities, value-objects, aggregates and sometimes repositories or other
