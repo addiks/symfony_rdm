@@ -1,4 +1,7 @@
 Symfony-RDM – Helper for using the Rich Domain Model in Symfony
+===================================
+
+[![Build Status](https://travis-ci.org/addiks/symfony_rdm.svg?branch=master)](https://travis-ci.org/addiks/symfony_rdm)
 
 ## What
 
