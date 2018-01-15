@@ -43,7 +43,7 @@ final class MappingDriverChainFactory implements MappingDriverFactoryInterface
             $subRDMMetadataDrivers = array();
 
             foreach ($mappingDriverChain->getDrivers() as $subMappingDriver) {
-                /** @var MappingDriver $mappingDriver */
+                /** @var MappingDriver $subMappingDriver */
 
                 $subRDMMetadataDriver = $this->rootMetadataDriverFactory->createRDMMappingDriver(
                     $subMappingDriver

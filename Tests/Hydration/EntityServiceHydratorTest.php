@@ -11,7 +11,7 @@
 namespace Addiks\RDMBundle\Tests\Hydration;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\Hydration\EntityServiceHydrator;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Annotation\Service;
@@ -75,8 +75,8 @@ final class EntityServiceHydratorTest extends TestCase
         ]));
 
         $this->container->method("get")->will($this->returnValueMap([
-            ['the_foo_service', $serviceA],
-            ['another_bar_service', $serviceB],
+            ['the_foo_service', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $serviceA],
+            ['another_bar_service', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $serviceB],
         ]));
 
         $entity = new EntityExample();
@@ -107,7 +107,7 @@ final class EntityServiceHydratorTest extends TestCase
         ]));
 
         $this->container->method("get")->will($this->returnValueMap([
-            ['the_foo_service', $service],
+            ['the_foo_service', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $service],
         ]));
 
         $entity = new EntityExample();

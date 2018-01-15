@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use ErrorException;
 
 /**
  * Circumvents the symfony "circular reference" error by lazy-loading.
@@ -46,7 +47,18 @@ final class MappingDriverFactoryLazyLoadProxy implements MappingDriverFactoryInt
         MappingDriver $mappingDriver
     ): ?MappingDriverInterface {
         if (is_null($this->actualMappingDriverFactory)) {
-            $this->actualMappingDriverFactory = $this->container->get($this->serviceId);
+            $this->actualMappingDriverFactory = $this->container->get(
+                $this->serviceId,
+                ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE
+            );
+
+            if (!$this->actualMappingDriverFactory instanceof MappingDriverFactoryInterface) {
+                throw new ErrorException(sprintf(
+                    "The service '%s' is not an instance of %s!",
+                    $this->serviceId,
+                    MappingDriverFactoryInterface::class
+                ));
+            }
         }
 
         return $this->actualMappingDriverFactory->createRDMMappingDriver($mappingDriver);

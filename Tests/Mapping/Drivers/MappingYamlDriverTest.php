@@ -59,6 +59,7 @@ final class MappingYamlDriverTest extends TestCase
             $someAnnotationB
         ];
 
+        $this->fileLocator->method('fileExists')->willReturn(true);
         $this->fileLocator->method('findMappingFile')->willReturn(__DIR__ . "/EntityExample.orm.yml");
 
         /** @var array<Service> $actualAnnotations */

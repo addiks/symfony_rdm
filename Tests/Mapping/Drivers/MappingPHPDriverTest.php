@@ -60,6 +60,7 @@ final class MappingPHPDriverTest extends TestCase
         # The mock-file just returns this global-variable.
         $GLOBALS['addiks_symfony_rdm_tests_mapping_driver_php_annotations'] = $expectedAnnotations;
 
+        $this->fileLocator->method('fileExists')->willReturn(true);
         $this->fileLocator->method('findMappingFile')->willReturn(__DIR__ . "/phpMappingMock.php");
 
         /** @var array<Service> $actualAnnotations */

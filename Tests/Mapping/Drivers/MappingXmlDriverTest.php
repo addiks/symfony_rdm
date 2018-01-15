@@ -60,6 +60,7 @@ final class MappingXmlDriverTest extends TestCase
             $someAnnotationB
         ];
 
+        $this->fileLocator->method('fileExists')->willReturn(true);
         $this->fileLocator->method('findMappingFile')->willReturn(__DIR__ . "/EntityExample.orm.xml");
 
         /** @var array<Service> $actualAnnotations */

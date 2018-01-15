@@ -16,7 +16,7 @@ use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryLazyLoadProxy;
-use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingDriverFactoryLazyLoadProxyTest extends TestCase
 {
@@ -36,7 +36,7 @@ final class MappingDriverFactoryLazyLoadProxyTest extends TestCase
         $service = $this->createMock(MappingDriverFactoryInterface::class);
 
         $container->method('get')->will($this->returnValueMap([
-            ['some_service', $service],
+            ['some_service', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $service],
         ]));
 
         $container->method('has')->will($this->returnValueMap([
