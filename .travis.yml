@@ -1,0 +1,9 @@
+language: php
+php:
+  - 7.1
+notifications:
+  email: notifications.github@addiks.de
+install:
+- composer install
+script:
+- vendor/bin/phpunit
