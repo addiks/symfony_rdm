@@ -4,7 +4,7 @@
     "keywords":     ["doctrine2", "symfony", "php", "orm", "domain driven design"],
     "homepage":     "http://github.com/addiks/symfony_rdm",
     "type":         "library",
-    "license":      "GPL-3.0",
+    "license":      "GPL-3.0-or-later",
     "authors":      [
         {
             "name":      "Gerrit Addiks",
