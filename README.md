@@ -205,4 +205,4 @@ The (probably unachievable) vision for this project is to free entity-design fro
 doctrine mapping and allow to map, persist & load all types of objects from any PHP-library out there.
 *Especially* if they were *not* designed with (doctrine-) ORM in mind.
 
-**Viva la liberté!** ;)
+**Viva la liberté!**
