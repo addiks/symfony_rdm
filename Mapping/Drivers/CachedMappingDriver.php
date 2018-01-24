@@ -10,10 +10,10 @@
 
 namespace Addiks\RDMBundle\Mapping\Drivers;
 
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 
 final class CachedMappingDriver implements MappingDriverInterface
 {
@@ -38,10 +38,10 @@ final class CachedMappingDriver implements MappingDriverInterface
         $this->cacheItemPool = $cacheItemPool;
     }
 
-    public function loadRDMMetadataForClass($className): array
+    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        /** @var array<Service> $services */
-        $services = array();
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = null;
 
         /** @var CacheItemInterface $cacheItem */
         $cacheItem = $this->cacheItemPool->getItem(sprintf(
@@ -50,16 +50,16 @@ final class CachedMappingDriver implements MappingDriverInterface
         ));
 
         if ($cacheItem->isHit()) {
-            $services = unserialize($cacheItem->get());
+            $mapping = unserialize($cacheItem->get());
 
         } else {
-            $services = $this->innerMappingDriver->loadRDMMetadataForClass($className);
+            $mapping = $this->innerMappingDriver->loadRDMMetadataForClass($className);
 
-            $cacheItem->set(serialize($services));
+            $cacheItem->set(serialize($mapping));
             $this->cacheItemPool->saveDeferred($cacheItem);
         }
 
-        return $services;
+        return $mapping;
     }
 
 }

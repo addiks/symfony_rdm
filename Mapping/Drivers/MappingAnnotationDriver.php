@@ -10,11 +10,15 @@
 
 namespace Addiks\RDMBundle\Mapping\Drivers;
 
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
 use Doctrine\Common\Annotations\Reader;
 use ReflectionClass;
 use ReflectionProperty;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Mapping\EntityMapping;
+use Addiks\RDMBundle\Mapping\Annotation\Service;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 
 final class MappingAnnotationDriver implements MappingDriverInterface
 {
@@ -29,10 +33,13 @@ final class MappingAnnotationDriver implements MappingDriverInterface
         $this->annotationReader = $annotationReader;
     }
 
-    public function loadRDMMetadataForClass($className): array
+    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        /** @var array<Service> $services */
-        $services = array();
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = null;
+
+        /** @var array<MappingInterface> $fieldMappings */
+        $fieldMappings = array();
 
         $classReflection = new ReflectionClass($className);
 
@@ -46,14 +53,19 @@ final class MappingAnnotationDriver implements MappingDriverInterface
                 /** @var object $annotation */
 
                 if ($annotation instanceof Service) {
-                    $annotation->field = $propertyReflection->getName();
-
-                    $services[] = $annotation;
+                    $fieldMappings[$propertyReflection->getName()] = new ServiceMapping(
+                        $annotation->id,
+                        $annotation->lax
+                    );
                 }
             }
         }
 
-        return $services;
+        if (!empty($fieldMappings)) {
+            $mapping = new EntityMapping($className, $fieldMappings);
+        }
+
+        return $mapping;
     }
 
 }

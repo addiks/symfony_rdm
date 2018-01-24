@@ -13,13 +13,15 @@ namespace Addiks\RDMBundle\Hydration;
 use ReflectionClass;
 use ReflectionProperty;
 use ErrorException;
-use Addiks\RDMBundle\Hydration\EntityServiceHydratorInterface;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\Common\Util\ClassUtils;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
 
-final class EntityServiceHydrator implements EntityServiceHydratorInterface
+final class EntityHydrator implements EntityHydratorInterface
 {
 
     /**
@@ -52,27 +54,25 @@ final class EntityServiceHydrator implements EntityServiceHydratorInterface
         /** @var mixed $classReflection */
         $classReflection = new ReflectionClass($className);
 
-        /** @var array<Service> $annotations */
-        $annotations = $this->mappingDriver->loadRDMMetadataForClass($className);
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
-        foreach ($annotations as $annotation) {
-            /** @var Service $annotation */
-
-            if ($annotation instanceof Service) {
-                /** @var Service $serviceMapping */
-                $serviceMapping = $annotation;
+        if ($mapping instanceof EntityMappingInterface) {
+            foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
+                /** @var MappingInterface $fieldMapping */
 
                 /** @var ReflectionProperty $propertyReflection */
-                $propertyReflection = $classReflection->getProperty($serviceMapping->field);
+                $propertyReflection = $classReflection->getProperty($fieldName);
 
-                /** @var string $serviceId */
-                $serviceId = $serviceMapping->id;
+                /** @var mixed $value */
+                $value = null;
 
-                /** @var mixed $service */
-                $service = $this->loadService($serviceId, $propertyReflection);
+                if ($fieldMapping instanceof ServiceMapping) {
+                    $value = $this->loadService($fieldMapping->getServiceId(), $propertyReflection);
+                }
 
                 $propertyReflection->setAccessible(true);
-                $propertyReflection->setValue($entity, $service);
+                $propertyReflection->setValue($entity, $value);
                 $propertyReflection->setAccessible(false);
             }
         }
@@ -85,22 +85,19 @@ final class EntityServiceHydrator implements EntityServiceHydratorInterface
 
         $classReflection = new ReflectionClass($className);
 
-        /** @var array<Service> $annotations */
-        $annotations = $this->mappingDriver->loadRDMMetadataForClass($className);
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
-        foreach ($annotations as $annotation) {
-            /** @var Service $annotation */
-
-            if ($annotation instanceof Service) {
-                /** @var Service $serviceMapping */
-                $serviceMapping = $annotation;
+        if ($mapping instanceof EntityMappingInterface) {
+            foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
+                /** @var MappingInterface $fieldMapping */
 
                 /** @var ReflectionProperty $propertyReflection */
-                $propertyReflection = $classReflection->getProperty($serviceMapping->field);
+                $propertyReflection = $classReflection->getProperty($fieldName);
 
-                if (!$serviceMapping->lax) {
+                if ($fieldMapping instanceof ServiceMapping && !$fieldMapping->isLax()) {
                     /** @var string $serviceId */
-                    $serviceId = $serviceMapping->id;
+                    $serviceId = $fieldMapping->getServiceId();
 
                     /** @var object $expectedService */
                     $expectedService = $this->loadService($serviceId, $propertyReflection);

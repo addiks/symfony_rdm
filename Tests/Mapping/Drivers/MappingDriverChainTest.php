@@ -16,6 +16,8 @@ use Addiks\RDMBundle\Mapping\Annotation\Service;
 use ReflectionProperty;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverChain;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\Mapping\EntityMapping;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
 
 final class MappingDriverChainTest extends TestCase
 {
@@ -51,32 +53,31 @@ final class MappingDriverChainTest extends TestCase
      */
     public function shouldCollectMappingData()
     {
-        $someAnnotationA = new Service();
-        $someAnnotationA->id = "some_service";
-        $someAnnotationA->field = "foo";
-
-        $someAnnotationB = new Service();
-        $someAnnotationB->id = "other_service";
-        $someAnnotationB->field = "bar";
+        $fieldMappingA = new ServiceMapping("some_service");
+        $fieldMappingB = new ServiceMapping("other_service");
 
         /** @var array<Service> $expectedAnnotations */
-        $expectedAnnotations = [
-            $someAnnotationA,
-            $someAnnotationB
+        $expectedFieldMappings = [
+            'foo' => $fieldMappingA,
+            'bar' => $fieldMappingB
         ];
 
-        $this->innerDriverA->method('loadRDMMetadataForClass')->willReturn([
-            $someAnnotationA
-        ]);
+        $this->innerDriverA->method('loadRDMMetadataForClass')->willReturn(
+            new EntityMapping(EntityExample::class, [
+                'foo' => $fieldMappingA
+            ])
+        );
 
-        $this->innerDriverB->method('loadRDMMetadataForClass')->willReturn([
-            $someAnnotationB
-        ]);
+        $this->innerDriverB->method('loadRDMMetadataForClass')->willReturn(
+            new EntityMapping(EntityExample::class, [
+                'bar' => $fieldMappingB
+            ])
+        );
 
-        /** @var array<Service> $actualAnnotations */
-        $actualAnnotations = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
+        /** @var EntityMapping $actualMapping */
+        $actualMapping = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
 
-        $this->assertEquals($expectedAnnotations, $actualAnnotations);
+        $this->assertEquals($expectedFieldMappings, $actualMapping->getFieldMappings());
     }
 
 }

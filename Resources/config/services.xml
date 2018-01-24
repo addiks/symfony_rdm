@@ -12,14 +12,14 @@
             <tag name="doctrine.event_listener" event="postLoad" />
 
             <argument type="service">
-                <service class="Addiks\RDMBundle\Hydration\EntityServiceHydratorLazyLoadProxy">
+                <service class="Addiks\RDMBundle\Hydration\EntityHydratorLazyLoadProxy">
                     <argument type="service" id="service_container" />
                     <argument>addiks_rdm.hydrator</argument>
                 </service>
             </argument>
         </service>
 
-        <service id="addiks_rdm.hydrator" class="Addiks\RDMBundle\Hydration\EntityServiceHydrator" public="true">
+        <service id="addiks_rdm.hydrator" class="Addiks\RDMBundle\Hydration\EntityHydrator" public="true">
             <argument type="service" id="service_container" />
             <argument type="service" id="addiks_rdm.mapping.driver" />
         </service>

@@ -40,7 +40,7 @@ final class EntityExample
         $this->bar = $bar;
     }
 
-    public static $staticMetadata = array();
+    public static $staticMetadata;
 
     public static function loadRDMMetadata()
     {

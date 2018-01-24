@@ -12,18 +12,20 @@ namespace Addiks\RDMBundle\Tests\Hydration;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Addiks\RDMBundle\Hydration\EntityServiceHydrator;
+use Addiks\RDMBundle\Hydration\EntityHydrator;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Annotation\Service;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use ErrorException;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Addiks\RDMBundle\Mapping\EntityMapping;
 
-final class EntityServiceHydratorTest extends TestCase
+final class EntityHydratorTest extends TestCase
 {
 
     /**
-     * @var EntityServiceHydrator
+     * @var EntityHydrator
      */
     private $hydrator;
 
@@ -42,7 +44,7 @@ final class EntityServiceHydratorTest extends TestCase
         $this->container = $this->createMock(ContainerInterface::class);
         $this->mappingDriver = $this->createMock(MappingDriverInterface::class);
 
-        $this->hydrator = new EntityServiceHydrator(
+        $this->hydrator = new EntityHydrator(
             $this->container,
             $this->mappingDriver
         );
@@ -53,18 +55,12 @@ final class EntityServiceHydratorTest extends TestCase
      */
     public function shouldHydrateAnEntityWithServices()
     {
-        $serviceAnnotationA = new Service();
-        $serviceAnnotationA->field = "foo";
-        $serviceAnnotationA->id = "the_foo_service";
-
-        $serviceAnnotationB = new Service();
-        $serviceAnnotationB->field = "bar";
-        $serviceAnnotationB->id = "another_bar_service";
-
-        $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn([
-            $serviceAnnotationA,
-            $serviceAnnotationB
-        ]);
+        $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn(
+            new EntityMapping(EntityExample::class, [
+                'foo' => new ServiceMapping("the_foo_service"),
+                'bar' => new ServiceMapping("another_bar_service")
+            ])
+        );
 
         $serviceA = new ServiceExample("SomeService", 123);
         $serviceB = new ServiceExample("AnotherService", 456);
@@ -92,13 +88,11 @@ final class EntityServiceHydratorTest extends TestCase
      */
     public function shouldRecognizeMissingServices()
     {
-        $serviceAnnotation = new Service();
-        $serviceAnnotation->field = "foo";
-        $serviceAnnotation->id = "the_foo_service";
-
-        $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn([
-            $serviceAnnotation
-        ]);
+        $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn(
+            new EntityMapping(EntityExample::class, [
+                'foo' => new ServiceMapping("the_foo_service"),
+            ])
+        );
 
         $service = new ServiceExample("SomeService", 123);
 

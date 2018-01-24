@@ -12,7 +12,7 @@ namespace Addiks\RDMBundle\Tests\Doctrine;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Doctrine\EventListener;
-use Addiks\RDMBundle\Hydration\EntityServiceHydratorInterface;
+use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 
@@ -25,13 +25,13 @@ final class EventListenerTest extends TestCase
     private $eventListener;
 
     /**
-     * @var EntityServiceHydratorInterface
+     * @var EntityHydratorInterface
      */
     private $entityServiceHydrator;
 
     public function setUp()
     {
-        $this->entityServiceHydrator = $this->createMock(EntityServiceHydratorInterface::class);
+        $this->entityServiceHydrator = $this->createMock(EntityHydratorInterface::class);
 
         $this->eventListener = new EventListener(
             $this->entityServiceHydrator

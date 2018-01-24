@@ -17,6 +17,8 @@ use ReflectionProperty;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingPHPDriver;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
+use Addiks\RDMBundle\Mapping\EntityMapping;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
 
 final class MappingPHPDriverTest extends TestCase
 {
@@ -43,27 +45,19 @@ final class MappingPHPDriverTest extends TestCase
      */
     public function shouldReadMappingData()
     {
-        $someAnnotationA = new Service();
-        $someAnnotationA->id = "some_service";
-        $someAnnotationA->field = "foo";
-
-        $someAnnotationB = new Service();
-        $someAnnotationB->id = "other_service";
-        $someAnnotationB->field = "bar";
-
-        /** @var array<Service> $expectedAnnotations */
-        $expectedAnnotations = [
-            $someAnnotationA,
-            $someAnnotationB
-        ];
+        /** @var EntityMapping $expectedAnnotations */
+        $expectedAnnotations = new EntityMapping(EntityExample::class, [
+            'foo' => new ServiceMapping('some_service'),
+            'bar' => new ServiceMapping('other_service')
+        ]);
 
         # The mock-file just returns this global-variable.
-        $GLOBALS['addiks_symfony_rdm_tests_mapping_driver_php_annotations'] = $expectedAnnotations;
+        $GLOBALS['addiks_symfony_rdm_tests_mapping_driver_php_mapping'] = $expectedAnnotations;
 
         $this->fileLocator->method('fileExists')->willReturn(true);
         $this->fileLocator->method('findMappingFile')->willReturn(__DIR__ . "/phpMappingMock.php");
 
-        /** @var array<Service> $actualAnnotations */
+        /** @var EntityMapping $actualAnnotations */
         $actualAnnotations = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
 
         $this->assertEquals($expectedAnnotations, $actualAnnotations);

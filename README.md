@@ -145,15 +145,6 @@ return [
 
 After that the service-type should work.
 
-## The future
-
-This project may be extended with more features in the future, here are some ideas i have:
-
-- Automatic initialization of value-objects in entities.
-- Use aggregates (composed objects) in entities. (embeddables are just not enough)
-- Allow object-decoration in, on and between entities.
-- Allow dynamic service mapping, storing in the database which service was set on the member.
-
 ## Why
 
 This project was implemented because I think there are still some missing pieces for one to be able to **effectively**
@@ -189,3 +180,29 @@ symfony service in a doctrine field by static mapping, this may be extended in t
 system which field in an entity should contain what service. Then it hooks into the doctrine2 events to hydrate that
 fields with the needed services when you load your entities and even check's them when you try to persist new entities.
 That way you are now able to express domain logic in your entities that normally would have to be in a separate service.
+
+## The future
+
+This project may be extended with more features in the future, here are some ideas i have:
+
+- [Automatic initialization of value-objects in entities.][3]
+- Use aggregates (composed objects) in entities. (embeddables are just not enough)
+- Allow object-decoration (custom proxy-objects) in, on and between entities.
+- Allow dynamic service mapping, storing in the database which service was set on the member.
+- [Allow to use simple arrays instead of doctrine collection objects or even custom collections.][4]
+- Inject service-container-parameters into entities (similar to services).
+- Re-use data from one column in multiple fields (maybe even across multiple entities).
+- [Generare non-object values from generator-services (or other routines) to be hydrated into unmapped fields][5]
+- populate arrays in the entity with values from columns, services, parameters or other stuff.
+- [Populate fields with aggregated data from the database.][6]
+
+[3]: https://stackoverflow.com/questions/8440879
+[4]: https://stackoverflow.com/questions/3691943
+[5]: https://stackoverflow.com/questions/35414300
+[6]: https://stackoverflow.com/questions/26968809
+
+The (probably unachievable) vision for this project is to free entity-design from all technical limitations of the
+doctrine mapping and allow to map, persist & load all types of objects from any PHP-library out there.
+*Especially* if they were *not* designed with (doctrine-) ORM in mind.
+
+**Viva la liberté!** ;)

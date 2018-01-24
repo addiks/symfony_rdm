@@ -10,11 +10,11 @@
 
 namespace Addiks\RDMBundle\Doctrine;
 
+use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
 use Doctrine\ORM\Event\LifecycleEventArgs;
-use Doctrine\Common\EventArgs;
-use Addiks\RDMBundle\Hydration\EntityServiceHydratorInterface;
-use Doctrine\Common\Persistence\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Common\EventArgs;
+use Doctrine\Common\Persistence\Event\LoadClassMetadataEventArgs;
 use Doctrine\Common\Persistence\ObjectManager;
 
 /**
@@ -24,12 +24,12 @@ final class EventListener
 {
 
     /**
-     * @var EntityServiceHydratorInterface
+     * @var EntityHydratorInterface
      */
     private $entityHydrator;
 
     public function __construct(
-        EntityServiceHydratorInterface $entityHydrator
+        EntityHydratorInterface $entityHydrator
     ) {
         $this->entityHydrator = $entityHydrator;
     }

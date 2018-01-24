@@ -8,23 +8,11 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Hydration;
+namespace Addiks\RDMBundle\Mapping;
 
 /**
- * Hydrates (symfony-)services into doctrine2-entities and checks for correct hydration.
+ * A class that implements this interface indicates that it to be used as mapping-information for this RDM bundle.
  */
-interface EntityServiceHydratorInterface
+interface MappingInterface
 {
-
-    /**
-     * @param object $entity
-     */
-    public function hydrateEntity($entity);
-
-    /**
-     * @param object $entity
-     * @throws ErrorException
-     */
-    public function assertHydrationOnEntity($entity);
-
 }

@@ -11,27 +11,26 @@
 namespace Addiks\RDMBundle\Mapping\Drivers;
 
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 
 final class MappingStaticPHPDriver implements MappingDriverInterface
 {
 
-    public function loadRDMMetadataForClass($className): array
+    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        /** @var array<Service> $services */
-        $services = array();
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = null;
 
         if (method_exists($className, 'loadRDMMetadata')) {
-            foreach ($className::loadRDMMetadata() as $serviceCandidate) {
-                /** @var mixed $serviceCandidate */
+            /** @var mixed $mappingCandidate */
+            $mappingCandidate = $className::loadRDMMetadata();
 
-                if ($serviceCandidate instanceof Service) {
-                    $services[] = $serviceCandidate;
-                }
+            if ($mappingCandidate instanceof EntityMappingInterface) {
+                $mapping = $mappingCandidate;
             }
         }
 
-        return $services;
+        return $mapping;
     }
 
 }

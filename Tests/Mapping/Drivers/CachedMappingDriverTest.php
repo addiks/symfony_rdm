@@ -16,6 +16,7 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Psr\Cache\CacheItemInterface;
 use PHPUnit\Framework\TestCase;
+use Addiks\RDMBundle\Mapping\EntityMapping;
 
 final class CachedMappingDriverTest extends TestCase
 {
@@ -58,11 +59,11 @@ final class CachedMappingDriverTest extends TestCase
             ['addiks_rdm_mapping__Addiks_RDMBundle_Tests_Hydration_EntityExample', $cacheItem]
         ]));
 
-        /** @var array<mixed> $expectedAnnotations */
-        $expectedAnnotations = ["Lorem ipsum", "dolor sit"];
+        /** @var EntityMapping $expectedAnnotations */
+        $expectedAnnotations = new EntityMapping(EntityExample::class, []);
 
         $cacheItem->method('isHit')->willReturn(true);
-        $cacheItem->method('get')->willReturn(serialize(["Lorem ipsum", "dolor sit"]));
+        $cacheItem->method('get')->willReturn(serialize($expectedAnnotations));
 
         /** @var array<mixed> $actualAnnotations */
         $actualAnnotations = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
@@ -82,11 +83,11 @@ final class CachedMappingDriverTest extends TestCase
             ['addiks_rdm_mapping__Addiks_RDMBundle_Tests_Hydration_EntityExample', $cacheItem]
         ]));
 
-        /** @var array<mixed> $expectedAnnotations */
-        $expectedAnnotations = ["Lorem ipsum", "dolor sit"];
+        /** @var EntityMapping $expectedAnnotations */
+        $expectedAnnotations = new EntityMapping(EntityExample::class, []);
 
         $cacheItem->method('isHit')->willReturn(false);
-        $cacheItem->expects($this->once())->method('set')->with(serialize(["Lorem ipsum", "dolor sit"]));
+        $cacheItem->expects($this->once())->method('set')->with(serialize($expectedAnnotations));
 
         $this->innerMappingDriver->method('loadRDMMetadataForClass')->will($this->returnValueMap([
             [EntityExample::class, $expectedAnnotations]

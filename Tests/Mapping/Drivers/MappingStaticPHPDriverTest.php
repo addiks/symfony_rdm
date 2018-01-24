@@ -16,6 +16,8 @@ use Addiks\RDMBundle\Mapping\Annotation\Service;
 use ReflectionProperty;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingStaticPHPDriver;
+use Addiks\RDMBundle\Mapping\EntityMapping;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
 
 final class MappingStaticPHPDriverTest extends TestCase
 {
@@ -35,26 +37,17 @@ final class MappingStaticPHPDriverTest extends TestCase
      */
     public function shouldReadMappingData()
     {
-        $someAnnotationA = new Service();
-        $someAnnotationA->id = "some_service";
-        $someAnnotationA->field = "foo";
+        $expectedMapping = new EntityMapping(EntityExample::class, [
+            'foo' => new ServiceMapping('some_service'),
+            'bar' => new ServiceMapping('other_service')
+        ]);
 
-        $someAnnotationB = new Service();
-        $someAnnotationB->id = "other_service";
-        $someAnnotationB->field = "bar";
+        EntityExample::$staticMetadata = $expectedMapping;
 
-        /** @var array<Service> $expectedAnnotations */
-        $expectedAnnotations = [
-            $someAnnotationA,
-            $someAnnotationB
-        ];
+        /** @var EntityMapping $actualMapping */
+        $actualMapping = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
 
-        EntityExample::$staticMetadata = $expectedAnnotations;
-
-        /** @var array<Service> $actualAnnotations */
-        $actualAnnotations = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
-
-        $this->assertEquals($expectedAnnotations, $actualAnnotations);
+        $this->assertEquals($expectedMapping, $actualMapping);
     }
 
 }

@@ -11,6 +11,9 @@
 namespace Addiks\RDMBundle\Mapping\Drivers;
 
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Mapping\EntityMapping;
 
 final class MappingDriverChain implements MappingDriverInterface
 {
@@ -29,20 +32,30 @@ final class MappingDriverChain implements MappingDriverInterface
         }
     }
 
-    public function loadRDMMetadataForClass($className): array
+    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        /** @var mixed $serviceAnnotations */
-        $serviceAnnotations = array();
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = null;
+
+        /** @var array<MappingInterface> $fieldMappings */
+        $fieldMappings = array();
 
         foreach ($this->innerDrivers as $innerDriver) {
             /** @var MappingDriverInterface $innerDriver */
 
-            $driverServiceAnnotations = $innerDriver->loadRDMMetadataForClass($className);
+            /** @var ?EntityMappingInterface $driverMapping */
+            $driverMapping = $innerDriver->loadRDMMetadataForClass($className);
 
-            $serviceAnnotations = array_merge($serviceAnnotations, $driverServiceAnnotations);
+            if ($driverMapping instanceof EntityMappingInterface) {
+                $fieldMappings = array_merge($fieldMappings, $driverMapping->getFieldMappings());
+            }
         }
 
-        return $serviceAnnotations;
+        if (!empty($fieldMappings)) {
+            $mapping = new EntityMapping($className, $fieldMappings);
+        }
+
+        return $mapping;
     }
 
     private function addInnerMetadataDriver(MappingDriverInterface $innerDriver)

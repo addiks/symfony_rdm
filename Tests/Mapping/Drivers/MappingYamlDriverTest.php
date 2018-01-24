@@ -17,6 +17,8 @@ use ReflectionProperty;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\Drivers\MappingYamlDriver;
+use Addiks\RDMBundle\Mapping\EntityMapping;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
 
 final class MappingYamlDriverTest extends TestCase
 {
@@ -45,27 +47,18 @@ final class MappingYamlDriverTest extends TestCase
      */
     public function shouldReadMappingData()
     {
-        $someAnnotationA = new Service();
-        $someAnnotationA->id = "some_service";
-        $someAnnotationA->field = "foo";
-
-        $someAnnotationB = new Service();
-        $someAnnotationB->id = "other_service";
-        $someAnnotationB->field = "bar";
-
-        /** @var array<Service> $expectedAnnotations */
-        $expectedAnnotations = [
-            $someAnnotationA,
-            $someAnnotationB
-        ];
+        $expectedMapping = new EntityMapping(EntityExample::class, [
+            'foo' => new ServiceMapping('some_service'),
+            'bar' => new ServiceMapping('other_service')
+        ]);
 
         $this->fileLocator->method('fileExists')->willReturn(true);
         $this->fileLocator->method('findMappingFile')->willReturn(__DIR__ . "/EntityExample.orm.yml");
 
-        /** @var array<Service> $actualAnnotations */
-        $actualAnnotations = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
+        /** @var EntityMapping $actualMapping */
+        $actualMapping = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
 
-        $this->assertEquals($expectedAnnotations, $actualAnnotations);
+        $this->assertEquals($expectedMapping, $actualMapping);
     }
 
 }

@@ -8,13 +8,23 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Mapping\Drivers;
+namespace Addiks\RDMBundle\Hydration;
 
-use Addiks\RDMBundle\Mapping\EntityMappingInterface;
-
-interface MappingDriverInterface
+/**
+ * Hydrates doctrine2-entities and checks for correct hydration.
+ */
+interface EntityHydratorInterface
 {
 
-    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface;
+    /**
+     * @param object $entity
+     */
+    public function hydrateEntity($entity);
+
+    /**
+     * @param object $entity
+     * @throws ErrorException
+     */
+    public function assertHydrationOnEntity($entity);
 
 }

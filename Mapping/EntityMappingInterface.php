@@ -8,13 +8,18 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Mapping\Drivers;
+namespace Addiks\RDMBundle\Mapping;
 
-use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
-interface MappingDriverInterface
+interface EntityMappingInterface extends MappingInterface
 {
 
-    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface;
+    public function getEntityClassName(): string;
+
+    /**
+     * @return array<MappingInterface>
+     */
+    public function getFieldMappings(): array;
 
 }

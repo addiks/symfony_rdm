@@ -8,18 +8,11 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Mapping\Annotation;
+namespace Addiks\RDMBundle\Mapping;
 
-use Doctrine\Common\Annotations\Annotation;
-use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
-use Addiks\RDMBundle\Mapping\MappingConvertableInterface;
 
-/**
- * @Annotation
- * @Target("PROPERTY")
- */
-final class Service
+final class ServiceMapping implements MappingInterface
 {
 
     /**
@@ -27,7 +20,7 @@ final class Service
      *
      * @var string
      */
-    public $id;
+    private $serviceId;
 
     /**
      * Set this to true if this field should not be checked for the correct service on persist.
@@ -36,6 +29,22 @@ final class Service
      *
      * @var bool
      */
-    public $lax = false;
+    private $lax = false;
+
+    public function __construct(string $serviceId, bool $lax = false)
+    {
+        $this->serviceId = $serviceId;
+        $this->lax = $lax;
+    }
+
+    public function getServiceId(): string
+    {
+        return $this->serviceId;
+    }
+
+    public function isLax(): bool
+    {
+        return $this->lax;
+    }
 
 }

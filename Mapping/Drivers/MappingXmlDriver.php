@@ -10,12 +10,15 @@
 
 namespace Addiks\RDMBundle\Mapping\Drivers;
 
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
-use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use DOMDocument;
 use DOMXPath;
 use DOMNode;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\EntityMapping;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -41,10 +44,13 @@ final class MappingXmlDriver implements MappingDriverInterface
         $this->schemaFilePath = $schemaFilePath;
     }
 
-    public function loadRDMMetadataForClass($className): array
+    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        /** @var array<Service> $services */
-        $services = array();
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = null;
+
+        /** @var array<MappingInterface> $fieldMappings */
+        $fieldMappings = array();
 
         if ($this->fileLocator->fileExists($className)) {
             /** @var string $mappingFile */
@@ -71,8 +77,8 @@ final class MappingXmlDriver implements MappingDriverInterface
                     /** @var bool $lax */
                     $lax = $serviceNode->attributes->getNamedItem("lax");
 
-                    /** @var string $field */
-                    $field = (string)$serviceNode->attributes->getNamedItem("field")->value;
+                    /** @var string $fieldName */
+                    $fieldName = (string)$serviceNode->attributes->getNamedItem("field")->value;
 
                     /** @var string $serviceId */
                     $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->value;
@@ -84,19 +90,18 @@ final class MappingXmlDriver implements MappingDriverInterface
                         $lax = (strtolower($lax) === 'true');
                     }
 
-                    $service = new Service();
-                    $service->field = $field;
-                    $service->id = $serviceId;
-                    $service->lax = $lax;
-
-                    $services[] = $service;
+                    $fieldMappings[$fieldName] = new ServiceMapping($serviceId, $lax);
                 }
             }
 
             libxml_use_internal_errors($previousUseLibxmlInternalErrors);
         }
 
-        return $services;
+        if (!empty($fieldMappings)) {
+            $mapping = new EntityMapping($className, $fieldMappings);
+        }
+
+        return $mapping;
     }
 
 }

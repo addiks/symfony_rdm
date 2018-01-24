@@ -16,6 +16,8 @@ use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Mapping\Annotation\Service;
 use ReflectionProperty;
 use Doctrine\Common\Annotations\Reader;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Addiks\RDMBundle\Mapping\EntityMapping;
 
 final class MappingAnnotationDriverTest extends TestCase
 {
@@ -52,20 +54,20 @@ final class MappingAnnotationDriverTest extends TestCase
         $someAnnotationB->id = "other_service";
         $someAnnotationB->field = "bar";
 
-        /** @var array<Service> $expectedAnnotations */
-        $expectedAnnotations = [
-            $someAnnotationA,
-            $someAnnotationB
+        /** @var array<ServiceMapping> $expectedFieldMappings */
+        $expectedFieldMappings = [
+            'foo' => new ServiceMapping("some_service"),
+            'bar' => new ServiceMapping("other_service")
         ];
 
-        /** @var mixed $annotationMap */
+        /** @var array<array<Service>> $annotationMap */
         $annotationMap = [
-            'foo' => [$expectedAnnotations[0]],
-            'bar' => [$expectedAnnotations[1]],
+            'foo' => [$someAnnotationA],
+            'bar' => [$someAnnotationB],
         ];
 
         $this->annotationReader->method('getPropertyAnnotations')->will($this->returnCallback(
-            function (ReflectionProperty $propertyReflection) use ($expectedAnnotations, $annotationMap) {
+            function (ReflectionProperty $propertyReflection) use ($annotationMap) {
                 if (isset($annotationMap[$propertyReflection->getName()])) {
                     return $annotationMap[$propertyReflection->getName()];
                 } else {
@@ -74,10 +76,10 @@ final class MappingAnnotationDriverTest extends TestCase
             }
         ));
 
-        /** @var array<Service> $actualAnnotations */
-        $actualAnnotations = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
+        /** @var EntityMapping $actualMapping */
+        $actualMapping = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
 
-        $this->assertEquals($expectedAnnotations, $actualAnnotations);
+        $this->assertEquals($expectedFieldMappings, $actualMapping->getFieldMappings());
     }
 
 }

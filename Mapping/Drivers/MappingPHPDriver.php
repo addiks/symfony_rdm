@@ -12,7 +12,8 @@ namespace Addiks\RDMBundle\Mapping\Drivers;
 
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
+use Addiks\RDMBundle\Mapping\Annotation\RDMAnnotationInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 
 final class MappingPHPDriver implements MappingDriverInterface
 {
@@ -27,34 +28,30 @@ final class MappingPHPDriver implements MappingDriverInterface
         $this->fileLocator = $fileLocator;
     }
 
-    public function loadRDMMetadataForClass($className): array
+    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        /** @var array<Service> $services */
-        $services = array();
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = null;
 
         if ($this->fileLocator->fileExists($className)) {
             /** @var string $mappingFile */
             $mappingFile = $this->fileLocator->findMappingFile($className);
 
             if (file_exists($mappingFile)) {
-                /** @var array $rdmMapping */
-                $rdmMapping = array();
+                /** @var mixed $mappingCandidate */
+                $mappingCandidate = null;
 
                 (function (&$rdmMapping) use ($mappingFile) {
                     include $mappingFile;
-                })($rdmMapping);
+                })($mappingCandidate);
 
-                foreach ($rdmMapping as $serviceCandidate) {
-                    /** @var Service $serviceCandidate */
-
-                    if ($serviceCandidate instanceof Service) {
-                        $services[] = $serviceCandidate;
-                    }
+                if ($mappingCandidate instanceof EntityMappingInterface) {
+                    $mapping = $mappingCandidate;
                 }
             }
         }
 
-        return $services;
+        return $mapping;
     }
 
 }

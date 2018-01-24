@@ -10,10 +10,10 @@
 
 namespace Addiks\RDMBundle\Hydration;
 
-use Addiks\RDMBundle\Hydration\EntityServiceHydratorInterface;
+use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-final class EntityServiceHydratorLazyLoadProxy implements EntityServiceHydratorInterface
+final class EntityHydratorLazyLoadProxy implements EntityHydratorInterface
 {
 
     /**
@@ -27,7 +27,7 @@ final class EntityServiceHydratorLazyLoadProxy implements EntityServiceHydratorI
     private $serviceId;
 
     /**
-     * @var EntityServiceHydratorInterface
+     * @var EntityHydratorInterface
      */
     private $actualHydrator;
 
@@ -47,7 +47,7 @@ final class EntityServiceHydratorLazyLoadProxy implements EntityServiceHydratorI
         return $this->loadActualHydrator()->assertHydrationOnEntity($entity);
     }
 
-    private function loadActualHydrator(): EntityServiceHydratorInterface
+    private function loadActualHydrator(): EntityHydratorInterface
     {
         if (is_null($this->actualHydrator)) {
             $this->actualHydrator = $this->container->get($this->serviceId);

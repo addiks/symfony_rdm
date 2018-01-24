@@ -10,11 +10,14 @@
 
 namespace Addiks\RDMBundle\Mapping\Drivers;
 
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use ErrorException;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Symfony\Component\Yaml\Yaml;
-use ErrorException;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Mapping\EntityMapping;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
 
 final class MappingYamlDriver implements MappingDriverInterface
 {
@@ -30,10 +33,13 @@ final class MappingYamlDriver implements MappingDriverInterface
         $this->fileLocator = $fileLocator;
     }
 
-    public function loadRDMMetadataForClass($className): array
+    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        /** @var array<Service> $services */
-        $services = array();
+        /** @var ?EntityMappingInterface $mapping */
+        $mapping = null;
+
+        /** @var array<MappingInterface> $fieldMappings */
+        $fieldMappings = array();
 
         if ($this->fileLocator->fileExists($className)) {
             /** @var string $mappingFile */
@@ -65,18 +71,17 @@ final class MappingYamlDriver implements MappingDriverInterface
                             $lax = (strtolower($yamlService["lax"]) === 'true');
                         }
 
-                        $service = new Service();
-                        $service->field = $fieldName;
-                        $service->id = $serviceId;
-                        $service->lax = $lax;
-
-                        $services[] = $service;
+                        $fieldMappings[$fieldName] = new ServiceMapping($serviceId, $lax);
                     }
                 }
             }
         }
 
-        return $services;
+        if (!empty($fieldMappings)) {
+            $mapping = new EntityMapping($className, $fieldMappings);
+        }
+
+        return $mapping;
     }
 
 }
