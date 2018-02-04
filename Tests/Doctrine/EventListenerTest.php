@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2017  Gerrit Addiks.
+ * Copyright (C) 2018 Gerrit Addiks.
  * This package (including this file) was released under the terms of the GPL-3.0.
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/> or send me a mail so i can send you a copy.
@@ -15,6 +15,9 @@ use Addiks\RDMBundle\Doctrine\EventListener;
 use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Doctrine\ORM\Event\LifecycleEventArgs;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 final class EventListenerTest extends TestCase
 {
@@ -29,12 +32,26 @@ final class EventListenerTest extends TestCase
      */
     private $entityServiceHydrator;
 
+    /**
+     * @var MappingDriverInterface
+     */
+    private $mappingDriver;
+
+    /**
+     * @var DataLoaderInterface
+     */
+    private $dbalDataLoader;
+
     public function setUp()
     {
         $this->entityServiceHydrator = $this->createMock(EntityHydratorInterface::class);
+        $this->mappingDriver = $this->createMock(MappingDriverInterface::class);
+        $this->dbalDataLoader = $this->createMock(DataLoaderInterface::class);
 
         $this->eventListener = new EventListener(
-            $this->entityServiceHydrator
+            $this->entityServiceHydrator,
+            $this->mappingDriver,
+            $this->dbalDataLoader
         );
     }
 
@@ -49,6 +66,7 @@ final class EventListenerTest extends TestCase
         $entity = new EntityExample();
 
         $arguments->method('getEntity')->willReturn($entity);
+        $arguments->method('getEntityManager')->willReturn($this->createMock(EntityManagerInterface::class));
 
         $this->entityServiceHydrator->expects($this->once())->method('hydrateEntity')->with($entity);
 
@@ -66,6 +84,7 @@ final class EventListenerTest extends TestCase
         $entity = new EntityExample();
 
         $arguments->method('getEntity')->willReturn($entity);
+        $arguments->method('getEntityManager')->willReturn($this->createMock(EntityManagerInterface::class));
 
         $this->entityServiceHydrator->expects($this->once())->method('assertHydrationOnEntity')->with($entity);
 

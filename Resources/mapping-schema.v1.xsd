@@ -2,18 +2,55 @@
 <!-- @author gerrit addiks <gerrit.addiks@brille24.de> -->
 <xs:schema
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:rdm="http://github.com/addiks/rdm/tree/master/Resources/mapping-schema.xsd"
-    targetNamespace="http://github.com/addiks/rdm/tree/master/Resources/mapping-schema.xsd"
+    xmlns:rdm="http://github.com/addiks/rdm/tree/master/Resources/mapping-schema.v1.xsd"
+    targetNamespace="http://github.com/addiks/rdm/tree/master/Resources/mapping-schema.v1.xsd"
     elementFormDefault="qualified"
 >
 
-    <import namespace="http://www.w3.org/1999/xhtml"/>
+    <xs:import namespace="http://doctrine-project.org/schemas/orm/doctrine-mapping" />
 
-    <xs:element name="service" type="rdm:service" />
+    <xs:element name="service" type="rdm:root_service" />
+    <xs:element name="choice" type="rdm:root_choice" />
+
+    <xs:complexType name="root_service">
+        <xs:attribute name="field" type="xs:string" use="required" />
+        <xs:attribute name="id"    type="xs:string" use="required" />
+        <xs:attribute name="lax"   type="xs:string" />
+    </xs:complexType>
+
+    <xs:complexType name="root_choice">
+        <xs:sequence>
+            <xs:element name="option" minOccurs="1" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:choice minOccurs="1" maxOccurs="1">
+                        <xs:element name="service" type="rdm:service" />
+                        <xs:element name="service" type="rdm:choice" />
+                    </xs:choice>
+                    <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="field" type="xs:string" use="required" />
+        <xs:attribute name="column" type="xs:string" use="required" />
+    </xs:complexType>
+
+    <xs:complexType name="choice">
+        <xs:sequence>
+            <xs:element name="option" minOccurs="1" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:choice minOccurs="1" maxOccurs="1">
+                        <xs:element name="service" type="rdm:service" />
+                        <xs:element name="service" type="rdm:choice" />
+                    </xs:choice>
+                    <xs:attribute name="name" type="xs:string" use="required" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="column" type="xs:string" use="required" />
+    </xs:complexType>
 
     <xs:complexType name="service">
-        <xs:attribute name="field" type="xs:string" />
-        <xs:attribute name="id"    type="xs:string" />
+        <xs:attribute name="id"    type="xs:string" use="required" />
         <xs:attribute name="lax"   type="xs:string" />
     </xs:complexType>
 

@@ -149,7 +149,8 @@ return [
 ];
 ```
 
-After that the service-type should work.
+After that this bundle should work. If not create an issue here and provide as much details about the environment this
+is being used in, i may be able to help.
 
 ## Why
 
@@ -190,7 +191,7 @@ about symfony services.
 
 That is where this project comes into play. It provides a way (or several ways even) to define how to compose your
 doctrine2 entities with other things that doctrine normally does not know about. Currently it can only "store" a symfony
-service in a doctrine field by static mapping, this may be extended in the future. In this mapping you tell this plugin
+service in a doctrine field by static mapping, this may be extended in the future. In this mapping you tell this bundle
 which field in an entity should contain what service. Then it hooks into the doctrine2 events to hydrate that fields
 with the needed services when you load your entities and even check's them when you try to persist new entities. That
 way you are now able to express domain logic in your entities that normally would have to be in a separate service.

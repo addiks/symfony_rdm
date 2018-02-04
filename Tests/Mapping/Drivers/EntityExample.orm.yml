@@ -15,3 +15,13 @@ Addiks\RDMBundle\Tests\Hydration\EntityExample:
             id: some_service
         bar:
             id: other_service
+    choices:
+        baz:
+            column: baz_column
+            choices:
+                lorem:
+                    service:
+                        id: lorem_service
+                ipsum:
+                    service:
+                        id: ipsum_service

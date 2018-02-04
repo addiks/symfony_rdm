@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2017  Gerrit Addiks.
+ * Copyright (C) 2018 Gerrit Addiks.
  * This package (including this file) was released under the terms of the GPL-3.0.
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/> or send me a mail so i can send you a copy.
@@ -19,6 +19,9 @@ use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\Annotation\Service;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\Annotation\Choice;
+use Addiks\RDMBundle\Mapping\ChoiceMapping;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
 
 final class MappingAnnotationDriver implements MappingDriverInterface
 {
@@ -46,17 +49,19 @@ final class MappingAnnotationDriver implements MappingDriverInterface
         foreach ($classReflection->getProperties() as $propertyReflection) {
             /** @var ReflectionProperty $propertyReflection */
 
+            /** @var string $fieldName */
+            $fieldName = $propertyReflection->getName();
+
             /** @var array<object> $annotations */
             $annotations = $this->annotationReader->getPropertyAnnotations($propertyReflection);
 
             foreach ($annotations as $annotation) {
                 /** @var object $annotation */
 
-                if ($annotation instanceof Service) {
-                    $fieldMappings[$propertyReflection->getName()] = new ServiceMapping(
-                        $annotation->id,
-                        $annotation->lax
-                    );
+                $fieldMapping = $this->convertAnnotationToMapping($annotation, $fieldName, $className);
+
+                if ($fieldMapping instanceof MappingInterface) {
+                    $fieldMappings[$fieldName] = $fieldMapping;
                 }
             }
         }
@@ -66,6 +71,71 @@ final class MappingAnnotationDriver implements MappingDriverInterface
         }
 
         return $mapping;
+    }
+
+    private function convertAnnotationToMapping(
+        $annotation,
+        string $fieldName,
+        string $className
+    ): ?MappingInterface {
+        /** @var ?MappingInterface $fieldMapping */
+        $fieldMapping = null;
+
+        if ($annotation instanceof Service) {
+            $fieldMapping = new ServiceMapping(
+                $annotation->id,
+                $annotation->lax,
+                sprintf(
+                    "in entity '%s' on field '%s'",
+                    $className,
+                    $fieldName
+                )
+            );
+
+        } elseif ($annotation instanceof Choice) {
+            /** @var string $columnName */
+            $columnName = $annotation->column;
+
+            if (empty($columnName)) {
+                $columnName = $fieldName;
+            }
+
+            /** @var array<MappingInterface>*/
+            $choiceMappings = array();
+
+            foreach ($annotation->choices as $determinator => $choiceAnnotation) {
+                /** @var ?MappingInterface $choiceMapping */
+                $choiceMapping = $this->convertAnnotationToMapping(
+                    $choiceAnnotation,
+                    $fieldName,
+                    $className
+                );
+
+                if ($choiceMapping instanceof MappingInterface) {
+                    $choiceMappings[$determinator] = $choiceMapping;
+
+                } else {
+                    throw new InvalidMappingException(sprintf(
+                        "Invalid mapping on entity '%s' in field '%s' of choice-option '%s'!",
+                        $className,
+                        $fieldName,
+                        $determinator
+                    ));
+                }
+            }
+
+            $fieldMapping = new ChoiceMapping(
+                $columnName,
+                $choiceMappings,
+                sprintf(
+                    "in entity '%s' on field '%s'",
+                    $className,
+                    $fieldName
+                )
+            );
+        }
+
+        return $fieldMapping;
     }
 
 }

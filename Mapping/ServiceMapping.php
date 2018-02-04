@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2017  Gerrit Addiks.
+ * Copyright (C) 2018 Gerrit Addiks.
  * This package (including this file) was released under the terms of the GPL-3.0.
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/> or send me a mail so i can send you a copy.
@@ -10,9 +10,9 @@
 
 namespace Addiks\RDMBundle\Mapping;
 
-use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Mapping\ServiceMappingInterface;
 
-final class ServiceMapping implements MappingInterface
+final class ServiceMapping implements ServiceMappingInterface
 {
 
     /**
@@ -31,10 +31,19 @@ final class ServiceMapping implements MappingInterface
      */
     private $lax = false;
 
-    public function __construct(string $serviceId, bool $lax = false)
-    {
+    /**
+     * @var string
+     */
+    private $origin;
+
+    public function __construct(
+        string $serviceId,
+        bool $lax = false,
+        string $origin = "unknown"
+    ) {
         $this->serviceId = $serviceId;
         $this->lax = $lax;
+        $this->origin = $origin;
     }
 
     public function getServiceId(): string
@@ -45,6 +54,16 @@ final class ServiceMapping implements MappingInterface
     public function isLax(): bool
     {
         return $this->lax;
+    }
+
+    public function describeOrigin(): string
+    {
+        return $this->origin;
+    }
+
+    public function collectDBALColumns(): array
+    {
+        return [];
     }
 
 }

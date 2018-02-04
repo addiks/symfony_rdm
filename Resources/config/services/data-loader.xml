@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+
+        <service id="addiks_rdm.data_loader" class="Addiks\RDMBundle\DataLoader\DataLoaderInterface">
+            <factory service="addiks_rdm.data_loader.factory" method="createDataLoader" />
+        </service>
+
+        <service id="addiks_rdm.data_loader.factory" class="Addiks\RDMBundle\DataLoader\ChoosingDataLoaderFactory">
+            <argument type="service" id="service_container" />
+            <argument type="collection">
+                <argument key="slow-and-stable">addiks_rdm.data_loader.simple</argument>
+            </argument>
+            <argument>addiks_rdm.data_loader.stability</argument>
+            <argument>addiks_rdm.data_loader.simple</argument>
+        </service>
+
+        <service id="addiks_rdm.data_loader.simple" class="Addiks\RDMBundle\DataLoader\SimpleSelectDataLoader">
+            <argument type="service" id="addiks_rdm.mapping.driver" />
+            <argument type="service" id="addiks_rdm.value_resolver" />
+        </service>
+
+    </services>
+</container>

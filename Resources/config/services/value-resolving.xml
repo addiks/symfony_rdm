@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
+>
+    <services>
+
+        <service id="addiks_rdm.value_resolver" class="Addiks\RDMBundle\ValueResolver\ValueResolverAggregate">
+            <argument type="collection">
+                <argument
+                    type="service"
+                    key="Addiks\RDMBundle\Mapping\ServiceMapping"
+                    id="addiks_rdm.value_resolver.service"
+                />
+                <argument
+                    type="service"
+                    key="Addiks\RDMBundle\Mapping\ChoiceMapping"
+                    id="addiks_rdm.value_resolver.choice"
+                />
+            </argument>
+        </service>
+
+        <service
+            id="addiks_rdm.value_resolver.lazy_load_proxy"
+            class="Addiks\RDMBundle\ValueResolver\ValueResolverLazyLoadProxy"
+        >
+            <argument type="service" id="service_container" />
+            <argument>addiks_rdm.value_resolver</argument>
+        </service>
+
+        <service id="addiks_rdm.value_resolver.service" class="Addiks\RDMBundle\ValueResolver\ServiceValueResolver">
+            <argument type="service" id="service_container" />
+        </service>
+
+        <service id="addiks_rdm.value_resolver.choice" class="Addiks\RDMBundle\ValueResolver\ChoiceValueResolver">
+            <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
+        </service>
+
+    </services>
+</container>

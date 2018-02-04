@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2017  Gerrit Addiks.
+ * Copyright (C) 2018 Gerrit Addiks.
  * This package (including this file) was released under the terms of the GPL-3.0.
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/> or send me a mail so i can send you a copy.
@@ -11,14 +11,24 @@
 namespace Addiks\RDMBundle\Doctrine;
 
 use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Tools\SchemaTool;
+use Doctrine\ORM\Tools\Event\GenerateSchemaTableEventArgs;
+use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\UnitOfWork;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Schema\Column;
 use Doctrine\Common\EventArgs;
-use Doctrine\Common\Persistence\Event\LoadClassMetadataEventArgs;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\Event\OnFlushEventArgs;
 
 /**
- * Hooks into the event's of doctrine2-ORM and forwards the entities to the hydrator.
+ * Hooks into the event's of doctrine2-ORM and forwards the entities to other objects.
  */
 final class EventListener
 {
@@ -28,10 +38,24 @@ final class EventListener
      */
     private $entityHydrator;
 
+    /**
+     * @var MappingDriverInterface
+     */
+    private $mappingDriver;
+
+    /**
+     * @var DataLoaderInterface
+     */
+    private $dbalDataLoader;
+
     public function __construct(
-        EntityHydratorInterface $entityHydrator
+        EntityHydratorInterface $entityHydrator,
+        MappingDriverInterface $mappingDriver,
+        DataLoaderInterface $dbalDataLoader
     ) {
         $this->entityHydrator = $entityHydrator;
+        $this->mappingDriver = $mappingDriver;
+        $this->dbalDataLoader = $dbalDataLoader;
     }
 
     public function postLoad(LifecycleEventArgs $arguments)
@@ -39,7 +63,10 @@ final class EventListener
         /** @var object $entity */
         $entity = $arguments->getEntity();
 
-        $this->entityHydrator->hydrateEntity($entity);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $arguments->getEntityManager();
+
+        $this->entityHydrator->hydrateEntity($entity, $entityManager);
     }
 
     public function prePersist(LifecycleEventArgs $arguments)
@@ -47,7 +74,77 @@ final class EventListener
         /** @var object $entity */
         $entity = $arguments->getEntity();
 
-        $this->entityHydrator->assertHydrationOnEntity($entity);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $arguments->getEntityManager();
+
+        $this->entityHydrator->assertHydrationOnEntity($entity, $entityManager);
+    }
+
+    public function onFlush(OnFlushEventArgs $arguments)
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $arguments->getEntityManager();
+
+        /** @var UnitOfWork $unitOfWork */
+        $unitOfWork = $entityManager->getUnitOfWork();
+
+        foreach ($unitOfWork->getIdentityMap() as $className => $entities) {
+            foreach ($entities as $entity) {
+                if ($unitOfWork->isScheduledForDelete($entity)) {
+                    $this->dbalDataLoader->removeDBALDataForEntity($entity, $entityManager);
+
+                } else {
+                    $this->dbalDataLoader->storeDBALDataForEntity($entity, $entityManager);
+                }
+            }
+        }
+
+        # TODO: Save data to DB
+    }
+
+    public function loadClassMetadata(LoadClassMetadataEventArgs $arguments)
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $arguments->getEntityManager();
+
+        /** @var ClassMetadata $classMetadata */
+        $classMetadata = $arguments->getClassMetadata();
+
+        $this->dbalDataLoader->prepareOnMetadataLoad($entityManager, $classMetadata);
+    }
+
+    /**
+     * Invoked when doctrine has generated a table-definition in the target-schema.
+     * Collects the additional schema-columns from the mapping and add's them to the table.
+     *
+     * Dispatched in:
+     * @see SchemaTool::getSchemaFromMetadata
+     */
+    public function postGenerateSchemaTable(GenerateSchemaTableEventArgs $arguments)
+    {
+        /** @var Table $table */
+        $table = $arguments->getClassTable();
+
+        /** @var ClassMetadata $classMetadata */
+        $classMetadata = $arguments->getClassMetadata();
+
+        /** @var ?EntityMappingInterface $entityMapping */
+        $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($classMetadata->getName());
+
+        if ($entityMapping instanceof EntityMappingInterface) {
+            /** @var array<Column> $additionalColumns */
+            $additionalColumns = $entityMapping->collectDBALColumns();
+
+            foreach ($additionalColumns as $column) {
+                /** @var Column $column */
+
+                $table->addColumn(
+                    $column->getName(),
+                    $column->getType()->getName(),
+                    $column->toArray()
+                );
+            }
+        }
     }
 
 }

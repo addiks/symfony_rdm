@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2017  Gerrit Addiks.
+ * Copyright (C) 2018 Gerrit Addiks.
  * This package (including this file) was released under the terms of the GPL-3.0.
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/> or send me a mail so i can send you a copy.
@@ -19,6 +19,9 @@ use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Mapping\ChoiceMapping;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
+use DOMAttr;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -74,23 +77,19 @@ final class MappingXmlDriver implements MappingDriverInterface
                 foreach ($xpath->query("//d:entity/{$rdmPrefix}:service", $dom) as $serviceNode) {
                     /** @var DOMNode $serviceNode */
 
-                    /** @var bool $lax */
-                    $lax = $serviceNode->attributes->getNamedItem("lax");
-
                     /** @var string $fieldName */
                     $fieldName = (string)$serviceNode->attributes->getNamedItem("field")->value;
 
-                    /** @var string $serviceId */
-                    $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->value;
+                    $fieldMappings[$fieldName] = $this->readService($serviceNode, $mappingFile);
+                }
 
-                    if (is_null($lax)) {
-                        $lax = false;
+                foreach ($xpath->query("//d:entity/{$rdmPrefix}:choice", $dom) as $choiceNode) {
+                    /** @var DOMNode $choiceNode */
 
-                    } else {
-                        $lax = (strtolower($lax) === 'true');
-                    }
+                    /** @var string $fieldName */
+                    $fieldName = (string)$choiceNode->attributes->getNamedItem("field")->value;
 
-                    $fieldMappings[$fieldName] = new ServiceMapping($serviceId, $lax);
+                    $fieldMappings[$fieldName] = $this->readChoice($choiceNode, $mappingFile);
                 }
             }
 
@@ -102,6 +101,75 @@ final class MappingXmlDriver implements MappingDriverInterface
         }
 
         return $mapping;
+    }
+
+    private function readChoice(DOMNode $choiceNode, string $mappingFile)
+    {
+        /** @var string $columnName */
+        $columnName = (string)$choiceNode->attributes->getNamedItem("column")->value;
+
+        /** @var array<MappingInterface> $choiceMappings */
+        $choiceMappings = array();
+
+        foreach ($choiceNode->childNodes as $optionNode) {
+            /** @var DOMNode $optionNode */
+
+            while ($optionNode instanceof DOMNode && in_array($optionNode->nodeType, [
+                XML_TEXT_NODE,
+                XML_COMMENT_NODE
+            ])) {
+                $optionNode = $optionNode->nextSibling;
+            }
+
+            if ($optionNode instanceof DOMNode && $optionNode->nodeName === $optionNode->prefix . ":option") {
+                /** @var string $determinator */
+                $determinator = (string)$optionNode->attributes->getNamedItem("name")->value;
+
+                /** @var DOMNode $optionMappingNode */
+                $optionMappingNode = $optionNode->firstChild;
+
+                while (in_array($optionMappingNode->nodeType, [XML_TEXT_NODE, XML_COMMENT_NODE])) {
+                    $optionMappingNode = $optionMappingNode->nextSibling;
+                }
+
+                if ($optionMappingNode->nodeName === $optionMappingNode->prefix . ":service") {
+                    $choiceMappings[$determinator] = $this->readService($optionMappingNode, $mappingFile);
+
+                } elseif ($optionMappingNode->nodeName === $optionMappingNode->prefix . ":choice") {
+                    $choiceMappings[$determinator] = $this->readChoice($optionMappingNode, $mappingFile);
+                }
+            }
+        }
+
+        return new ChoiceMapping($columnName, $choiceMappings, sprintf(
+            "in file '%s'",
+            $mappingFile
+        ));
+    }
+
+    private function readService(DOMNode $serviceNode, string $mappingFile)
+    {
+        /** @var bool $lax */
+        $lax = false;
+
+        if ($serviceNode->attributes->getNamedItem("lax") instanceof DOMNode) {
+            $lax = $serviceNode->attributes->getNamedItem("lax")->value;
+        }
+
+        /** @var string $serviceId */
+        $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->value;
+
+        if (is_null($lax)) {
+            $lax = false;
+
+        } else {
+            $lax = (strtolower($lax) === 'true');
+        }
+
+        return new ServiceMapping($serviceId, $lax, sprintf(
+            "in file '%s'",
+            $mappingFile
+        ));
     }
 
 }

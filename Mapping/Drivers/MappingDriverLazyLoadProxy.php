@@ -8,12 +8,13 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Hydration;
+namespace Addiks\RDMBundle\Mapping\Drivers;
 
-use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 
-final class EntityHydratorLazyLoadProxy implements EntityHydratorInterface
+final class MappingDriverLazyLoadProxy implements MappingDriverInterface
 {
 
     /**
@@ -27,9 +28,9 @@ final class EntityHydratorLazyLoadProxy implements EntityHydratorInterface
     private $serviceId;
 
     /**
-     * @var EntityHydratorInterface
+     * @var MappingDriverInterface
      */
-    private $actualHydrator;
+    private $loadedMetadataDriver;
 
     public function __construct(ContainerInterface $container, string $serviceId)
     {
@@ -37,23 +38,18 @@ final class EntityHydratorLazyLoadProxy implements EntityHydratorInterface
         $this->serviceId = $serviceId;
     }
 
-    public function hydrateEntity($entity)
+    public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        return $this->loadActualHydrator()->hydrateEntity($entity);
+        return $this->loadMetadataDriver()->loadRDMMetadataForClass($className);
     }
 
-    public function assertHydrationOnEntity($entity)
+    private function loadMetadataDriver(): MappingDriverInterface
     {
-        return $this->loadActualHydrator()->assertHydrationOnEntity($entity);
-    }
-
-    private function loadActualHydrator(): EntityHydratorInterface
-    {
-        if (is_null($this->actualHydrator)) {
-            $this->actualHydrator = $this->container->get($this->serviceId);
+        if (is_null($this->loadedMetadataDriver)) {
+            $this->loadedMetadataDriver = $this->container->get($this->serviceId);
         }
 
-        return $this->actualHydrator;
+        return $this->loadedMetadataDriver;
     }
 
 }

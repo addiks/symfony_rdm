@@ -5,11 +5,21 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"
 >
+
+    <imports>
+        <import resource="services/mapping.xml" />
+        <import resource="services/value-resolving.xml" />
+        <import resource="services/data-loader.xml" />
+    </imports>
+
     <services>
 
         <service id="addiks_rdm.listener" class="Addiks\RDMBundle\Doctrine\EventListener">
             <tag name="doctrine.event_listener" event="prePersist" />
             <tag name="doctrine.event_listener" event="postLoad" />
+            <tag name="doctrine.event_listener" event="postGenerateSchemaTable" />
+            <tag name="doctrine.event_listener" event="onFlush" />
+            <tag name="doctrine.event_listener" event="loadClassMetadata" />
 
             <argument type="service">
                 <service class="Addiks\RDMBundle\Hydration\EntityHydratorLazyLoadProxy">
@@ -17,99 +27,25 @@
                     <argument>addiks_rdm.hydrator</argument>
                 </service>
             </argument>
+            <argument type="service">
+                <service class="Addiks\RDMBundle\Mapping\Drivers\MappingDriverLazyLoadProxy">
+                    <argument type="service" id="service_container" />
+                    <argument>addiks_rdm.mapping.driver</argument>
+                </service>
+            </argument>
+            <argument type="service">
+                <service class="Addiks\RDMBundle\DataLoader\DataLoaderLazyLoadProxy">
+                    <argument type="service" id="service_container" />
+                    <argument>addiks_rdm.data_loader</argument>
+                </service>
+            </argument>
         </service>
 
         <service id="addiks_rdm.hydrator" class="Addiks\RDMBundle\Hydration\EntityHydrator" public="true">
-            <argument type="service" id="service_container" />
+            <argument type="service" id="addiks_rdm.value_resolver" />
             <argument type="service" id="addiks_rdm.mapping.driver" />
+            <argument type="service" id="addiks_rdm.data_loader" />
         </service>
-
-        <service
-            id="addiks_rdm.mapping.driver"
-            class="Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface"
-        >
-            <factory service="addiks_rdm.mapping.driver_factory" method="createRDMMappingDriver" />
-            <argument type="service">
-                <service class="Doctrine\Common\Persistence\Mapping\Driver\MappingDriver">
-                    <factory service="addiks_rdm.doctrine.orm.configuration" method="getMetadataDriverImpl" />
-                </service>
-            </argument>
-        </service>
-
-        <service id="addiks_rdm.doctrine.orm.configuration" class="Doctrine\ORM\Configuration">
-            <factory service="doctrine.orm.entity_manager" method="getConfiguration" />
-        </service>
-
-        <service id="addiks_rdm.mapping.driver_factory" alias="addiks_rdm.mapping.driver_factory.cached" />
-
-        <service
-            id="addiks_rdm.mapping.driver_factory.cached"
-            class="Addiks\RDMBundle\Mapping\DriverFactories\CachedMappingDriverFactory"
-        >
-            <argument type="service">
-                <service class="Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryLazyLoadProxy">
-                    <argument type="service" id="service_container" />
-                    <argument>addiks_rdm.mapping.driver_factory.aggregate</argument>
-                </service>
-            </argument>
-            <argument type="service" id="cache.app" />
-        </service>
-
-        <service
-            id="addiks_rdm.mapping.driver_factory.aggregate"
-            class="Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryAggregate"
-            public="true"
-        >
-            <argument type="collection">
-                <argument type="service" id="addiks_rdm.mapping.driver_factory.chain" />
-                <argument type="service" id="addiks_rdm.mapping.driver_factory.annotation" />
-                <argument type="service" id="addiks_rdm.mapping.driver_factory.xml" />
-                <argument type="service" id="addiks_rdm.mapping.driver_factory.yaml" />
-                <argument type="service" id="addiks_rdm.mapping.driver_factory.php" />
-                <argument type="service" id="addiks_rdm.mapping.driver_factory.static_php" />
-            </argument>
-        </service>
-
-        <service
-            id="addiks_rdm.mapping.driver_factory.chain"
-            class="Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverChainFactory"
-        >
-            <argument type="service">
-                <service class="Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryLazyLoadProxy">
-                    <argument type="service" id="service_container" />
-                    <argument>addiks_rdm.mapping.driver_factory.aggregate</argument>
-                </service>
-            </argument>
-        </service>
-
-        <service
-            id="addiks_rdm.mapping.driver_factory.annotation"
-            class="Addiks\RDMBundle\Mapping\DriverFactories\MappingAnnotationDriverFactory"
-        >
-            <argument type="service" id="annotation_reader" />
-        </service>
-
-        <service
-            id="addiks_rdm.mapping.driver_factory.xml"
-            class="Addiks\RDMBundle\Mapping\DriverFactories\MappingXMLDriverFactory"
-        >
-            <argument>@=service('kernel').locateResource('@AddiksRDMBundle/Resources/mapping-schema.v1.xsd')</argument>
-        </service>
-
-        <service
-            id="addiks_rdm.mapping.driver_factory.yaml"
-            class="Addiks\RDMBundle\Mapping\DriverFactories\MappingYamlDriverFactory"
-        />
-
-        <service
-            id="addiks_rdm.mapping.driver_factory.php"
-            class="Addiks\RDMBundle\Mapping\DriverFactories\MappingPHPDriverFactory"
-        />
-
-        <service
-            id="addiks_rdm.mapping.driver_factory.static_php"
-            class="Addiks\RDMBundle\Mapping\DriverFactories\MappingStaticPHPDriverFactory"
-        />
 
     </services>
 </container>
