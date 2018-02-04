@@ -263,7 +263,6 @@ This project may be extended with more features in the future, here are some ide
 - [Automatic initialization of value-objects in entities.][3]
 - Use aggregates (composed objects) in entities. (embeddables are just not enough)
 - Allow object-decoration (custom proxy-objects) in, on and between entities.
-- Allow dynamic service mapping, storing in the database which service was set on the member.
 - [Allow to use simple arrays instead of doctrine collection objects or even custom collections.][4]
 - Inject service-container-parameters into entities (similar to services).
 - Re-use data from one column in multiple fields (maybe even across multiple entities).
