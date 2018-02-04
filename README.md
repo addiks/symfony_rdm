@@ -12,8 +12,9 @@ put much more of your business-logic into the entities which until now would hav
 from within an entity (or would at least need some workarounds). For a more detailed explanation, read the section "Why"
 near the bottom of this document.
 
-Currently this project consists of only one feature, but it will be extended in the near future:
+Currently this project consists of only two features, but it will be extended in the near future:
  - Load services from the symfony-DIC into the fields of doctrine2 entities.
+ - Choose which service to inject from a list of services by a value from the database.
 
 This was implemented with symfony 2.8 running on PHP 7.1 in mind because that is simply my use case. But i think it
 should work in all current stable versions (at least up until symfony 3.x, probably even further), i have however not
@@ -22,11 +23,10 @@ this paragraph.
 
 ## How
 
-It hooks into the “postLoad" event of doctrine and hydrates the marked fields with the described services. It also hooks
-into the “prePersist" event and asserts that the marked fields actually contain their services. This is an additional
-security layer to make sure you do not forget to inject these services (f.e.: in the entity-constructor). The assertion
-can be disabled on a field-by-field basis using the property "lax=true". Only disable this check if you must and you
-know what you are doing.
+It hooks into the events of doctrine and hydrates the marked fields with the described services. It also asserts that
+the marked fields actually contain their services. This is an additional security layer to make sure you do not forget
+to inject these services (f.e.: in the entity-constructor). The assertion can be disabled on a field-by-field basis
+using the property "lax=true". Only disable this check if you must and you know what you are doing.
 
 There are multiple ways of defining which services should be in what fields of the services:
 Per annotations, YAML, XML, PHP or Static PHP.
@@ -48,6 +48,20 @@ configuration because those are the most used formats.
 		…
 		<rdm:service field="mailer" id="swift_mailer" />
 		<rdm:service field="thingyFactory" id="my.thingy.factory" lax="true" />
+
+        <!-- Creates a new column 'transmitter_name' that contains either:
+                - "foo_transmitter": loads the service 'some_bundle.transmitter.foo' into the field $transmitter
+                - "bar_transmitter": loads the service 'some_bundle.transmitter.bar' into the field $transmitter
+                - null: keeps the field $transmitter empty.
+        -->
+		<rdm:choice field="transmitter" column="transmitter_name">
+		    <rdm:option name="foo_transmitter">
+		        <rdm:service id="some_bundle.transmitter.foo" />
+		    </rdm:option>
+		    <rdm:option name="bar_transmitter">
+		        <rdm:service id="some_bundle.transmitter.bar" />
+		    </rdm:option>
+		</rdm:choice>
 		…
 	</entity>
 </doctrine-mapping>
@@ -75,6 +89,16 @@ Doctrine\Tests\ORM\Mapping\User:
     thingyFactory:
       id: my.things.factory
       lax: true
+  choices:
+    transmitter:
+      column: transmitter_name
+      choices:
+        foo_transmitter:
+          service:
+            id: some_bundle.transmitter.foo
+        bar_transmitter:
+          service:
+            id: some_bundle.transmitter.bar
 ```
 
 ### Configuration via annotations
@@ -82,10 +106,26 @@ Doctrine\Tests\ORM\Mapping\User:
 ```php
 <?php
 
-use Addiks\RDMBundle\Mapping\Service;
+use Addiks\RDMBundle\Mapping\Annotation\Service;
+use Addiks\RDMBundle\Mapping\Annotation\Choice;
 
+/**
+ * @Entity
+ */
 class MyEntity
 {
+
+    /**
+     * @Id
+     * @Column(type="string")
+     */
+    private $id;
+
+    /**
+     * @Column(type="text")
+     */
+    private $text;
+
     /**
      * @Service(id="swift_mailer")
      * @var Swift_Mailer
@@ -98,10 +138,30 @@ class MyEntity
      */
     private $thingyFactory;
 
-    public function __construct(Swift_Mailer $mailer, MyThingyFactory $thingyFactory = null)
-    {
+    /**
+     * @var ?TransmitterInterface
+     * @Choice(column="transmitter_name", choices={
+     *  "foo_transmitter" = @Service(id="some_bundle.transmitter.foo"),
+     *  "bar_transmitter" = @Service(id="some_bundle.transmitter.bar"),
+     * })
+     */
+    private $transmitter;
+
+    public function __construct(
+        string $text,
+        Swift_Mailer $mailer,
+        MyThingyFactory $thingyFactory = null,
+        TransmitterInterface $transmitter = null
+    ) {
+        $this->id = uuid();
         $this->mailer = $mailer;
         $this->thingyFactory = $thingyFactory;
+        $this->transmitter = $transmitter;
+    }
+
+    public function transmit()
+    {
+        $this->transmitter->transmitText($this->text);
     }
 }
 ```
