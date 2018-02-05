@@ -2,8 +2,8 @@
 <!-- @author gerrit addiks <gerrit.addiks@brille24.de> -->
 <xs:schema
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:rdm="http://github.com/addiks/rdm/tree/master/Resources/mapping-schema.v1.xsd"
-    targetNamespace="http://github.com/addiks/rdm/tree/master/Resources/mapping-schema.v1.xsd"
+    xmlns:rdm="https://github.com/addiks/symfony_rdm/raw/master/Resources/mapping-schema.v1.xsd"
+    targetNamespace="https://github.com/addiks/symfony_rdm/raw/master/Resources/mapping-schema.v1.xsd"
     elementFormDefault="qualified"
 >
 

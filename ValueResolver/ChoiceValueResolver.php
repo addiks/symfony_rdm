@@ -44,34 +44,28 @@ final class ChoiceValueResolver implements ValueResolverInterface
             /** @var array<MappingInterface> $choices */
             $choices = $fieldMapping->getChoices();
 
-            if (!array_key_exists($determinatorColumn, $dataFromAdditionalColumns)) {
-                throw new InvalidMappingException(sprintf(
-                    "Missing data for choice column '%s' on entity %s!",
-                    $determinatorColumn,
-                    get_class($entity)
-                ));
-            }
+            if (array_key_exists($determinatorColumn, $dataFromAdditionalColumns)) {
+                /** @var scalar $determinatorValue */
+                $determinatorValue = $dataFromAdditionalColumns[$determinatorColumn];
 
-            /** @var scalar $determinatorValue */
-            $determinatorValue = $dataFromAdditionalColumns[$determinatorColumn];
+                if (!empty($determinatorValue) && !array_key_exists($determinatorValue, $choices)) {
+                    throw new InvalidMappingException(sprintf(
+                        "Invalid option-value '%s' for choice-column '%s' on entity %s!",
+                        $determinatorValue,
+                        $determinatorColumn,
+                        get_class($entity)
+                    ));
+                }
 
-            if (!empty($determinatorValue) && !array_key_exists($determinatorValue, $choices)) {
-                throw new InvalidMappingException(sprintf(
-                    "Invalid option-value '%s' for choice-column '%s' on entity %s!",
-                    $determinatorValue,
-                    $determinatorColumn,
-                    get_class($entity)
-                ));
-            }
+                if (isset($choices[$determinatorValue])) {
+                    $choiceMapping = $choices[$determinatorValue];
 
-            if (isset($choices[$determinatorValue])) {
-                $choiceMapping = $choices[$determinatorValue];
-
-                $value = $this->innerValueResolver->resolveValue(
-                    $choiceMapping,
-                    $entity,
-                    $dataFromAdditionalColumns
-                );
+                    $value = $this->innerValueResolver->resolveValue(
+                        $choiceMapping,
+                        $entity,
+                        $dataFromAdditionalColumns
+                    );
+                }
             }
         }
 
@@ -128,40 +122,33 @@ final class ChoiceValueResolver implements ValueResolverInterface
             /** @var string $determinatorColumn */
             $determinatorColumn = $fieldMapping->getDeterminatorColumnName();
 
-            /** @var array<MappingInterface> $choices */
-            $choices = $fieldMapping->getChoices();
+            if (array_key_exists($determinatorColumn, $dataFromAdditionalColumns)) {
+                /** @var scalar $determinatorValue */
+                $determinatorValue = $dataFromAdditionalColumns[$determinatorColumn];
 
-            if (!array_key_exists($determinatorColumn, $dataFromAdditionalColumns)) {
-                throw new InvalidMappingException(sprintf(
-                    "Missing data for choice column '%s' on entity %s!",
-                    $determinatorColumn,
-                    get_class($entity)
-                ));
+                /** @var array<MappingInterface> $choices */
+                $choices = $fieldMapping->getChoices();
+
+                if (!empty($determinatorValue) && !array_key_exists($determinatorValue, $choices)) {
+                    throw new InvalidMappingException(sprintf(
+                        "Invalid option-value '%s' for choice-column '%s' on entity %s!",
+                        $determinatorValue,
+                        $determinatorColumn,
+                        get_class($entity)
+                    ));
+                }
+
+                if (isset($choices[$determinatorValue])) {
+                    $choiceMapping = $choices[$determinatorValue];
+
+                    $this->innerValueResolver->assertValue(
+                        $choiceMapping,
+                        $entity,
+                        $dataFromAdditionalColumns,
+                        $actualValue
+                    );
+                }
             }
-
-            /** @var scalar $determinatorValue */
-            $determinatorValue = $dataFromAdditionalColumns[$determinatorColumn];
-
-            if (!empty($determinatorValue) && !array_key_exists($determinatorValue, $choices)) {
-                throw new InvalidMappingException(sprintf(
-                    "Invalid option-value '%s' for choice-column '%s' on entity %s!",
-                    $determinatorValue,
-                    $determinatorColumn,
-                    get_class($entity)
-                ));
-            }
-
-            if (isset($choices[$determinatorValue])) {
-                $choiceMapping = $choices[$determinatorValue];
-
-                $this->innerValueResolver->assertValue(
-                    $choiceMapping,
-                    $entity,
-                    $dataFromAdditionalColumns,
-                    $actualValue
-                );
-            }
-
         }
     }
 

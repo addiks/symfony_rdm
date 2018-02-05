@@ -50,6 +50,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Statement;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\ORM\Event\PostFlushEventArgs;
 
 /**
  * This is an integration-test that test's the bundle as a whole.
@@ -332,7 +333,7 @@ final class IntegrationTest extends TestCase
 
         $eventListener->loadClassMetadata(new LoadClassMetadataEventArgs($classMetadata, $this->entityManager));
 
-        $eventListener->onFlush(new OnFlushEventArgs($this->entityManager));
+        $eventListener->postFlush(new PostFlushEventArgs($this->entityManager));
     }
 
     /**
@@ -388,6 +389,8 @@ final class IntegrationTest extends TestCase
 
         /** @var ClassMetadata $classMetadata */
         $classMetadata = $metadataFactory->getMetadataFor(EntityExample::class);
+        $classMetadata->identifier = ['id'];
+        $classMetadata->fieldMappings = ['id' => ['columnName' => 'id']];
         $classMetadata->table = ['name' => 'some_table'];
 
         $this->entityManager->method("getUnitOfWork")->willReturn($unitOfWork);
@@ -436,6 +439,7 @@ final class IntegrationTest extends TestCase
         $this->assertTrue($classTable->hasColumn("bar_column"));
 
         $entity = new EntityExample();
+        $entity->id = 123;
         $entity->foo = null;
         $entity->bar = $serviceA;
 
@@ -450,11 +454,14 @@ final class IntegrationTest extends TestCase
             ]
         ]);
 
-        $eventListener->onFlush(new OnFlushEventArgs(
+        $eventListener->postFlush(new PostFlushEventArgs(
             $this->entityManager
         ));
 
         $loadedEntity = new EntityExample();
+        $loadedEntity->id = 123;
+        $loadedEntity->foo = null;
+        $loadedEntity->bar = null;
 
         $eventListener->postLoad(new LifecycleEventArgs(
             $loadedEntity,

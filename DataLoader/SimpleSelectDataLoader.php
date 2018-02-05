@@ -48,12 +48,24 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
      */
     private $valueResolver;
 
+    /**
+     * @var array<array<scalar>>
+     */
+    private $originalData = array();
+
+    /**
+     * @var int
+     */
+    private $originalDataLimit;
+
     public function __construct(
         MappingDriverInterface $mappingDriver,
-        ValueResolverInterface $valueResolver
+        ValueResolverInterface $valueResolver,
+        int $originalDataLimit = 1000
     ) {
         $this->mappingDriver = $mappingDriver;
         $this->valueResolver = $valueResolver;
+        $this->originalDataLimit = $originalDataLimit;
     }
 
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array
@@ -95,6 +107,9 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
             $reflectionClass = new ReflectionClass($className);
 
+            /** @var bool $hasId */
+            $hasId = false;
+
             foreach ($classMetaData->identifier as $idFieldName) {
                 /** @var string $idFieldName */
 
@@ -110,16 +125,34 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
                 $reflectionProperty->setAccessible(false);
 
-                $queryBuilder->andWhere($expr->eq($idColumn['columnName'], $idValue));
+                if (!empty($idValue)) {
+                    $hasId = true;
+                    $queryBuilder->andWhere($expr->eq($idColumn['columnName'], $idValue));
+                }
             }
 
-            $queryBuilder->from($classMetaData->getTableName());
-            $queryBuilder->setMaxResults(1);
+            if ($hasId) {
+                $queryBuilder->from($classMetaData->getTableName());
+                $queryBuilder->setMaxResults(1);
 
-            /** @var Statement $statement */
-            $statement = $queryBuilder->execute();
+                /** @var Statement $statement */
+                $statement = $queryBuilder->execute();
 
-            $additionalData = $statement->fetch(PDO::FETCH_ASSOC);
+                $additionalData = $statement->fetch(PDO::FETCH_ASSOC);
+
+                if (!is_array($additionalData)) {
+                    $additionalData = array();
+                }
+
+                /** @var string $entityObjectHash */
+                $entityObjectHash = spl_object_hash($entity);
+
+                $this->originalData[$entityObjectHash] = $additionalData;
+
+                if (count($this->originalData) > $this->originalDataLimit) {
+                    array_shift($this->originalData);
+                }
+            }
         }
 
         return $additionalData;
@@ -201,7 +234,13 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
             /** @var array<scalar> */
             $originalData = array();
-            # TODO: decide if and where to store original fetched data to decide whether to update or not.
+
+            /** @var string $entityObjectHash */
+            $entityObjectHash = spl_object_hash($entity);
+
+            if (isset($this->originalData[$entityObjectHash])) {
+                $originalData = $this->originalData[$entityObjectHash];
+            }
 
             /** @var bool $hasDataChanged */
             $hasDataChanged = false;

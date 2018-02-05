@@ -42,7 +42,7 @@ configuration because those are the most used formats.
 <?xml version="1.0" encoding="utf-8"?>
 <doctrine-mapping
     xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
-    xmlns:rdm="http://github.com/addiks/symfony_rdm/tree/master/Resources/mapping-schema.v1.xsd"
+    xmlns:rdm="https://github.com/addiks/symfony_rdm/raw/master/Resources/mapping-schema.v1.xsd"
 >
 	<entity name="Foo\Bar\SomeEntity" table="some_entity">
 		…
@@ -212,6 +212,33 @@ return [
 After that this bundle should work. If not create an issue here and provide as much details about the environment this
 is being used in, i may be able to help.
 
+## Service-FormType
+
+This bundle also provides a additional new form-type called "ServiceFormType" which should prove valuable in conjunction
+with the service-hydration-abilities of this bundle. It allows to specify a list of service-id's as choices that can be
+selected between in a form and the selected being set on the entity.
+
+```php
+<?php
+
+use Addiks\RDMBundle\Symfony\FormType\ServiceFormType;
+
+class MyEntityFormType extends AbstractType
+{
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        $builder->add("someField", ServiceFormType::class, [
+            'required' => false,
+            'choices' => [
+                'app.example_services.foo' => 'foo',
+                'app.example_services.bar' => 'bar',
+            ]
+        ]);
+    }
+    …
+}
+```
+
 ## Why
 
 This project was implemented because I think there are still some missing pieces for one to be able to **effectively**
@@ -263,7 +290,7 @@ This project may be extended with more features in the future, here are some ide
 - [Automatic initialization of value-objects in entities.][3]
 - Use aggregates (composed objects) in entities. (embeddables are just not enough)
 - Allow object-decoration (custom proxy-objects) in, on and between entities.
-- [Allow to use simple arrays instead of doctrine collection objects or even custom collections.][4]
+- Allow to use simple arrays instead of doctrine collection objects [or even custom collections.][4]
 - Inject service-container-parameters into entities (similar to services).
 - Re-use data from one column in multiple fields (maybe even across multiple entities).
 - [Generare non-object values from generator-services (or other routines) to be hydrated into unmapped fields][5]

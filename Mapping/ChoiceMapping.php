@@ -67,7 +67,8 @@ final class ChoiceMapping implements ChoiceMappingInterface
                 $this->getDeterminatorColumnName(),
                 Type::getType("text"),
                 [
-                    'length' => 255
+                    'length' => 255,
+                    'notnull' => false,
                 ]
             )
         );

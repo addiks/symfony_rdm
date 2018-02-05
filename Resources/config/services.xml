@@ -18,7 +18,7 @@
             <tag name="doctrine.event_listener" event="prePersist" />
             <tag name="doctrine.event_listener" event="postLoad" />
             <tag name="doctrine.event_listener" event="postGenerateSchemaTable" />
-            <tag name="doctrine.event_listener" event="onFlush" />
+            <tag name="doctrine.event_listener" event="postFlush" />
             <tag name="doctrine.event_listener" event="loadClassMetadata" />
 
             <argument type="service">
@@ -45,6 +45,11 @@
             <argument type="service" id="addiks_rdm.value_resolver" />
             <argument type="service" id="addiks_rdm.mapping.driver" />
             <argument type="service" id="addiks_rdm.data_loader" />
+        </service>
+
+        <service id="addiks_rdm.form.type.service" class="Addiks\RDMBundle\Symfony\FormType\ServiceFormType">
+            <tag name="form.type" alias="service" />
+            <argument type="service" id="service_container" />
         </service>
 
     </services>

@@ -26,6 +26,7 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\Common\EventArgs;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Event\PostFlushEventArgs;
 
 /**
  * Hooks into the event's of doctrine2-ORM and forwards the entities to other objects.
@@ -80,7 +81,7 @@ final class EventListener
         $this->entityHydrator->assertHydrationOnEntity($entity, $entityManager);
     }
 
-    public function onFlush(OnFlushEventArgs $arguments)
+    public function postFlush(PostFlushEventArgs $arguments)
     {
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $arguments->getEntityManager();
