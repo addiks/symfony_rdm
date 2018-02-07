@@ -168,20 +168,13 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             $className = ClassUtils::getRealClass($className);
         }
 
-        /** @var bool $isUnitializedProxy */
-        $isUnitializedProxy = false;
-
-        if ($entity instanceof Proxy && !$entity->__isInitialized()) {
-            $isUnitializedProxy = true;
-        }
-
         /** @var array<string> $additionalData */
         $additionalData = array();
 
         /** @var ?EntityMappingInterface $entityMapping */
         $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
-        if ($entityMapping instanceof EntityMappingInterface && !$isUnitializedProxy) {
+        if ($entityMapping instanceof EntityMappingInterface) {
             /** @var ClassMetadata $classMetaData */
             $classMetaData = $entityManager->getClassMetadata($className);
 

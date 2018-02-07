@@ -27,6 +27,7 @@ use Doctrine\Common\EventArgs;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
+use Doctrine\ORM\Proxy\Proxy;
 
 /**
  * Hooks into the event's of doctrine2-ORM and forwards the entities to other objects.
@@ -78,7 +79,9 @@ final class EventListener
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $arguments->getEntityManager();
 
-        $this->entityHydrator->assertHydrationOnEntity($entity, $entityManager);
+        if (!($entity instanceof Proxy)) {
+            $this->entityHydrator->assertHydrationOnEntity($entity, $entityManager);
+        }
     }
 
     public function postFlush(PostFlushEventArgs $arguments)
@@ -91,16 +94,18 @@ final class EventListener
 
         foreach ($unitOfWork->getIdentityMap() as $className => $entities) {
             foreach ($entities as $entity) {
-                if ($unitOfWork->isScheduledForDelete($entity)) {
-                    $this->dbalDataLoader->removeDBALDataForEntity($entity, $entityManager);
+                /** @var object $entity */
 
-                } else {
-                    $this->dbalDataLoader->storeDBALDataForEntity($entity, $entityManager);
+                if (!$this->isUnitializedProxy($entity)) {
+                    if ($unitOfWork->isScheduledForDelete($entity)) {
+                        $this->dbalDataLoader->removeDBALDataForEntity($entity, $entityManager);
+
+                    } else {
+                        $this->dbalDataLoader->storeDBALDataForEntity($entity, $entityManager);
+                    }
                 }
             }
         }
-
-        # TODO: Save data to DB
     }
 
     public function loadClassMetadata(LoadClassMetadataEventArgs $arguments)
@@ -146,6 +151,18 @@ final class EventListener
                 );
             }
         }
+    }
+
+    private function isUnitializedProxy($entity): bool
+    {
+        /** @var bool $isUnitializedProxy */
+        $isUnitializedProxy = false;
+
+        if ($entity instanceof Proxy && !$entity->__isInitialized()) {
+            $isUnitializedProxy = true;
+        }
+
+        return $isUnitializedProxy;
     }
 
 }
