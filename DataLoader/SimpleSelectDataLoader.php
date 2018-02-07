@@ -26,6 +26,7 @@ use Doctrine\DBAL\Driver\Statement;
 use PDO;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
+use Doctrine\ORM\Proxy\Proxy;
 
 /**
  * A very simple loader that just executes one simple select statement for every entity to load the data for.
@@ -167,13 +168,20 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             $className = ClassUtils::getRealClass($className);
         }
 
+        /** @var bool $isUnitializedProxy */
+        $isUnitializedProxy = false;
+
+        if ($entity instanceof Proxy && !$entity->__isInitialized()) {
+            $isUnitializedProxy = true;
+        }
+
         /** @var array<string> $additionalData */
         $additionalData = array();
 
         /** @var ?EntityMappingInterface $entityMapping */
         $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
-        if ($entityMapping instanceof EntityMappingInterface) {
+        if ($entityMapping instanceof EntityMappingInterface && !$isUnitializedProxy) {
             /** @var ClassMetadata $classMetaData */
             $classMetaData = $entityManager->getClassMetadata($className);
 
@@ -246,7 +254,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             $hasDataChanged = false;
 
             foreach ($additionalData as $key => $value) {
-                if (!isset($originalData[$key]) || $originalData[$key] !== $value) {
+                if (!array_key_exists($key, $originalData) || $originalData[$key] !== $value) {
                     $hasDataChanged = true;
                 }
             }
