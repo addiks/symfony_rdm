@@ -9,8 +9,9 @@ The goal of this project is to enrich the doctrine2-ORM in ways that allow the d
 roles that classical entities should fulfill in a rich/fat domain model. This project will try to lift as many technical
 limitations of the current doctrine2-ORM in object-design as reasonable. This is meant to allow you (the developer) to
 put much more of your business-logic into the entities which until now would have to be on other objects and unreachable
-from within an entity (or would at least need some workarounds). For a more detailed explanation, read the section "Why"
-near the bottom of this document.
+from within an entity (or would at least need some workarounds).
+
+For a more detailed explanation why this was implemented read the file "Resources/docs/WHY.md".
 
 Currently this project consists of only two features, but it will be extended in the near future:
  - Load services from the symfony-DIC into the fields of doctrine2 entities.
@@ -238,50 +239,6 @@ class MyEntityFormType extends AbstractType
     …
 }
 ```
-
-## Why
-
-This project was implemented because I think there are still some missing pieces for one to be able to **effectively**
-perform domain driven design in software based on the symfony/doctrine2 framework(s) without the constant drive of
-falling back to the anti-pattern of [anemic-domain-model][2] (please do read this link).
-
-[2]: https://martinfowler.com/bliki/AnemicDomainModel.html
-
-In domain driven design you are supposed to put your domain logic into their semantically designated domain objects. To
-put it simply: Put customer related logic in the customer related domain objects. These domain objects may be entities,
-value-objects, aggregates, services or repositories.
-
-With symfony it will be easy for most of these types of objects to put their domain logic into them because for these
-the symfony-DIC helps you in composing these objects with anything they need. The objects will be fully instanciated
-again for every PHP-runtime with all needed dependencies.
-
-With (doctrine2-) entities however you may find the problem that when loaded from database the entities will not be
-instanciated as new objects but re-hydrated from an empty object-skeleton with only data that originates directly from
-the database. Neither the constructor nor any wakeup process runs to fill the entity with data and objects that did not
-originate from the database. Without any non-database objects the entitiy is per se "stranded" and cannot communicate
-with anything that is not pure data. That means that it cannot trigger domain-related processes it would need to trigger
-(like sending a happy-birthday-mail) because it cannot have any link to the infrastructure objects (mailers) that it
-could send these signals accross to trigger these processes.
-
-For example: Suppose you (and your domain-experts) decide that at the point of payment the invoice should send some kind
-of PDF-receipt via e-mail to some customer. In a rich-domain-model (see link above) this e-mail should be triggered by
-the "invoice" entity. For the invoice entity to be able to trigger an e-mail being sent it must at some point be able to
-(directly or indirectly) call some outer infrastructure services outside of the business-logic that can send e-mails.
-
-For an entity to be able to trigger a service it must have some reference to that service. Currently when you load an
-entity from doctrine2 it will only be hydrated (loaded/filled) with data from the database but nothing else. As it
-currently stands, doctrine2 is not able to hydrate an entity with non-entity objects (and it should not be able to,
-that's IMHO the job of the application framework which in this case is symfony). You can inject a service via the
-entity-constructor into some field of an entity and persist that entity to the database but as soon as you try to load
-that entity later from database via the doctrine2 ORM you will find the field empty because doctrine2 does not know
-about symfony services.
-
-That is where this project comes into play. It provides a way (or several ways even) to define how to compose your
-doctrine2 entities with other things that doctrine normally does not know about. Currently it can only "store" a symfony
-service in a doctrine field by static mapping, this may be extended in the future. In this mapping you tell this bundle
-which field in an entity should contain what service. Then it hooks into the doctrine2 events to hydrate that fields
-with the needed services when you load your entities and even check's them when you try to persist new entities. That
-way you are now able to express domain logic in your entities that normally would have to be in a separate service.
 
 ## The future
 
