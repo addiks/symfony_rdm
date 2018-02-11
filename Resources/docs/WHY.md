@@ -1,13 +1,46 @@
 Symfony-RDM – Helper for using the Rich Domain Model in Symfony
 ===================================
 
-## Why this bundle was implemented
+This document is a detailed explanation of why this project was implemented. Maybe it helps you to decide if you want to
+use it or not. (It definitely helps me keeping my head straight by writing all this stuff down.)
 
-This project was implemented because I think there are still some missing pieces for one to be able to **effectively**
-perform domain driven design in software based on the symfony/doctrine2 framework(s) without the constant drive of
-falling back to the anti-pattern of [anemic-domain-model][2] (please do read this link).
+TL;DR: This project was implemented because I think there are still some missing pieces for one to be able to
+**effectively** perform domain driven design in software based on the symfony/doctrine2 framework(s) without the
+constant drive of falling back to the anti-pattern of [anemic-domain-model][2] (please do read this link).
 
 [2]: https://martinfowler.com/bliki/AnemicDomainModel.html
+
+If that didn't clear up things (and i don't expect it to), keep on reading. And if you know more about DDD then me and
+realize that the following is just a big pile of crap, please let me know.
+
+## A few definitions and context first
+
+In order to understand the purpose of this project you first need to understand the context in which it operates and the
+definitions and axioms it is developed under. Most importantly what domain-driven-design is (or at least how i
+understand it). So let's begin with a few definitions:
+
+With "domain" i mean a domain of knowledge, an area of expertise. Such a domain could be of any field, but in most
+cases they refer to foreign (non-programming-related) fields of knowledge.
+
+A software that tries to _purposefully_ embed knowlege of a specific domain by emulating parts of that domain is
+therefore called domain-driven software. The knowledge of the domain drives the development of that kind of software.
+Prime-candidates for such domain-driven software could be accounting-software, web-shops, a ticket-system or a system
+to simulate how particles behave in space. Everything that emulates some part of (mental or physical) reality.
+You _could_ develop any software domain-driven, but it makes IMHO more sense for high-level, non-techy cases like the
+ones mentioned above then for low-level or performance-critical software like hardware-drivers, 3D-graphics-engines,
+operating-systems or the likes.
+
+The people who know a lot about the domain are called domain-experts. These are (non-technical) people that help the
+developer understand how the domain works. These domain-experts could be logisticians, accounters, doctors, physicists,
+mechanics or anyone that understands the domain better than the developer. In many cases the project-owners are the
+domain-experts.
+
+An important concept in DDD is that of the "model". A domain-model is a description of the part of the domain that you
+or your software cares about. It is a mind-map that contains all the rules, processes and definitions that the developer
+must know about to develop the software. Such a model could be expressed in text, diagrams, speech or (as many prefer)
+in executable code.
+
+## The problem this project tries to solve
 
 In domain driven design you are supposed to put your domain logic into their semantically designated domain objects. To
 put it simply: Put customer related logic in the customer related domain objects. These domain objects may be entities,
@@ -66,6 +99,12 @@ Not having a distinct domain-model in domain-related software means that the dom
 domain logic. In such a software a change to the domain means that you also have to change parts of the that is not
 relevant to the domain and in reverse a change to the non-domain logic means that you also have to change domain logic.
 
+For small software-projects this might be doable, but for bigger projects things will become hard to maintain very fast.
+And even if it's a small project now, you never know if your small project evolves into something much bigger. So why
+not just do it right from the beginning and use a dedicated domain-layer?
+
 ### A non-rich or anemic domain model
 
 ### The command pattern
+
+### Manually setting services on entities when loading them (f.e.: in repositories)
