@@ -23,6 +23,16 @@
             </rdm:option>
         </rdm:choice>
 
+        <rdm:choice field="faz">
+            <field type="string" name="faz_column" nullable="false" />
+            <rdm:option name="lorem">
+                <rdm:service id="lorem_service" />
+            </rdm:option>
+            <rdm:option name="ipsum">
+                <rdm:service id="ipsum_service" />
+            </rdm:option>
+        </rdm:choice>
+
     </entity>
 
 </doctrine-mapping>

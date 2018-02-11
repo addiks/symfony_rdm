@@ -29,4 +29,9 @@ final class Choice
      */
     public $choices = array();
 
+    /**
+     * @var bool
+     */
+    public $nullable = true;
+
 }

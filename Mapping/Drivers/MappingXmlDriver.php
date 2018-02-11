@@ -22,6 +22,8 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
 use DOMAttr;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -89,7 +91,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                     /** @var string $fieldName */
                     $fieldName = (string)$choiceNode->attributes->getNamedItem("field")->value;
 
-                    $fieldMappings[$fieldName] = $this->readChoice($choiceNode, $mappingFile);
+                    $fieldMappings[$fieldName] = $this->readChoice($choiceNode, $mappingFile, $fieldName);
                 }
             }
 
@@ -103,10 +105,14 @@ final class MappingXmlDriver implements MappingDriverInterface
         return $mapping;
     }
 
-    private function readChoice(DOMNode $choiceNode, string $mappingFile)
+    private function readChoice(DOMNode $choiceNode, string $mappingFile, string $defaultColumnName)
     {
-        /** @var string $columnName */
-        $columnName = (string)$choiceNode->attributes->getNamedItem("column")->value;
+        /** @var string|Colum $columnName */
+        $column = $defaultColumnName;
+
+        if (!is_null($choiceNode->attributes->getNamedItem("column"))) {
+            $column = (string)$choiceNode->attributes->getNamedItem("column")->value;
+        }
 
         /** @var array<MappingInterface> $choiceMappings */
         $choiceMappings = array();
@@ -121,27 +127,39 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $optionNode = $optionNode->nextSibling;
             }
 
-            if ($optionNode instanceof DOMNode && $optionNode->nodeName === $optionNode->prefix . ":option") {
-                /** @var string $determinator */
-                $determinator = (string)$optionNode->attributes->getNamedItem("name")->value;
+            if ($optionNode instanceof DOMNode) {
+                /** @var mixed $nodeName */
+                $nodeName = $optionNode->namespaceURI . ":" . $optionNode->localName;
 
-                /** @var DOMNode $optionMappingNode */
-                $optionMappingNode = $optionNode->firstChild;
+                if ($nodeName === self::RDM_SCHEMA_URI . ":option") {
+                    /** @var string $determinator */
+                    $determinator = (string)$optionNode->attributes->getNamedItem("name")->value;
 
-                while (in_array($optionMappingNode->nodeType, [XML_TEXT_NODE, XML_COMMENT_NODE])) {
-                    $optionMappingNode = $optionMappingNode->nextSibling;
-                }
+                    /** @var DOMNode $optionMappingNode */
+                    $optionMappingNode = $optionNode->firstChild;
 
-                if ($optionMappingNode->nodeName === $optionMappingNode->prefix . ":service") {
-                    $choiceMappings[$determinator] = $this->readService($optionMappingNode, $mappingFile);
+                    while (in_array($optionMappingNode->nodeType, [XML_TEXT_NODE, XML_COMMENT_NODE])) {
+                        $optionMappingNode = $optionMappingNode->nextSibling;
+                    }
 
-                } elseif ($optionMappingNode->nodeName === $optionMappingNode->prefix . ":choice") {
-                    $choiceMappings[$determinator] = $this->readChoice($optionMappingNode, $mappingFile);
+                    if ($optionMappingNode->nodeName === $optionMappingNode->prefix . ":service") {
+                        $choiceMappings[$determinator] = $this->readService($optionMappingNode, $mappingFile);
+
+                    } elseif ($optionMappingNode->nodeName === $optionMappingNode->prefix . ":choice") {
+                        $choiceMappings[$determinator] = $this->readChoice($optionMappingNode, $mappingFile, sprintf(
+                            "%s_%s",
+                            $defaultColumnName,
+                            $determinator
+                        ));
+                    }
+
+                } elseif ($nodeName === self::DOCTRINE_SCHEMA_URI . ":field") {
+                    $column = $this->readDoctrineField($optionNode);
                 }
             }
         }
 
-        return new ChoiceMapping($columnName, $choiceMappings, sprintf(
+        return new ChoiceMapping($column, $choiceMappings, sprintf(
             "in file '%s'",
             $mappingFile
         ));
@@ -170,6 +188,58 @@ final class MappingXmlDriver implements MappingDriverInterface
             "in file '%s'",
             $mappingFile
         ));
+    }
+
+    private function readDoctrineField(DOMNode $fieldNode): Column
+    {
+        /** @var array<string> $attributes */
+        $attributes = array();
+
+        /** @var array<string> $keyMap */
+        $keyMap = array(
+            'name'              => 'name',
+            'type'              => 'type',
+            'nullable'          => 'notnull',
+            'length'            => 'length',
+            'precision'         => 'precision',
+            'scale'             => 'scale',
+            'column-definition' => 'columnDefinition',
+        );
+
+        /** @var string $columnName */
+        $columnName = null;
+
+        /** @var Type $type */
+        $type = null;
+
+        foreach ($fieldNode->attributes as $key => $attribute) {
+            /** @var DOMAttr $attribute */
+
+            $attributeValue = (string)$attribute->value;
+
+            if ($key === 'name') {
+                $columnName = $attributeValue;
+
+            } elseif ($key === 'type') {
+                $type = Type::getType($attributeValue);
+
+            } elseif (isset($keyMap[$key])) {
+                if ($key === 'nullable') {
+                    # target is 'notnull', so falue is reversed
+                    $attributeValue = ($attributeValue === 'false');
+                }
+
+                $attributes[$keyMap[$key]] = (string)$attribute->value;
+            }
+        }
+
+        $column = new Column(
+            $columnName,
+            $type,
+            $attributes
+        );
+
+        return $column;
     }
 
 }

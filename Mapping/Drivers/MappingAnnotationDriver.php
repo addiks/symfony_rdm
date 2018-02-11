@@ -22,6 +22,9 @@ use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\Mapping\Annotation\Choice;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Doctrine\ORM\Mapping\Column as ColumnAnnotation;
+use Doctrine\DBAL\Schema\Column as DBALColumn;
+use Doctrine\DBAL\Types\Type;
 
 final class MappingAnnotationDriver implements MappingDriverInterface
 {
@@ -93,12 +96,44 @@ final class MappingAnnotationDriver implements MappingDriverInterface
             );
 
         } elseif ($annotation instanceof Choice) {
-            /** @var string $columnName */
-            $columnName = $annotation->column;
+            /** @var string|ColumnAnnotation $column */
+            $column = $annotation->column;
 
-            if (empty($columnName)) {
+            if (is_string($column) || empty($column)) {
+                /** @var string $columnName */
                 $columnName = $fieldName;
+
+                if (is_string($column)) {
+                    $columnName = $column;
+                }
+
+                $column = new ColumnAnnotation();
+                $column->name = $columnName;
+                $column->type = 'string';
+                $column->length = 255;
+                $column->unique = false;
+                $column->nullable = (bool)$annotation->nullable;
+
+            } elseif (!($column instanceof ColumnAnnotation)) {
+                throw new InvalidMappingException(sprintf(
+                    "Invalid column-definition on entity '%s' in field '%s' of choice-option '%s'! %s",
+                    $className,
+                    $fieldName,
+                    $determinator,
+                    'Expected string of "Column" annotation.'
+                ));
             }
+
+            $dbalColumn = new DBALColumn(
+                $column->name,
+                Type::getType($column->type),
+                [
+                    'notnull'   => !$column->nullable,
+                    'length'    => $column->length,
+                    'precision' => $column->precision,
+                    'scale'     => $column->scale,
+                ]
+            );
 
             /** @var array<MappingInterface>*/
             $choiceMappings = array();
@@ -125,7 +160,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
             }
 
             $fieldMapping = new ChoiceMapping(
-                $columnName,
+                $dbalColumn,
                 $choiceMappings,
                 sprintf(
                     "in entity '%s' on field '%s'",

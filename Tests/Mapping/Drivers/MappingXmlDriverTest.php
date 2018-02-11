@@ -20,6 +20,8 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingXmlDriver;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
 
 final class MappingXmlDriverTest extends TestCase
 {
@@ -56,6 +58,10 @@ final class MappingXmlDriverTest extends TestCase
             'foo' => new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
             'bar' => new ServiceMapping('other_service', false, "in file '{$mappingFilePath}'"),
             'baz' => new ChoiceMapping('baz_column', [
+                'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
+                'ipsum' => new ServiceMapping("ipsum_service", false, "in file '{$mappingFilePath}'"),
+            ], "in file '{$mappingFilePath}'"),
+            'faz' => new ChoiceMapping(new Column("faz_column", Type::getType('string'), ['notnull' => true]), [
                 'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
                 'ipsum' => new ServiceMapping("ipsum_service", false, "in file '{$mappingFilePath}'"),
             ], "in file '{$mappingFilePath}'"),

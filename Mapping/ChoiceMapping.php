@@ -15,14 +15,15 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\TextType;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
 
 final class ChoiceMapping implements ChoiceMappingInterface
 {
 
     /**
-     * @var string
+     * @var Column
      */
-    private $determinatorColumnName;
+    private $determinatorColumn;
 
     /**
      * @var array<MappingInterface>
@@ -35,11 +36,29 @@ final class ChoiceMapping implements ChoiceMappingInterface
     private $originDescription;
 
     public function __construct(
-        string $determinatorColumnName,
+        $determinatorColumn,
         array $choiceMappings,
         string $originDescription = ""
     ) {
-        $this->determinatorColumnName = $determinatorColumnName;
+        if (is_string($determinatorColumn)) {
+            $determinatorColumn = new Column(
+                $determinatorColumn,
+                Type::getType('string'),
+                [
+                    'notnull' => false,
+                    'length'  => 255,
+                ]
+            );
+
+        } elseif (!$determinatorColumn instanceof Column) {
+            throw new InvalidMappingException(sprintf(
+                "Invalid column-definition on choice-option '%s'! %s",
+                $determinator,
+                'Expected string of "Column" annotation.'
+            ));
+        }
+
+        $this->determinatorColumn = clone $determinatorColumn;
         $this->originDescription = $originDescription;
 
         foreach ($choiceMappings as $determinator => $choiceMapping) {
@@ -63,14 +82,7 @@ final class ChoiceMapping implements ChoiceMappingInterface
     {
         /** @var array<Column> $additionalMappings */
         $additionalMappings = array(
-            new Column(
-                $this->getDeterminatorColumnName(),
-                Type::getType("text"),
-                [
-                    'length' => 255,
-                    'notnull' => false,
-                ]
-            )
+            clone $this->determinatorColumn
         );
 
         foreach ($this->choiceMappings as $choiceMapping) {
@@ -85,9 +97,14 @@ final class ChoiceMapping implements ChoiceMappingInterface
         return $additionalMappings;
     }
 
+    public function getDeterminatorColumn(): Column
+    {
+        return clone $this->determinatorColumn;
+    }
+
     public function getDeterminatorColumnName(): string
     {
-        return $this->determinatorColumnName;
+        return $this->determinatorColumn->getName();
     }
 
     private function addChoice(string $determinator, MappingInterface $choiceMapping)
