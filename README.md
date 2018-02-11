@@ -11,8 +11,6 @@ limitations of the current doctrine2-ORM in object-design as reasonable. This is
 put much more of your business-logic into the entities which until now would have to be on other objects and unreachable
 from within an entity (or would at least need some workarounds).
 
-For a more detailed explanation why this was implemented read the file "Resources/docs/WHY.md".
-
 Currently this project consists of only two features, but it will be extended in the near future:
  - Load services from the symfony-DIC into the fields of doctrine2 entities.
  - Choose which service to inject from a list of services by a value from the database.
