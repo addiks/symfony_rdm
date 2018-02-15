@@ -16,7 +16,13 @@
 
     <filter>
         <whitelist>
-            <directory>Tests</directory>
+            <directory>DataLoader</directory>
+            <directory>Doctrine</directory>
+            <directory>Exception</directory>
+            <directory>Hydration</directory>
+            <directory>Mapping</directory>
+            <directory>Symfony</directory>
+            <directory>ValueResolver</directory>
             <exclude>
                 <directory>vendor</directory>
             </exclude>

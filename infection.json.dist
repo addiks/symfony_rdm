@@ -1,0 +1,17 @@
+{
+    "timeout": 10,
+    "source": {
+        "directories": [
+            "DataLoader",
+            "Doctrine",
+            "Exception",
+            "Hydration",
+            "Mapping",
+            "Symfony",
+            "ValueResolver"
+        ]
+    },
+    "logs": {
+        "text": "infection.log"
+    }
+}

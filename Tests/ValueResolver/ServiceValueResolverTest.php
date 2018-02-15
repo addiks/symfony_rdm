@@ -67,4 +67,19 @@ final class ServiceValueResolverTest extends TestCase
         $this->assertSame($expectedService, $actualService);
     }
 
+    /**
+     * @test
+     */
+    public function shouldRevertValue()
+    {
+        /** @var ServiceMappingInterface $fieldMapping */
+        $fieldMapping = $this->createMock(ServiceMappingInterface::class);
+
+        $this->assertEquals([], $this->valueResolver->revertValue(
+            $fieldMapping,
+            $this->createMock(EntityExample::class),
+            null
+        ));
+    }
+
 }

@@ -249,8 +249,9 @@ This project may be extended with more features in the future, here are some ide
 - Inject service-container-parameters into entities (similar to services).
 - Re-use data from one column in multiple fields (maybe even across multiple entities).
 - [Generare non-object values from generator-services (or other routines) to be hydrated into unmapped fields][5]
-- populate arrays in the entity with values from columns, services, parameters or other stuff.
+- Populate arrays in the entity with values from columns, services, parameters or other stuff.
 - [Populate fields with aggregated data from the database.][6]
+- Allow custom (non-generated) proxy-classes for final entities.
 
 [3]: https://stackoverflow.com/questions/8440879
 [4]: https://stackoverflow.com/questions/3691943
