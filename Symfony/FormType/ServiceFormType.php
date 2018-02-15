@@ -20,6 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormConfigBuilder;
 use Symfony\Component\Form\FormConfigBuilderInterface;
 use Symfony\Component\Form\CallbackTransformer;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ServiceFormType implements FormTypeInterface
 {
@@ -59,7 +60,7 @@ final class ServiceFormType implements FormTypeInterface
 
                     return $serviceId;
                 },
-                function ($serviceId) use ($container, $options) {
+                function ($serviceId) use ($container) {
                     /** @var ?object $service */
                     $service = null;
 
@@ -82,13 +83,21 @@ final class ServiceFormType implements FormTypeInterface
     {
     }
 
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $this->setDefaultOptions($resolver);
+    }
+
     public function setDefaultOptions(OptionsResolverInterface $resolver)
     {
-
         $resolver->setDefaults(array(
             'choices' => null,
         ));
+    }
 
+    public function getBlockPrefix()
+    {
+        return '';
     }
 
     public function getParent()
