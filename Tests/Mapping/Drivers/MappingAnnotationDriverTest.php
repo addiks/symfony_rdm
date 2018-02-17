@@ -18,6 +18,11 @@ use ReflectionProperty;
 use Doctrine\Common\Annotations\Reader;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\EntityMapping;
+use Addiks\RDMBundle\Mapping\Annotation\Choice;
+use Addiks\RDMBundle\Mapping\ChoiceMapping;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
 final class MappingAnnotationDriverTest extends TestCase
 {
@@ -53,20 +58,50 @@ final class MappingAnnotationDriverTest extends TestCase
         $someAnnotationB = new Service();
         $someAnnotationB->id = "other_service";
         $someAnnotationB->field = "bar";
+        $someAnnotationB->lax = true;
+
+        $someAnnotationC = new Choice();
+        $someAnnotationC->column = "baz_column";
+        $someAnnotationC->nullable = true;
+        $someAnnotationC->choices = [
+            'foo' => $someAnnotationA,
+            'bar' => $someAnnotationB,
+        ];
+
+        $someAnnotationD = new Choice();
+        $someAnnotationD->column = "faz_column";
+        $someAnnotationD->nullable = false;
+        $someAnnotationD->choices = [
+            'foo' => $someAnnotationA,
+            'bar' => $someAnnotationB,
+        ];
 
         /** @var string $entityClass */
         $entityClass = EntityExample::class;
 
-        /** @var array<ServiceMapping> $expectedFieldMappings */
+        /** @var array<MappingInterface> $expectedFieldMappings */
         $expectedFieldMappings = [
             'foo' => new ServiceMapping("some_service", false, "in entity '{$entityClass}' on field 'foo'"),
-            'bar' => new ServiceMapping("other_service", false, "in entity '{$entityClass}' on field 'bar'")
+            'bar' => new ServiceMapping("other_service", true, "in entity '{$entityClass}' on field 'bar'"),
+            'baz' => new ChoiceMapping('baz_column', [
+                'foo' => new ServiceMapping("some_service", false, "in entity '{$entityClass}' on field 'baz'"),
+                'bar' => new ServiceMapping("other_service", true, "in entity '{$entityClass}' on field 'baz'"),
+            ], "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'baz'"),
+            'faz' => new ChoiceMapping(new Column('faz_column', Type::getType('string'), [
+                'notnull' => true,
+                'length' => 255,
+            ]), [
+                'foo' => new ServiceMapping("some_service", false, "in entity '{$entityClass}' on field 'faz'"),
+                'bar' => new ServiceMapping("other_service", true, "in entity '{$entityClass}' on field 'faz'"),
+            ], "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'faz'"),
         ];
 
         /** @var array<array<Service>> $annotationMap */
         $annotationMap = [
             'foo' => [$someAnnotationA],
             'bar' => [$someAnnotationB],
+            'baz' => [$someAnnotationC],
+            'faz' => [$someAnnotationD],
         ];
 
         $this->annotationReader->method('getPropertyAnnotations')->will($this->returnCallback(

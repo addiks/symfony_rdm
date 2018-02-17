@@ -114,7 +114,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
                 $column->name = $columnName;
                 $column->type = 'string';
                 $column->length = 255;
-                $column->unique = false;
+                $column->precision = 10;
                 $column->nullable = (bool)$annotation->nullable;
             }
 

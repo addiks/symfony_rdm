@@ -35,6 +35,11 @@ class EntityExample
      */
     public $baz;
 
+    /**
+     * @var string
+     */
+    public $faz;
+
     public function __construct(ServiceExample $foo = null, ServiceExample $bar = null)
     {
         $this->foo = $foo;

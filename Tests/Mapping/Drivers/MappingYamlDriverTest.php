@@ -69,4 +69,23 @@ final class MappingYamlDriverTest extends TestCase
         $this->assertEquals($expectedMapping, $actualMapping);
     }
 
+    /**
+     * @test
+     */
+    public function shouldNotReadOtherEntitiesMappingData()
+    {
+        /** @var string $mappingFilePath */
+        $mappingFilePath = __DIR__ . "/EntityExample.orm.yml";
+
+        $this->fileLocator->method('fileExists')->willReturn(true);
+        $this->fileLocator->method('findMappingFile')->willReturn($mappingFilePath);
+
+        /** @var EntityMapping $actualMapping */
+        $actualMapping = $this->mappingDriver->loadRDMMetadataForClass(
+            get_class($this->createMock(EntityExample::class))
+        );
+
+        $this->assertNull($actualMapping);
+    }
+
 }

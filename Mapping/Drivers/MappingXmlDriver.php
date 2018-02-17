@@ -60,9 +60,6 @@ final class MappingXmlDriver implements MappingDriverInterface
             /** @var string $mappingFile */
             $mappingFile = $this->fileLocator->findMappingFile($className);
 
-            /** @var boolean $previousUseLibxmlInternalErrors */
-            $previousUseLibxmlInternalErrors = libxml_use_internal_errors(true);
-
             $dom = new DOMDocument();
             $dom->loadXML(file_get_contents($mappingFile));
 
@@ -93,8 +90,6 @@ final class MappingXmlDriver implements MappingDriverInterface
                     $fieldMappings[$fieldName] = $this->readChoice($choiceNode, $mappingFile, $fieldName);
                 }
             }
-
-            libxml_use_internal_errors($previousUseLibxmlInternalErrors);
         }
 
         if (!empty($fieldMappings)) {

@@ -216,9 +216,9 @@ is being used in, i may be able to help.
 
 ## Service-FormType
 
-This bundle also provides a additional new form-type called "ServiceFormType" which should prove valuable in conjunction
-with the service-hydration-abilities of this bundle. It allows to specify a list of service-id's as choices that can be
-selected between in a form and the selected being set on the entity.
+This bundle also provides an additional new form-type called "ServiceFormType" which should prove valuable in
+conjunction with the service-hydration-abilities of this bundle. It allows to specify a list of service-id's as choices
+that can be selected between in a form and the selected being set on the entity.
 
 ```php
 <?php
