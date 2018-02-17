@@ -16,6 +16,7 @@ use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Mapping\ServiceMappingInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
 
 final class ServiceValueResolverTest extends TestCase
 {
@@ -80,6 +81,54 @@ final class ServiceValueResolverTest extends TestCase
             $this->createMock(EntityExample::class),
             null
         ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldAssertThatCorrectServiceWasSet()
+    {
+        /** @var ServiceMappingInterface $fieldMapping */
+        $fieldMapping = $this->createMock(ServiceMappingInterface::class);
+
+        $fieldMapping->method('isLax')->willReturn(false);
+        $fieldMapping->method('getServiceId')->willReturn("some_service");
+
+        $entity = new EntityExample();
+
+        $service = new ServiceExample("lorem", 123);
+        $otherService = new ServiceExample("ipsum", 456);
+
+        $this->container->method('has')->will($this->returnValueMap([
+            ['some_service', true],
+        ]));
+
+        $this->container->method('get')->will($this->returnValueMap([
+            ['some_service', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $service],
+        ]));
+
+        $this->expectException(FailedRDMAssertionExceptionInterface::class);
+
+        $this->valueResolver->assertValue($fieldMapping, $entity, [], $otherService);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotAssertLaxFieldMappings()
+    {
+        /** @var ServiceMappingInterface $fieldMapping */
+        $fieldMapping = $this->createMock(ServiceMappingInterface::class);
+
+        $fieldMapping->method('isLax')->willReturn(true);
+
+        $fieldMapping->expects($this->never())->method('getServiceId');
+
+        $entity = new EntityExample();
+
+        $service = new ServiceExample("lorem", 123);
+
+        $this->valueResolver->assertValue($fieldMapping, $entity, [], $service);
     }
 
 }

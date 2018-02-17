@@ -59,9 +59,13 @@ final class MappingXmlDriverTest extends TestCase
             'bar' => new ServiceMapping('other_service', false, "in file '{$mappingFilePath}'"),
             'baz' => new ChoiceMapping('baz_column', [
                 'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping("ipsum_service", false, "in file '{$mappingFilePath}'"),
+                'ipsum' => new ServiceMapping("ipsum_service", true,  "in file '{$mappingFilePath}'"),
             ], "in file '{$mappingFilePath}'"),
             'faz' => new ChoiceMapping(new Column("faz_column", Type::getType('string'), ['notnull' => true]), [
+                'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
+                'ipsum' => new ServiceMapping("ipsum_service", false, "in file '{$mappingFilePath}'"),
+            ], "in file '{$mappingFilePath}'"),
+            'far' => new ChoiceMapping(new Column("far_column", Type::getType('string'), ['notnull' => false]), [
                 'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
                 'ipsum' => new ServiceMapping("ipsum_service", false, "in file '{$mappingFilePath}'"),
             ], "in file '{$mappingFilePath}'"),

@@ -166,19 +166,15 @@ final class MappingXmlDriver implements MappingDriverInterface
 
     private function readService(DOMNode $serviceNode, string $mappingFile): ServiceMapping
     {
-        /** @var bool|string $lax */
+        /** @var bool $lax */
         $lax = false;
 
         if ($serviceNode->attributes->getNamedItem("lax") instanceof DOMNode) {
-            $lax = $serviceNode->attributes->getNamedItem("lax")->nodeValue;
+            $lax = strtolower($serviceNode->attributes->getNamedItem("lax")->nodeValue) === 'true';
         }
 
         /** @var string $serviceId */
         $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->nodeValue;
-
-        if (!is_bool($lax)) {
-            $lax = (strtolower((string)$lax) === 'true');
-        }
 
         return new ServiceMapping($serviceId, $lax, sprintf(
             "in file '%s'",
@@ -225,7 +221,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                     $attributeValue = ($attributeValue === 'false');
                 }
 
-                $attributes[$keyMap[$key]] = (string)$attribute->nodeValue;
+                $attributes[$keyMap[$key]] = $attributeValue;
             }
         }
 

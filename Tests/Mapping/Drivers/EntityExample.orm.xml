@@ -19,12 +19,22 @@
                 <rdm:service id="lorem_service" />
             </rdm:option>
             <rdm:option name="ipsum">
-                <rdm:service id="ipsum_service" />
+                <rdm:service id="ipsum_service" lax="true" />
             </rdm:option>
         </rdm:choice>
 
         <rdm:choice field="faz">
             <field type="string" name="faz_column" nullable="false" />
+            <rdm:option name="lorem">
+                <rdm:service id="lorem_service" />
+            </rdm:option>
+            <rdm:option name="ipsum">
+                <rdm:service id="ipsum_service" />
+            </rdm:option>
+        </rdm:choice>
+
+        <rdm:choice field="far">
+            <field type="string" name="far_column" nullable="true" />
             <rdm:option name="lorem">
                 <rdm:service id="lorem_service" />
             </rdm:option>

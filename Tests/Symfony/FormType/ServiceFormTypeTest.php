@@ -16,6 +16,7 @@ use Symfony\Component\Form\CallbackTransformer;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Symfony\FormType\ServiceFormType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 final class ServiceFormTypeTest extends TestCase
 {
@@ -58,6 +59,7 @@ final class ServiceFormTypeTest extends TestCase
             'choices' => [
                 'some_service_a' => 'a',
                 'some_service_b' => 'b',
+                'some_service_c' => 'c',
             ]
         ]);
 
@@ -69,6 +71,7 @@ final class ServiceFormTypeTest extends TestCase
         $this->container->method('get')->will($this->returnValueMap([
             ['some_service_a', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $someServiceA],
             ['some_service_b', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $someServiceB],
+            ['some_service_c', ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE, $someServiceB],
         ]));
 
         /** @var string $expectedServiceId */
@@ -85,6 +88,22 @@ final class ServiceFormTypeTest extends TestCase
 
         $this->assertEquals($expectedServiceId, $actualServiceId);
         $this->assertSame($expectedService, $actualService);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBeChildOfChoiceType()
+    {
+        $this->assertEquals(ChoiceType::class, $this->formType->getParent());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldHaveEmptyBlockPrefix()
+    {
+        $this->assertEquals("", $this->formType->getBlockPrefix());
     }
 
     /**

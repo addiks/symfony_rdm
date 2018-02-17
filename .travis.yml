@@ -8,4 +8,4 @@ install:
 script:
 - vendor/bin/phpunit
 - vendor/bin/psalm
-- vendor/bin/infection -s -vv --min-msi=72
+- vendor/bin/infection -s -vv --min-msi=77

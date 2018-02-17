@@ -84,10 +84,12 @@ final class ChoiceValueResolverTest extends TestCase
     {
         $serviceMappingFoo = new ServiceMapping("foo_service");
         $serviceMappingBar = new ServiceMapping("bar_service");
+        $serviceMappingBaz = new ServiceMapping("baz_service");
 
         $fieldMapping = new ChoiceMapping("some_column", [
             'foo' => $serviceMappingFoo,
-            'bar' => $serviceMappingBar
+            'bar' => $serviceMappingBar,
+            'baz' => $serviceMappingBaz
         ]);
 
         $entity = new EntityExample();
@@ -102,7 +104,8 @@ final class ChoiceValueResolverTest extends TestCase
 
         $this->innerValueResolver->method('resolveValue')->will($this->returnValueMap([
             [$serviceMappingFoo, $entity, [], "unexpected value"],
-            [$serviceMappingBar, $entity, [], "lorem ipsum"]
+            [$serviceMappingBar, $entity, [], "lorem ipsum"],
+            [$serviceMappingBaz, $entity, [], "lorem ipsum"],
         ]));
 
         /** @var mixed $actualValue */
