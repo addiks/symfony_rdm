@@ -2,6 +2,9 @@ Symfony-RDM – Helper for using the Rich Domain Model in Symfony
 ===================================
 
 [![Build Status](https://travis-ci.org/addiks/symfony_rdm.svg?branch=master)](https://travis-ci.org/addiks/symfony_rdm)
+[![Build Status](https://scrutinizer-ci.com/g/addiks/symfony_rdm/badges/build.png?b=master)](https://scrutinizer-ci.com/g/addiks/symfony_rdm/build-status/master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/addiks/symfony_rdm/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/addiks/symfony_rdm/?branch=master)
+[![Code Coverage](https://scrutinizer-ci.com/g/addiks/symfony_rdm/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/addiks/symfony_rdm/?branch=master)
 
 ## What
 

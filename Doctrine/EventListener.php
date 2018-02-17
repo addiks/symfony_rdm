@@ -24,6 +24,7 @@ use Doctrine\ORM\UnitOfWork;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Proxy\Proxy;
+use Doctrine\DBAL\Schema\Column;
 
 /**
  * Hooks into the event's of doctrine2-ORM and forwards the entities to other objects.
