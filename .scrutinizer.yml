@@ -14,5 +14,3 @@ build:
               coverage:
                 file: 'some-file'
                 format: 'clover'
-            - vendor/bin/psalm
-            - vendor/bin/infection
