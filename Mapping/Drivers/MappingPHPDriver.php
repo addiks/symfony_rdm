@@ -41,9 +41,15 @@ final class MappingPHPDriver implements MappingDriverInterface
                 /** @var mixed $mappingCandidate */
                 $mappingCandidate = null;
 
-                (function (&$rdmMapping) use ($mappingFile) {
-                    include $mappingFile;
-                })($mappingCandidate);
+                (
+                    /**
+                     * @param mixed $rdmMapping
+                     */
+                    function (&$rdmMapping) use ($mappingFile): void {
+                        /** @psalm-suppress UnresolvableInclude */
+                        include $mappingFile;
+                    }
+                )($mappingCandidate);
 
                 if ($mappingCandidate instanceof EntityMappingInterface) {
                     $mapping = $mappingCandidate;

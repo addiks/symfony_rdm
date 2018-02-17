@@ -14,6 +14,7 @@ use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Addiks\RDMBundle\DataLoader\DataLoaderFactoryInterface;
+use ErrorException;
 
 /**
  * A simple data-loader-factory that chooses which data-loader to create using a parameter from the container.
@@ -71,7 +72,18 @@ final class ChoosingDataLoaderFactory implements DataLoaderFactoryInterface
 
     public function createDataLoader(): DataLoaderInterface
     {
-        return $this->container->get($this->serviceId);
+        /** @var object $dataLoader */
+        $dataLoader = $this->container->get($this->serviceId);
+
+        if (!$dataLoader instanceof DataLoaderInterface) {
+            throw new ErrorException(sprintf(
+                "Expected service with id '%s' to be of type %s!",
+                $this->serviceId,
+                DataLoaderInterface::class
+            ));
+        }
+
+        return $dataLoader;
     }
 
 }

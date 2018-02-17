@@ -5,10 +5,13 @@
     totallyTyped="false"
 >
     <projectFiles>
-        <directory name="." />
-        <ignoreFiles>
-            <directory name="vendor" />
-        </ignoreFiles>
+        <directory name="DataLoader" />
+        <directory name="Doctrine" />
+        <directory name="Exception" />
+        <directory name="Hydration" />
+        <directory name="Mapping" />
+        <directory name="Symfony" />
+        <directory name="ValueResolver" />
     </projectFiles>
 
     <issueHandlers>

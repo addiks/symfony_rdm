@@ -33,7 +33,7 @@ final class MappingDriverFactoryLazyLoadProxy implements MappingDriverFactoryInt
     private $serviceId;
 
     /**
-     * @var MappingDriverFactoryInterface
+     * @var ?MappingDriverFactoryInterface
      */
     private $actualMappingDriverFactory;
 
@@ -47,12 +47,16 @@ final class MappingDriverFactoryLazyLoadProxy implements MappingDriverFactoryInt
         MappingDriver $mappingDriver
     ): ?MappingDriverInterface {
         if (is_null($this->actualMappingDriverFactory)) {
-            $this->actualMappingDriverFactory = $this->container->get(
+            /** @var object $actualMappingDriverFactory */
+            $actualMappingDriverFactory = $this->container->get(
                 $this->serviceId,
                 ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE
             );
 
-            if (!$this->actualMappingDriverFactory instanceof MappingDriverFactoryInterface) {
+            if ($actualMappingDriverFactory instanceof MappingDriverFactoryInterface) {
+                $this->actualMappingDriverFactory = $actualMappingDriverFactory;
+
+            } else {
                 throw new ErrorException(sprintf(
                     "The service '%s' is not an instance of %s!",
                     $this->serviceId,

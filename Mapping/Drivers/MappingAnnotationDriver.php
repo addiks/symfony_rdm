@@ -76,6 +76,9 @@ final class MappingAnnotationDriver implements MappingDriverInterface
         return $mapping;
     }
 
+    /**
+     * @param object $annotation
+     */
     private function convertAnnotationToMapping(
         $annotation,
         string $fieldName,
@@ -96,10 +99,10 @@ final class MappingAnnotationDriver implements MappingDriverInterface
             );
 
         } elseif ($annotation instanceof Choice) {
-            /** @var string|ColumnAnnotation $column */
+            /** @var string|null|ColumnAnnotation $column */
             $column = $annotation->column;
 
-            if (is_string($column) || empty($column)) {
+            if (!$column instanceof ColumnAnnotation) {
                 /** @var string $columnName */
                 $columnName = $fieldName;
 
@@ -113,15 +116,6 @@ final class MappingAnnotationDriver implements MappingDriverInterface
                 $column->length = 255;
                 $column->unique = false;
                 $column->nullable = (bool)$annotation->nullable;
-
-            } elseif (!($column instanceof ColumnAnnotation)) {
-                throw new InvalidMappingException(sprintf(
-                    "Invalid column-definition on entity '%s' in field '%s' of choice-option '%s'! %s",
-                    $className,
-                    $fieldName,
-                    $determinator,
-                    'Expected string of "Column" annotation.'
-                ));
             }
 
             $dbalColumn = new DBALColumn(

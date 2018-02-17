@@ -13,6 +13,7 @@ namespace Addiks\RDMBundle\ValueResolver;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use ErrorException;
 
 final class ValueResolverLazyLoadProxy implements ValueResolverInterface
 {
@@ -67,8 +68,8 @@ final class ValueResolverLazyLoadProxy implements ValueResolverInterface
         $entity,
         array $dataFromAdditionalColumns,
         $actualValue
-    ) {
-        return $this->getInnerValueResolver()->assertValue(
+    ): void {
+        $this->getInnerValueResolver()->assertValue(
             $fieldMapping,
             $entity,
             $dataFromAdditionalColumns,
@@ -79,8 +80,23 @@ final class ValueResolverLazyLoadProxy implements ValueResolverInterface
     private function getInnerValueResolver(): ValueResolverInterface
     {
         if (is_null($this->innerValueResolver)) {
-            $this->innerValueResolver = $this->container->get($this->serviceId);
+            /** @var mixed $valueResolver */
+            $valueResolver = $this->container->get($this->serviceId);
+
+            if ($valueResolver instanceof ValueResolverInterface) {
+                $this->innerValueResolver = $valueResolver;
+            }
+
+            if (is_null($this->innerValueResolver)) {
+                throw new ErrorException(sprintf(
+                    "Service with id '%s' must implement %s",
+                    $this->serviceId,
+                    ValueResolverInterface::class
+                ));
+            }
         }
+
+
 
         return $this->innerValueResolver;
     }

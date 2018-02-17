@@ -11,6 +11,7 @@
 namespace Addiks\RDMBundle\Mapping\Annotation;
 
 use Doctrine\Common\Annotations\Annotation;
+use Doctrine\ORM\Mapping\Column;
 
 /**
  * @Annotation
@@ -20,7 +21,7 @@ final class Choice
 {
 
     /**
-     * @var string
+     * @var string|null|Column
      */
     public $column;
 

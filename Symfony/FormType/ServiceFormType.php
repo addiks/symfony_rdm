@@ -35,18 +35,21 @@ final class ServiceFormType implements FormTypeInterface
         $this->container = $container;
     }
 
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($builder instanceof FormConfigBuilderInterface) {
             /** @var ContainerInterface $container */
             $container = $this->container;
 
             $builder->addModelTransformer(new CallbackTransformer(
-                function ($service) use ($container, $options) {
+                /**
+                 * @param object $service
+                 */
+                function ($service) use ($container, $options): ?string {
                     /** @var ?string $serviceId */
                     $serviceId = null;
 
-                    if (!is_null($service) && isset($options['choices'])) {
+                    if (isset($options['choices'])) {
                         foreach (array_keys($options['choices']) as $serviceIdCandidate) {
                             /** @var object $serviceCandidate */
                             $serviceCandidate = $container->get($serviceIdCandidate);
@@ -60,7 +63,10 @@ final class ServiceFormType implements FormTypeInterface
 
                     return $serviceId;
                 },
-                function ($serviceId) use ($container) {
+                /**
+                 * @return ?object
+                 */
+                function (string $serviceId) use ($container) {
                     /** @var ?object $service */
                     $service = null;
 
@@ -75,37 +81,42 @@ final class ServiceFormType implements FormTypeInterface
 
     }
 
-    public function buildView(FormView $view, FormInterface $form, array $options)
+    public function buildView(FormView $view, FormInterface $form, array $options): void
     {
     }
 
-    public function finishView(FormView $view, FormInterface $form, array $options)
+    public function finishView(FormView $view, FormInterface $form, array $options): void
     {
     }
 
-    public function configureOptions(OptionsResolver $resolver)
-    {
-        $this->setDefaultOptions($resolver);
-    }
-
-    public function setDefaultOptions(OptionsResolverInterface $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults(array(
             'choices' => null,
         ));
     }
 
-    public function getBlockPrefix()
+    /**
+     * @psalm-suppress UndefinedClass
+     */
+    public function setDefaultOptions(OptionsResolverInterface $resolver): void
+    {
+        $resolver->setDefaults(array(
+            'choices' => null,
+        ));
+    }
+
+    public function getBlockPrefix(): string
     {
         return '';
     }
 
-    public function getParent()
+    public function getParent(): string
     {
         return ChoiceType::class;
     }
 
-    public function getName()
+    public function getName(): string
     {
         return 'service';
     }

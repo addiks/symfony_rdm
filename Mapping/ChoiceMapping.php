@@ -35,27 +35,23 @@ final class ChoiceMapping implements ChoiceMappingInterface
      */
     private $originDescription;
 
+    /**
+     * @param string|Column $determinatorColumn
+     */
     public function __construct(
         $determinatorColumn,
         array $choiceMappings,
         string $originDescription = ""
     ) {
-        if (is_string($determinatorColumn)) {
+        if (!$determinatorColumn instanceof Column) {
             $determinatorColumn = new Column(
-                $determinatorColumn,
+                (string)$determinatorColumn,
                 Type::getType('string'),
                 [
                     'notnull' => false,
                     'length'  => 255,
                 ]
             );
-
-        } elseif (!$determinatorColumn instanceof Column) {
-            throw new InvalidMappingException(sprintf(
-                "Invalid column-definition on choice-option '%s'! %s",
-                $determinator,
-                'Expected string of "Column" annotation.'
-            ));
         }
 
         $this->determinatorColumn = clone $determinatorColumn;
@@ -107,7 +103,7 @@ final class ChoiceMapping implements ChoiceMappingInterface
         return $this->determinatorColumn->getName();
     }
 
-    private function addChoice(string $determinator, MappingInterface $choiceMapping)
+    private function addChoice(string $determinator, MappingInterface $choiceMapping): void
     {
         $this->choiceMappings[$determinator] = $choiceMapping;
     }

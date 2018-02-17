@@ -38,7 +38,7 @@ final class EntityHydrator implements EntityHydratorInterface
     private $mappingDriver;
 
     /**
-     * @var DBALDataLoaderInterface
+     * @var DataLoaderInterface
      */
     private $dbalDataLoader;
 
@@ -52,7 +52,7 @@ final class EntityHydrator implements EntityHydratorInterface
         $this->dbalDataLoader = $dbalDataLoader;
     }
 
-    public function hydrateEntity($entity, EntityManagerInterface $entityManager)
+    public function hydrateEntity($entity, EntityManagerInterface $entityManager): void
     {
         /** @var string $className */
         $className = get_class($entity);
@@ -100,7 +100,7 @@ final class EntityHydrator implements EntityHydratorInterface
         }
     }
 
-    public function assertHydrationOnEntity($entity, EntityManagerInterface $entityManager)
+    public function assertHydrationOnEntity($entity, EntityManagerInterface $entityManager): void
     {
         /** @var string $className */
         $className = get_class($entity);

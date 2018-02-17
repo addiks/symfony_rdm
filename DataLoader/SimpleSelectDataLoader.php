@@ -69,6 +69,9 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         $this->originalDataLimit = $originalDataLimit;
     }
 
+    /**
+     * @param object $entity
+     */
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array
     {
         /** @var string $className */
@@ -159,7 +162,10 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         return $additionalData;
     }
 
-    public function storeDBALDataForEntity($entity, EntityManagerInterface $entityManager)
+    /**
+     * @param object $entity
+     */
+    public function storeDBALDataForEntity($entity, EntityManagerInterface $entityManager): void
     {
         /** @var string $className */
         $className = get_class($entity);
@@ -258,13 +264,16 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         }
     }
 
-    public function removeDBALDataForEntity($entity, EntityManagerInterface $entityManager)
+    /**
+     * @param object $entity
+     */
+    public function removeDBALDataForEntity($entity, EntityManagerInterface $entityManager): void
     {
         # This data-loader does not store data outside the entity-table.
         # No additional data need to be removed.
     }
 
-    public function prepareOnMetadataLoad(EntityManagerInterface $entityManager, ClassMetadata $classMetadata)
+    public function prepareOnMetadataLoad(EntityManagerInterface $entityManager, ClassMetadata $classMetadata): void
     {
         # This data-loader does not need any preperation
     }

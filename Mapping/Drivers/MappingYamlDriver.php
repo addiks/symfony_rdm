@@ -49,7 +49,7 @@ final class MappingYamlDriver implements MappingDriverInterface
             $mappingFile = $this->fileLocator->findMappingFile($className);
 
             if (file_exists($mappingFile)) {
-                /** @var array $yaml */
+                /** @var mixed $yaml */
                 $yaml = Yaml::parse(file_get_contents($mappingFile));
 
                 if (is_array($yaml) && isset($yaml[$className])) {
@@ -65,7 +65,7 @@ final class MappingYamlDriver implements MappingDriverInterface
         return $mapping;
     }
 
-    private function readMappings(array &$fieldMappings, array $yaml, string $mappingFile)
+    private function readMappings(array &$fieldMappings, array $yaml, string $mappingFile): void
     {
         if (isset($yaml['choices'])) {
             $this->readChoices($fieldMappings, $yaml['choices'], $mappingFile);
@@ -75,7 +75,7 @@ final class MappingYamlDriver implements MappingDriverInterface
         }
     }
 
-    private function readChoices(array &$fieldMappings, array $servicesYaml, string $mappingFile)
+    private function readChoices(array &$fieldMappings, array $servicesYaml, string $mappingFile): void
     {
         foreach ($servicesYaml as $fieldName => $choiceYaml) {
             /** @var array $yamlService */
@@ -84,7 +84,7 @@ final class MappingYamlDriver implements MappingDriverInterface
         }
     }
 
-    private function readServices(array &$fieldMappings, array $servicesYaml, string $mappingFile)
+    private function readServices(array &$fieldMappings, array $servicesYaml, string $mappingFile): void
     {
         foreach ($servicesYaml as $fieldName => $serviceYaml) {
             /** @var array $serviceYaml */
@@ -93,7 +93,7 @@ final class MappingYamlDriver implements MappingDriverInterface
         }
     }
 
-    private function readOneMapping($yaml, string $fieldName, string $mappingFile): MappingInterface
+    private function readOneMapping(array $yaml, string $fieldName, string $mappingFile): ?MappingInterface
     {
         if (isset($yaml['choice'])) {
             return $this->readChoice($yaml['choice'], $fieldName, $mappingFile);
@@ -101,9 +101,11 @@ final class MappingYamlDriver implements MappingDriverInterface
         if (isset($yaml['service'])) {
             return $this->readService($yaml['service'], $fieldName, $mappingFile);
         }
+
+        return null;
     }
 
-    private function readChoice($choiceYaml, string $fieldName, string $mappingFile)
+    private function readChoice(array $choiceYaml, string $fieldName, string $mappingFile): ChoiceMapping
     {
         /** @var array<MappingInterface> $choiceMappings */
         $choiceMappings = array();
@@ -116,7 +118,12 @@ final class MappingYamlDriver implements MappingDriverInterface
         }
 
         foreach ($choiceYaml['choices'] as $determinator => $choiceYaml) {
-            $choiceMappings[$determinator] = $this->readOneMapping($choiceYaml, $fieldName, $mappingFile);
+            /** @var ?MappingInterface $mapping */
+            $mapping = $this->readOneMapping($choiceYaml, $fieldName, $mappingFile);
+
+            if ($mapping instanceof MappingInterface) {
+                $choiceMappings[$determinator] = $mapping;
+            }
         }
 
         return new ChoiceMapping($determinatorColumnName, $choiceMappings, sprintf(
@@ -125,7 +132,7 @@ final class MappingYamlDriver implements MappingDriverInterface
         ));
     }
 
-    private function readService($serviceYaml, string $fieldName, string $mappingFile): ServiceMapping
+    private function readService(array $serviceYaml, string $fieldName, string $mappingFile): ServiceMapping
     {
         if (!isset($serviceYaml['id'])) {
             throw new ErrorException(sprintf(

@@ -63,6 +63,6 @@ interface ValueResolverInterface
         $entity,
         array $dataFromAdditionalColumns,
         $actualValue
-    );
+    ): void;
 
 }

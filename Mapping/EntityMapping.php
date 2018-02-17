@@ -25,7 +25,7 @@ final class EntityMapping implements EntityMappingInterface
     /**
      * @var array<MappingInterface>
      */
-    private $fieldMappings;
+    private $fieldMappings = array();
 
     public function __construct(string $className, array $fieldMappings)
     {
@@ -70,7 +70,7 @@ final class EntityMapping implements EntityMappingInterface
         return $additionalColumns;
     }
 
-    private function addFieldMapping(string $fieldName, MappingInterface $fieldMapping)
+    private function addFieldMapping(string $fieldName, MappingInterface $fieldMapping): void
     {
         $this->fieldMappings[$fieldName] = $fieldMapping;
     }

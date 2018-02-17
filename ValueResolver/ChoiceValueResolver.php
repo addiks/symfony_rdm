@@ -45,7 +45,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
             $choices = $fieldMapping->getChoices();
 
             if (array_key_exists($determinatorColumn, $dataFromAdditionalColumns)) {
-                /** @var scalar $determinatorValue */
+                /** @var string|int $determinatorValue */
                 $determinatorValue = $dataFromAdditionalColumns[$determinatorColumn];
 
                 if (!empty($determinatorValue) && !array_key_exists($determinatorValue, $choices)) {
@@ -117,13 +117,13 @@ final class ChoiceValueResolver implements ValueResolverInterface
         $entity,
         array $dataFromAdditionalColumns,
         $actualValue
-    ) {
+    ): void {
         if ($fieldMapping instanceof ChoiceMappingInterface) {
             /** @var string $determinatorColumn */
             $determinatorColumn = $fieldMapping->getDeterminatorColumnName();
 
             if (array_key_exists($determinatorColumn, $dataFromAdditionalColumns)) {
-                /** @var scalar $determinatorValue */
+                /** @var string|int $determinatorValue */
                 $determinatorValue = $dataFromAdditionalColumns[$determinatorColumn];
 
                 /** @var array<MappingInterface> $choices */

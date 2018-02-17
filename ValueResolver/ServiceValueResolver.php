@@ -71,7 +71,7 @@ final class ServiceValueResolver implements ValueResolverInterface
         $entity,
         array $databaseData,
         $actualService
-    ) {
+    ): void {
         if ($fieldMapping instanceof ServiceMappingInterface && !$fieldMapping->isLax()) {
             /** @var object $expectedService */
             $expectedService = $this->resolveValue($fieldMapping, $entity, $databaseData);

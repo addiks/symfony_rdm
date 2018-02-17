@@ -24,7 +24,7 @@ final class Service
      *
      * @var string
      */
-    public $id;
+    public $id = "";
 
     /**
      * Set this to true if this field should not be checked for the correct service on persist.

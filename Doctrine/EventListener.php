@@ -60,7 +60,7 @@ final class EventListener
         $this->dbalDataLoader = $dbalDataLoader;
     }
 
-    public function postLoad(LifecycleEventArgs $arguments)
+    public function postLoad(LifecycleEventArgs $arguments): void
     {
         /** @var object $entity */
         $entity = $arguments->getEntity();
@@ -71,7 +71,7 @@ final class EventListener
         $this->entityHydrator->hydrateEntity($entity, $entityManager);
     }
 
-    public function prePersist(LifecycleEventArgs $arguments)
+    public function prePersist(LifecycleEventArgs $arguments): void
     {
         /** @var object $entity */
         $entity = $arguments->getEntity();
@@ -84,7 +84,7 @@ final class EventListener
         }
     }
 
-    public function postFlush(PostFlushEventArgs $arguments)
+    public function postFlush(PostFlushEventArgs $arguments): void
     {
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $arguments->getEntityManager();
@@ -108,7 +108,7 @@ final class EventListener
         }
     }
 
-    public function loadClassMetadata(LoadClassMetadataEventArgs $arguments)
+    public function loadClassMetadata(LoadClassMetadataEventArgs $arguments): void
     {
         /** @var EntityManagerInterface $entityManager */
         $entityManager = $arguments->getEntityManager();
@@ -126,7 +126,7 @@ final class EventListener
      * Dispatched in:
      * @see SchemaTool::getSchemaFromMetadata
      */
-    public function postGenerateSchemaTable(GenerateSchemaTableEventArgs $arguments)
+    public function postGenerateSchemaTable(GenerateSchemaTableEventArgs $arguments): void
     {
         /** @var Table $table */
         $table = $arguments->getClassTable();
@@ -153,6 +153,9 @@ final class EventListener
         }
     }
 
+    /**
+     * @param object $entity
+     */
     private function isUnitializedProxy($entity): bool
     {
         /** @var bool $isUnitializedProxy */

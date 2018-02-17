@@ -27,7 +27,8 @@
         "symfony/thanks": "*",
         "malukenho/docheader": "*",
         "vimeo/psalm": "^0.3.90",
-        "symfony/form": "^2.8 || ^3.0 || ^4.0"
+        "symfony/form": "^2.8 || ^3.0 || ^4.0",
+        "symfony/expression-language": "^2.8 || ^3.0 || ^4.0"
     },
 
     "autoload": {

@@ -14,6 +14,7 @@ use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use ErrorException;
 
 final class DataLoaderLazyLoadProxy implements DataLoaderInterface
 {
@@ -29,7 +30,7 @@ final class DataLoaderLazyLoadProxy implements DataLoaderInterface
     private $serviceId;
 
     /**
-     * @var DataLoaderInterface
+     * @var ?DataLoaderInterface
      */
     private $loadedDataLoader;
 
@@ -39,30 +40,51 @@ final class DataLoaderLazyLoadProxy implements DataLoaderInterface
         $this->serviceId = $serviceId;
     }
 
+    /**
+     * @param object $entity
+     */
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array
     {
         return $this->loadDataLoader()->loadDBALDataForEntity($entity, $entityManager);
     }
 
-    public function storeDBALDataForEntity($entity, EntityManagerInterface $entityManager)
+    /**
+     * @param object $entity
+     */
+    public function storeDBALDataForEntity($entity, EntityManagerInterface $entityManager): void
     {
-        return $this->loadDataLoader()->storeDBALDataForEntity($entity, $entityManager);
+        $this->loadDataLoader()->storeDBALDataForEntity($entity, $entityManager);
     }
 
-    public function removeDBALDataForEntity($entity, EntityManagerInterface $entityManager)
+    /**
+     * @param object $entity
+     */
+    public function removeDBALDataForEntity($entity, EntityManagerInterface $entityManager): void
     {
-        return $this->loadDataLoader()->removeDBALDataForEntity($entity, $entityManager);
+        $this->loadDataLoader()->removeDBALDataForEntity($entity, $entityManager);
     }
 
-    public function prepareOnMetadataLoad(EntityManagerInterface $entityManager, ClassMetadata $classMetadata)
+    public function prepareOnMetadataLoad(EntityManagerInterface $entityManager, ClassMetadata $classMetadata): void
     {
-        return $this->loadDataLoader()->prepareOnMetadataLoad($entityManager, $classMetadata);
+        $this->loadDataLoader()->prepareOnMetadataLoad($entityManager, $classMetadata);
     }
 
     private function loadDataLoader(): DataLoaderInterface
     {
         if (is_null($this->loadedDataLoader)) {
-            $this->loadedDataLoader = $this->container->get($this->serviceId);
+            /** @var object $loadedDataLoader */
+            $loadedDataLoader = $this->container->get($this->serviceId);
+
+            if ($loadedDataLoader instanceof DataLoaderInterface) {
+                $this->loadedDataLoader = $loadedDataLoader;
+
+            } else {
+                throw new ErrorException(sprintf(
+                    "Service with id '%s' must implement %s",
+                    $this->serviceId,
+                    DataLoaderInterface::class
+                ));
+            }
         }
 
         return $this->loadedDataLoader;

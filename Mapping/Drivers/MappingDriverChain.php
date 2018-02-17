@@ -58,7 +58,7 @@ final class MappingDriverChain implements MappingDriverInterface
         return $mapping;
     }
 
-    private function addInnerMetadataDriver(MappingDriverInterface $innerDriver)
+    private function addInnerMetadataDriver(MappingDriverInterface $innerDriver): void
     {
         $this->innerDrivers[] = $innerDriver;
     }

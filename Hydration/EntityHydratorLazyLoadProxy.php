@@ -13,6 +13,7 @@ namespace Addiks\RDMBundle\Hydration;
 use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
 
 final class EntityHydratorLazyLoadProxy implements EntityHydratorInterface
 {
@@ -28,7 +29,7 @@ final class EntityHydratorLazyLoadProxy implements EntityHydratorInterface
     private $serviceId;
 
     /**
-     * @var EntityHydratorInterface
+     * @var ?EntityHydratorInterface
      */
     private $actualHydrator;
 
@@ -38,20 +39,32 @@ final class EntityHydratorLazyLoadProxy implements EntityHydratorInterface
         $this->serviceId = $serviceId;
     }
 
-    public function hydrateEntity($entity, EntityManagerInterface $entityManager)
+    public function hydrateEntity($entity, EntityManagerInterface $entityManager): void
     {
-        return $this->loadActualHydrator()->hydrateEntity($entity, $entityManager);
+        $this->loadActualHydrator()->hydrateEntity($entity, $entityManager);
     }
 
-    public function assertHydrationOnEntity($entity, EntityManagerInterface $entityManager)
+    public function assertHydrationOnEntity($entity, EntityManagerInterface $entityManager): void
     {
-        return $this->loadActualHydrator()->assertHydrationOnEntity($entity, $entityManager);
+        $this->loadActualHydrator()->assertHydrationOnEntity($entity, $entityManager);
     }
 
     private function loadActualHydrator(): EntityHydratorInterface
     {
         if (is_null($this->actualHydrator)) {
-            $this->actualHydrator = $this->container->get($this->serviceId);
+            /** @var object $actualHydrator */
+            $actualHydrator = $this->container->get($this->serviceId);
+
+            if ($actualHydrator instanceof EntityHydratorInterface) {
+                $this->actualHydrator = $actualHydrator;
+
+            } else {
+                throw new InvalidMappingException(sprintf(
+                    "Expected service with id '%s' to be of type %s!",
+                    $this->serviceId,
+                    EntityHydratorInterface::class
+                ));
+            }
         }
 
         return $this->actualHydrator;

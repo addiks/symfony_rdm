@@ -80,7 +80,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                     /** @var DOMNode $serviceNode */
 
                     /** @var string $fieldName */
-                    $fieldName = (string)$serviceNode->attributes->getNamedItem("field")->value;
+                    $fieldName = (string)$serviceNode->attributes->getNamedItem("field")->nodeValue;
 
                     $fieldMappings[$fieldName] = $this->readService($serviceNode, $mappingFile);
                 }
@@ -89,7 +89,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                     /** @var DOMNode $choiceNode */
 
                     /** @var string $fieldName */
-                    $fieldName = (string)$choiceNode->attributes->getNamedItem("field")->value;
+                    $fieldName = (string)$choiceNode->attributes->getNamedItem("field")->nodeValue;
 
                     $fieldMappings[$fieldName] = $this->readChoice($choiceNode, $mappingFile, $fieldName);
                 }
@@ -105,13 +105,13 @@ final class MappingXmlDriver implements MappingDriverInterface
         return $mapping;
     }
 
-    private function readChoice(DOMNode $choiceNode, string $mappingFile, string $defaultColumnName)
+    private function readChoice(DOMNode $choiceNode, string $mappingFile, string $defaultColumnName): ChoiceMapping
     {
         /** @var string|Colum $columnName */
         $column = $defaultColumnName;
 
         if (!is_null($choiceNode->attributes->getNamedItem("column"))) {
-            $column = (string)$choiceNode->attributes->getNamedItem("column")->value;
+            $column = (string)$choiceNode->attributes->getNamedItem("column")->nodeValue;
         }
 
         /** @var array<MappingInterface> $choiceMappings */
@@ -133,7 +133,7 @@ final class MappingXmlDriver implements MappingDriverInterface
 
                 if ($nodeName === self::RDM_SCHEMA_URI . ":option") {
                     /** @var string $determinator */
-                    $determinator = (string)$optionNode->attributes->getNamedItem("name")->value;
+                    $determinator = (string)$optionNode->attributes->getNamedItem("name")->nodeValue;
 
                     /** @var DOMNode $optionMappingNode */
                     $optionMappingNode = $optionNode->firstChild;
@@ -165,23 +165,20 @@ final class MappingXmlDriver implements MappingDriverInterface
         ));
     }
 
-    private function readService(DOMNode $serviceNode, string $mappingFile)
+    private function readService(DOMNode $serviceNode, string $mappingFile): ServiceMapping
     {
-        /** @var bool $lax */
+        /** @var bool|string $lax */
         $lax = false;
 
         if ($serviceNode->attributes->getNamedItem("lax") instanceof DOMNode) {
-            $lax = $serviceNode->attributes->getNamedItem("lax")->value;
+            $lax = $serviceNode->attributes->getNamedItem("lax")->nodeValue;
         }
 
         /** @var string $serviceId */
-        $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->value;
+        $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->nodeValue;
 
-        if (is_null($lax)) {
-            $lax = false;
-
-        } else {
-            $lax = (strtolower($lax) === 'true');
+        if (!is_bool($lax)) {
+            $lax = (strtolower((string)$lax) === 'true');
         }
 
         return new ServiceMapping($serviceId, $lax, sprintf(
@@ -215,7 +212,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         foreach ($fieldNode->attributes as $key => $attribute) {
             /** @var DOMAttr $attribute */
 
-            $attributeValue = (string)$attribute->value;
+            $attributeValue = (string)$attribute->nodeValue;
 
             if ($key === 'name') {
                 $columnName = $attributeValue;
@@ -229,7 +226,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                     $attributeValue = ($attributeValue === 'false');
                 }
 
-                $attributes[$keyMap[$key]] = (string)$attribute->value;
+                $attributes[$keyMap[$key]] = (string)$attribute->nodeValue;
             }
         }
 

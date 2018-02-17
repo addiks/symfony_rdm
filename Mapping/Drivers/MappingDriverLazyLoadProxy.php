@@ -13,6 +13,7 @@ namespace Addiks\RDMBundle\Mapping\Drivers;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
 
 final class MappingDriverLazyLoadProxy implements MappingDriverInterface
 {
@@ -28,7 +29,7 @@ final class MappingDriverLazyLoadProxy implements MappingDriverInterface
     private $serviceId;
 
     /**
-     * @var MappingDriverInterface
+     * @var ?MappingDriverInterface
      */
     private $loadedMetadataDriver;
 
@@ -46,7 +47,19 @@ final class MappingDriverLazyLoadProxy implements MappingDriverInterface
     private function loadMetadataDriver(): MappingDriverInterface
     {
         if (is_null($this->loadedMetadataDriver)) {
-            $this->loadedMetadataDriver = $this->container->get($this->serviceId);
+            /** @var object $loadMetadataDriver */
+            $loadedMetadataDriver = $this->container->get($this->serviceId);
+
+            if ($loadedMetadataDriver instanceof MappingDriverInterface) {
+                $this->loadedMetadataDriver = $loadedMetadataDriver;
+
+            } else {
+                throw new InvalidMappingException(sprintf(
+                    "Service with id '%s' was expected to be of type %s but was not!",
+                    $this->serviceId,
+                    MappingDriverInterface::class
+                ));
+            }
         }
 
         return $this->loadedMetadataDriver;

@@ -50,7 +50,7 @@ final class MappingDriverFactoryAggregate implements MappingDriverFactoryInterfa
         return $rdmMappingDriver;
     }
 
-    private function addinnerMappingDriverFactory(MappingDriverFactoryInterface $innerMappingDriverFactory)
+    private function addinnerMappingDriverFactory(MappingDriverFactoryInterface $innerMappingDriverFactory): void
     {
         $this->innerMappingDriverFactorys[] = $innerMappingDriverFactory;
     }

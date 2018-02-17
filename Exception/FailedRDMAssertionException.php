@@ -46,6 +46,10 @@ final class FailedRDMAssertionException extends ErrorException implements Failed
         return $this->parameters;
     }
 
+    /**
+     * @param mixed $expectedService
+     * @param mixed $actualService
+     */
     public static function expectedDifferentService(
         string $serviceId,
         ReflectionClass $classReflection,

@@ -19,7 +19,7 @@ final class ValueResolverAggregate implements ValueResolverInterface
     /**
      * @var array<ValueResolverInterface>
      */
-    private $innerValueResolvers;
+    private $innerValueResolvers = array();
 
     public function __construct(array $innerValueResolvers)
     {
@@ -45,6 +45,8 @@ final class ValueResolverAggregate implements ValueResolverInterface
                 $valueFromEntityField
             );
         }
+
+        return [];
     }
 
     public function resolveValue(
@@ -69,7 +71,7 @@ final class ValueResolverAggregate implements ValueResolverInterface
         $entity,
         array $dataFromAdditionalColumns,
         $actualValue
-    ) {
+    ): void {
         /** @var string $mappingClassName */
         $mappingClassName = get_class($fieldMapping);
 
@@ -83,8 +85,10 @@ final class ValueResolverAggregate implements ValueResolverInterface
         }
     }
 
-    private function addInnerValueResolver(string $mappingClassName, ValueResolverInterface $innerValueResolver)
-    {
+    private function addInnerValueResolver(
+        string $mappingClassName,
+        ValueResolverInterface $innerValueResolver
+    ): void {
         $this->innerValueResolvers[$mappingClassName] = $innerValueResolver;
     }
 
