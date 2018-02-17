@@ -26,7 +26,6 @@ use Doctrine\DBAL\Driver\Statement;
 use PDO;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
-use Doctrine\ORM\Proxy\Proxy;
 
 /**
  * A very simple loader that just executes one simple select statement for every entity to load the data for.

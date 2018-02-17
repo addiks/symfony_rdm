@@ -12,7 +12,6 @@ namespace Addiks\RDMBundle\Tests\DataLoader;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\DataLoader\ChoosingDataLoaderFactory;
-use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 

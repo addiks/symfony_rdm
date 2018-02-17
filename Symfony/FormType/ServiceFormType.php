@@ -17,7 +17,6 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\Form\FormConfigBuilder;
 use Symfony\Component\Form\FormConfigBuilderInterface;
 use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\OptionsResolver\OptionsResolver;

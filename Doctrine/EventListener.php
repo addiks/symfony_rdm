@@ -22,10 +22,6 @@ use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\UnitOfWork;
 use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\Common\EventArgs;
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Proxy\Proxy;
 

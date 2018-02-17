@@ -87,4 +87,12 @@ final class ServiceFormTypeTest extends TestCase
         $this->assertSame($expectedService, $actualService);
     }
 
+    /**
+     * @test
+     */
+    public function shouldHaveAName()
+    {
+        $this->assertEquals('service', $this->formType->getName());
+    }
+
 }

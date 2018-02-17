@@ -20,7 +20,6 @@ use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
-use Addiks\RDMBundle\Exception\InvalidMappingException;
 use DOMAttr;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;

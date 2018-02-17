@@ -11,7 +11,6 @@
 namespace Addiks\RDMBundle\Exception;
 
 use ErrorException;
-use ReflectionProperty;
 use ReflectionClass;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
 

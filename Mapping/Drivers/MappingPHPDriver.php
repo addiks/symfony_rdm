@@ -12,7 +12,6 @@ namespace Addiks\RDMBundle\Mapping\Drivers;
 
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
-use Addiks\RDMBundle\Mapping\Annotation\RDMAnnotationInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 
 final class MappingPHPDriver implements MappingDriverInterface
