@@ -23,6 +23,8 @@ use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
 final class EntityHydratorTest extends TestCase
 {
@@ -67,28 +69,33 @@ final class EntityHydratorTest extends TestCase
     {
         $fooMapping = new ServiceMapping("the_foo_service");
         $barMapping = new ServiceMapping("another_bar_service");
+        $fazMapping = new ServiceMapping("a_private_property_service");
 
         $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn(
             new EntityMapping(EntityExample::class, [
                 'foo' => $fooMapping,
-                'bar' => $barMapping
+                'bar' => $barMapping,
+                'faz' => $fazMapping
             ])
         );
 
         $serviceA = new ServiceExample("SomeService", 123);
         $serviceB = new ServiceExample("AnotherService", 456);
+        $serviceC = new ServiceExample("PrivateService", 789);
 
         $entity = new EntityExample();
 
         $this->valueResolver->method("resolveValue")->will($this->returnValueMap([
             [$fooMapping, $entity, [], $serviceA],
             [$barMapping, $entity, [], $serviceB],
+            [$fazMapping, $entity, [], $serviceC],
         ]));
 
         $this->hydrator->hydrateEntity($entity, $this->createMock(EntityManagerInterface::class));
 
         $this->assertEquals($serviceA, $entity->foo);
         $this->assertEquals($serviceB, $entity->bar);
+        $this->assertEquals($serviceC, $entity->getFaz());
     }
 
     /**
@@ -96,17 +103,25 @@ final class EntityHydratorTest extends TestCase
      */
     public function shouldAssertHydrationUsingValueResolvers()
     {
-        $fooMapping = new ServiceMapping("the_foo_service");
+        $fazMapping = new ServiceMapping("the_faz_service");
+
+        /** @var ServiceExample $fooService */
+        $fazService = $this->createMock(ServiceExample::class);
+
+        $entity = new EntityExample(null, null, null, $fazService);
 
         $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn(
             new EntityMapping(EntityExample::class, [
-                'foo' => $fooMapping,
+                'faz' => $fazMapping,
             ])
         );
 
-        $this->valueResolver->expects($this->once())->method("assertValue");
-
-        $entity = new EntityExample();
+        $this->valueResolver->expects($this->once())->method("assertValue")->with(
+            $this->equalTo($fazMapping),
+            $this->equalTo($entity),
+            $this->equalTo([]),
+            $this->equalTo($fazService)
+        );
 
         $this->hydrator->assertHydrationOnEntity($entity, $this->createMock(EntityManagerInterface::class));
     }

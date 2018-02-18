@@ -91,7 +91,6 @@ final class EntityHydrator implements EntityHydratorInterface
 
                     $propertyReflection->setAccessible(true);
                     $propertyReflection->setValue($entity, $value);
-                    $propertyReflection->setAccessible(false);
                 }
             }
         }
@@ -133,8 +132,6 @@ final class EntityHydrator implements EntityHydratorInterface
 
                     /** @var object $actualValue */
                     $actualValue = $propertyReflection->getValue($entity);
-
-                    $propertyReflection->setAccessible(false);
 
                     $this->valueResolver->assertValue(
                         $fieldMapping,

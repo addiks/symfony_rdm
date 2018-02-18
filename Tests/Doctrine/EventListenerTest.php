@@ -18,6 +18,9 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Proxy\Proxy;
+use Doctrine\ORM\Event\PostFlushEventArgs;
+use Doctrine\ORM\UnitOfWork;
 
 final class EventListenerTest extends TestCase
 {
@@ -89,6 +92,67 @@ final class EventListenerTest extends TestCase
         $this->entityServiceHydrator->expects($this->once())->method('assertHydrationOnEntity')->with($entity);
 
         $this->eventListener->prePersist($arguments);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldRemoveEntityProxiesOnlyWhenInitialized()
+    {
+        /** @var Proxy $proxiedEntity */
+        $proxiedEntity = $this->createMock(Proxy::class);
+
+        $proxiedEntity->method('__isInitialized')->willReturn(true);
+
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+
+        /** @var UnitOfWork $unitOfWork */
+        $unitOfWork = $this->createMock(UnitOfWork::class);
+
+        $entityManager->method('getUnitOfWork')->willReturn($unitOfWork);
+
+        $unitOfWork->method('getIdentityMap')->willReturn([
+            EntityExample::class => [$proxiedEntity]
+        ]);
+
+        $unitOfWork->method('isScheduledForDelete')->willReturn(false);
+
+        $this->dbalDataLoader->expects($this->once())->method('storeDBALDataForEntity')->with(
+            $this->equalTo($proxiedEntity),
+            $this->equalTo($entityManager)
+        );
+
+        $this->eventListener->postFlush(new PostFlushEventArgs($entityManager));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldIgnoreUninitializedProxies()
+    {
+        /** @var Proxy $proxiedEntity */
+        $proxiedEntity = $this->createMock(Proxy::class);
+
+        $proxiedEntity->method('__isInitialized')->willReturn(false);
+
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+
+        /** @var UnitOfWork $unitOfWork */
+        $unitOfWork = $this->createMock(UnitOfWork::class);
+
+        $entityManager->method('getUnitOfWork')->willReturn($unitOfWork);
+
+        $unitOfWork->method('getIdentityMap')->willReturn([
+            EntityExample::class => [$proxiedEntity]
+        ]);
+
+        $unitOfWork->method('isScheduledForDelete')->willReturn(false);
+
+        $this->dbalDataLoader->expects($this->never())->method('storeDBALDataForEntity');
+
+        $this->eventListener->postFlush(new PostFlushEventArgs($entityManager));
     }
 
 }

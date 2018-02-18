@@ -38,12 +38,18 @@ class EntityExample
     /**
      * @var string
      */
-    public $faz;
+    private $faz;
 
-    public function __construct(ServiceExample $foo = null, ServiceExample $bar = null)
-    {
+    public function __construct(
+        ServiceExample $foo = null,
+        ServiceExample $bar = null,
+        ServiceExample $baz = null,
+        ServiceExample $faz = null
+    ) {
         $this->foo = $foo;
         $this->bar = $bar;
+        $this->baz = $baz;
+        $this->faz = $faz;
     }
 
     public static $staticMetadata;
@@ -51,6 +57,11 @@ class EntityExample
     public static function loadRDMMetadata()
     {
         return self::$staticMetadata;
+    }
+
+    public function getFaz(): ?ServiceExample
+    {
+        return $this->faz;
     }
 
 }
