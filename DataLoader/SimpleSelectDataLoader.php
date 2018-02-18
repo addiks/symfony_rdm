@@ -126,8 +126,6 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
                 $idValue = $reflectionProperty->getValue($entity);
 
-                $reflectionProperty->setAccessible(false);
-
                 if (!empty($idValue)) {
                     $hasId = true;
                     $queryBuilder->andWhere($expr->eq($idColumn['columnName'], $idValue));
@@ -173,10 +171,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             $className = ClassUtils::getRealClass($className);
         }
 
-        /** @var array<string> $additionalData */
-        $additionalData = array();
-
-        /** @var ?EntityMappingInterface $entityMapping */
+        /** @var null|EntityMappingInterface $entityMapping */
         $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
         if ($entityMapping instanceof EntityMappingInterface) {
@@ -190,53 +185,10 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             $connection = $entityManager->getConnection();
 
             /** @var array<scalar> */
-            $additionalData = array();
-
-            $reflectionClass = new ReflectionClass($entityMapping->getEntityClassName());
-
-            foreach ($entityMapping->getFieldMappings() as $fieldName => $entityFieldMapping) {
-                /** @var MappingInterface $entityFieldMapping */
-
-                /** @var ReflectionProperty $reflectionProperty */
-                $reflectionProperty = $reflectionClass->getProperty($fieldName);
-
-                $reflectionProperty->setAccessible(true);
-
-                /** @var mixed $valueFromEntityField */
-                $valueFromEntityField = $reflectionProperty->getValue($entity);
-
-                $reflectionProperty->setAccessible(false);
-
-                /** @var array<scalar> $fieldAdditionalData */
-                $fieldAdditionalData = $this->valueResolver->revertValue(
-                    $entityFieldMapping,
-                    $entity,
-                    $valueFromEntityField
-                );
-
-                $additionalData = array_merge($additionalData, $fieldAdditionalData);
-            }
+            $additionalData = $this->collectAdditionalDataForEntity($entity, $entityMapping);
 
             /** @var array<scalar> $identifier */
-            $identifier = array();
-
-            foreach ($classMetaData->identifier as $idFieldName) {
-                /** @var string $idFieldName */
-
-                /** @var array $idColumn */
-                $idColumn = $classMetaData->fieldMappings[$idFieldName];
-
-                /** @var ReflectionProperty $reflectionProperty */
-                $reflectionProperty = $reflectionClass->getProperty($idFieldName);
-
-                $reflectionProperty->setAccessible(true);
-
-                $idValue = $reflectionProperty->getValue($entity);
-
-                $reflectionProperty->setAccessible(false);
-
-                $identifier[$idColumn['columnName']] = $idValue;
-            }
+            $identifier = $this->collectIdentifierForEntity($entity, $entityMapping, $classMetaData);
 
             /** @var array<scalar> */
             $originalData = array();
@@ -275,6 +227,73 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
     public function prepareOnMetadataLoad(EntityManagerInterface $entityManager, ClassMetadata $classMetadata): void
     {
         # This data-loader does not need any preperation
+    }
+
+    /**
+     * @param object $entity
+     */
+    private function collectAdditionalDataForEntity($entity, EntityMappingInterface $entityMapping): array
+    {
+        /** @var array<scalar> */
+        $additionalData = array();
+
+        /** @var mixed $reflectionClass */
+        $reflectionClass = new ReflectionClass($entityMapping->getEntityClassName());
+
+        foreach ($entityMapping->getFieldMappings() as $fieldName => $entityFieldMapping) {
+            /** @var MappingInterface $entityFieldMapping */
+
+            /** @var ReflectionProperty $reflectionProperty */
+            $reflectionProperty = $reflectionClass->getProperty($fieldName);
+
+            $reflectionProperty->setAccessible(true);
+
+            /** @var mixed $valueFromEntityField */
+            $valueFromEntityField = $reflectionProperty->getValue($entity);
+
+            /** @var array<scalar> $fieldAdditionalData */
+            $fieldAdditionalData = $this->valueResolver->revertValue(
+                $entityFieldMapping,
+                $entity,
+                $valueFromEntityField
+            );
+
+            $additionalData = array_merge($additionalData, $fieldAdditionalData);
+        }
+
+        return $additionalData;
+    }
+
+    /**
+     * @param object $entity
+     */
+    private function collectIdentifierForEntity(
+        $entity,
+        EntityMappingInterface $entityMapping,
+        ClassMetadata $classMetaData
+    ): array {
+        $reflectionClass = new ReflectionClass($entityMapping->getEntityClassName());
+
+        /** @var array<scalar> $identifier */
+        $identifier = array();
+
+        foreach ($classMetaData->identifier as $idFieldName) {
+            /** @var string $idFieldName */
+
+            /** @var array $idColumn */
+            $idColumn = $classMetaData->fieldMappings[$idFieldName];
+
+            /** @var ReflectionProperty $reflectionProperty */
+            $reflectionProperty = $reflectionClass->getProperty($idFieldName);
+
+            $reflectionProperty->setAccessible(true);
+
+            $idValue = $reflectionProperty->getValue($entity);
+
+            $identifier[$idColumn['columnName']] = $idValue;
+        }
+
+        return $identifier;
     }
 
 }

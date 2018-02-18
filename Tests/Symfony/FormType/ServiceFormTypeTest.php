@@ -17,6 +17,10 @@ use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Symfony\FormType\ServiceFormType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\Form\FormView;
+use Symfony\Component\Form\FormInterface;
 
 final class ServiceFormTypeTest extends TestCase
 {
@@ -112,6 +116,64 @@ final class ServiceFormTypeTest extends TestCase
     public function shouldHaveAName()
     {
         $this->assertEquals('service', $this->formType->getName());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldSetDefaultOptions()
+    {
+        if (!interface_exists(OptionsResolverInterface::class)) {
+            # This interface was removed in symfony 3, but this bundle aims to support 2.8 as well as 3.x,
+            # so this interface may or may not exist depending on the version of symfony
+            eval('
+                namespace Symfony\Component\OptionsResolver;
+                interface OptionsResolverInterface{
+                    public function setDefaults(array $defaultValues);
+                }
+            ');
+        }
+
+        /** @var OptionsResolverInterface $resolver */
+        $resolver = $this->createMock(OptionsResolverInterface::class);
+
+        $resolver->expects($this->once())->method('setDefaults')->with($this->equalTo([
+            'choices' => null,
+        ]));
+
+        $this->formType->setDefaultOptions($resolver);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldConfigureOptions()
+    {
+        /** @var OptionsResolver $resolver */
+        $resolver = $this->createMock(OptionsResolver::class);
+
+        $resolver->expects($this->once())->method('setDefaults')->with($this->equalTo([
+            'choices' => null,
+        ]));
+
+        $this->formType->configureOptions($resolver);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldBuildAndFinishView()
+    {
+        /** @var FormView $view */
+        $view = $this->createMock(FormView::class);
+
+        /** @var FormInterface $form */
+        $form = $this->createMock(FormInterface::class);
+
+        $this->formType->buildView($view, $form, []);
+        $this->formType->finishView($view, $form, []);
+
+        $this->assertTrue(true);
     }
 
 }
