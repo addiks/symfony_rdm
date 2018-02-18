@@ -77,7 +77,7 @@ final class FailedRDMAssertionException extends ErrorException implements Failed
 
         return new self(
             sprintf(
-                "Expected service %s (%s) on entity %s, was %s instead!",
+                "Expected service '%s' (%s) on entity %s, was %s instead!",
                 $serviceId,
                 $expectedDescription,
                 $classReflection->getName(),

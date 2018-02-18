@@ -31,6 +31,9 @@
             <rdm:option name="ipsum">
                 <rdm:service id="ipsum_service" />
             </rdm:option>
+            <rdm:option name="dolor">
+                <foo bar="baz" />
+            </rdm:option>
         </rdm:choice>
 
         <rdm:choice field="far">

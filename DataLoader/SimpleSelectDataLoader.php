@@ -175,41 +175,22 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
         if ($entityMapping instanceof EntityMappingInterface) {
-            /** @var ClassMetadata $classMetaData */
-            $classMetaData = $entityManager->getClassMetadata($className);
-
-            /** @var string $tableName */
-            $tableName = $classMetaData->getTableName();
-
-            /** @var Connection $connection */
-            $connection = $entityManager->getConnection();
-
             /** @var array<scalar> */
             $additionalData = $this->collectAdditionalDataForEntity($entity, $entityMapping);
 
-            /** @var array<scalar> $identifier */
-            $identifier = $this->collectIdentifierForEntity($entity, $entityMapping, $classMetaData);
+            if ($this->hasDataChanged($entity, $additionalData)) {
+                /** @var ClassMetadata $classMetaData */
+                $classMetaData = $entityManager->getClassMetadata($className);
 
-            /** @var array<scalar> */
-            $originalData = array();
+                /** @var array<scalar> $identifier */
+                $identifier = $this->collectIdentifierForEntity($entity, $entityMapping, $classMetaData);
 
-            /** @var string $entityObjectHash */
-            $entityObjectHash = spl_object_hash($entity);
+                /** @var string $tableName */
+                $tableName = $classMetaData->getTableName();
 
-            if (isset($this->originalData[$entityObjectHash])) {
-                $originalData = $this->originalData[$entityObjectHash];
-            }
+                /** @var Connection $connection */
+                $connection = $entityManager->getConnection();
 
-            /** @var bool $hasDataChanged */
-            $hasDataChanged = false;
-
-            foreach ($additionalData as $key => $value) {
-                if (!array_key_exists($key, $originalData) || $originalData[$key] !== $value) {
-                    $hasDataChanged = true;
-                }
-            }
-
-            if ($hasDataChanged) {
                 $connection->update($tableName, $additionalData, $identifier);
             }
         }
@@ -227,6 +208,33 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
     public function prepareOnMetadataLoad(EntityManagerInterface $entityManager, ClassMetadata $classMetadata): void
     {
         # This data-loader does not need any preperation
+    }
+
+    /**
+     * @param object $entity
+     */
+    private function hasDataChanged($entity, array $additionalData): bool
+    {
+        /** @var array<scalar> */
+        $originalData = array();
+
+        /** @var string $entityObjectHash */
+        $entityObjectHash = spl_object_hash($entity);
+
+        if (isset($this->originalData[$entityObjectHash])) {
+            $originalData = $this->originalData[$entityObjectHash];
+        }
+
+        /** @var bool $hasDataChanged */
+        $hasDataChanged = false;
+
+        foreach ($additionalData as $key => $value) {
+            if (!array_key_exists($key, $originalData) || $originalData[$key] !== $value) {
+                $hasDataChanged = true;
+            }
+        }
+
+        return $hasDataChanged;
     }
 
     /**

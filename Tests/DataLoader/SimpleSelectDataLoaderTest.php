@@ -45,15 +45,89 @@ final class DataSimpleSelectLoaderTest extends TestCase
      */
     private $valueResolver;
 
+    /**
+     * @var ClassMetadata
+     */
+    private $classMetaData;
+
+    /**
+     * @var Connection
+     */
+    private $connection;
+
+    /**
+     * @var QueryBuilder
+     */
+    private $queryBuilder;
+
+    /**
+     * @var Expr
+     */
+    private $expr;
+
+    /**
+     * @var Statement
+     */
+    private $statement;
+
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
+
+    /**
+     * @var UnitOfWork
+     */
+    private $unitOfWork;
+
+    /**
+     * @var EntityMapping
+     */
+    private $entityMapping;
+
+    /**
+     * @var ChoiceMapping
+     */
+    private $mappings = array();
+
     public function setUp()
     {
         $this->mappingDriver = $this->createMock(MappingDriverInterface::class);
         $this->valueResolver = $this->createMock(ValueResolverInterface::class);
+        $this->connection = $this->createMock(Connection::class);
+        $this->queryBuilder = $this->createMock(QueryBuilder::class);
+        $this->expr = $this->createMock(Expr::class);
+        $this->statement = $this->createMock(Statement::class);
+        $this->entityManager = $this->createMock(EntityManagerInterface::class);
+        $this->unitOfWork = $this->createMock(UnitOfWork::class);
 
         $this->dataLoader = new SimpleSelectDataLoader(
             $this->mappingDriver,
-            $this->valueResolver
+            $this->valueResolver,
+            1
         );
+
+        $this->classMetaData = new ClassMetadata(EntityExample::class);
+        $this->classMetaData->table = ['name' => 'some_table'];
+        $this->classMetaData->identifier = ["id"];
+        $this->classMetaData->fieldMappings = [
+            "id" => [
+                'columnName' => 'id'
+            ]
+        ];
+
+        $this->mappings['foo'] = new ChoiceMapping('foo_column', []);
+        $this->mappings['bar'] = new ChoiceMapping('bar_column', []);
+
+        $this->entityMapping = new EntityMapping(EntityExample::class, $this->mappings);
+
+        $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn($this->entityMapping);
+        $this->entityManager->method("getClassMetadata")->willReturn($this->classMetaData);
+        $this->entityManager->method("getConnection")->willReturn($this->connection);
+        $this->entityManager->method("getUnitOfWork")->willReturn($this->unitOfWork);
+        $this->connection->method('createQueryBuilder')->willReturn($this->queryBuilder);
+        $this->queryBuilder->method('expr')->willReturn($this->expr);
+        $this->queryBuilder->method('execute')->willReturn($this->statement);
     }
 
     /**
@@ -63,64 +137,58 @@ final class DataSimpleSelectLoaderTest extends TestCase
     {
         /** @var array $expectedData */
         $expectedData = array(
-            'foo' => 'Lorem ipsum',
-            'bar' => 'dolor sit amet'
+            'foo_column' => 'Lorem ipsum',
+            'bar_column' => 'dolor sit amet'
         );
 
-        $classMetaData = new ClassMetadata(EntityExample::class);
-        $classMetaData->table = ['name' => 'some_table'];
-        $classMetaData->identifier = ["id"];
-        $classMetaData->fieldMappings = [
-            "id" => [
-                'columnName' => 'id'
-            ]
+        $this->classMetaData->identifier = ["id", "faz"];
+        $this->classMetaData->fieldMappings = [
+            "id"  => ['columnName' => 'id'],
+            "faz" => ['columnName' => 'faz']
         ];
 
-        $entityMapping = new EntityMapping(EntityExample::class, [
-            new ChoiceMapping('foo', []),
-            new ChoiceMapping('bar', [])
-        ]);
+        $this->queryBuilder->expects($this->once())->method('from')->with($this->equalTo('some_table'));
+        $this->queryBuilder->expects($this->exactly(2))->method('andWhere')->with($this->equalTo("*eq-return*"));
+        $this->queryBuilder->expects($this->exactly(2))->method('addSelect');
+        $this->queryBuilder->expects($this->once())->method('setMaxResults')->with($this->equalTo(1));
 
-        /** @var Connection $connection */
-        $connection = $this->createMock(Connection::class);
+        $this->statement->method('fetch')->willReturn($expectedData);
 
-        /** @var QueryBuilder $queryBuilder */
-        $queryBuilder = $this->createMock(QueryBuilder::class);
+        /** @var ServiceExample $fazService */
+        $fazService = $this->createMock(ServiceExample::class);
 
-        /** @var Expr $expr */
-        $expr = $this->createMock(Expr::class);
+        $entity = new EntityExample(null, null, null, $fazService);
+        $entity->id = "some_id";
 
-        /** @var Statement $statement */
-        $statement = $this->createMock(Statement::class);
+        $this->expr->method("eq")->willReturn("*eq-return*");
 
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        /** @var array $actualData */
+        $actualData = $this->dataLoader->loadDBALDataForEntity($entity, $this->entityManager);
 
-        $connection->method('createQueryBuilder')->willReturn($queryBuilder);
+        $this->assertEquals($expectedData, $actualData);
+    }
 
-        $queryBuilder->method('expr')->willReturn($expr);
-        $queryBuilder->method('execute')->willReturn($statement);
+    /**
+     * @test
+     */
+    public function shouldNotLoadEntityWithoutId()
+    {
+        /** @var array $expectedData */
+        $expectedData = array();
 
-        $queryBuilder->expects($this->once())->method('from')->with($this->equalTo('some_table'));
-        $queryBuilder->expects($this->once())->method('andWhere')->with($this->equalTo("*eq-return*"));
-        $queryBuilder->expects($this->exactly(2))->method('addSelect');
+        $this->classMetaData->identifier = [];
 
-        $statement->method('fetch')->willReturn($expectedData);
+        $this->queryBuilder->expects($this->never())->method('from');
 
-        $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn($entityMapping);
-        $entityManager->method("getClassMetadata")->willReturn($classMetaData);
-        $entityManager->method("getConnection")->willReturn($connection);
+        $this->statement->method('fetch')->willReturn($expectedData);
 
         $entity = new EntityExample();
         $entity->id = "some_id";
 
-        $expr->expects($this->once())->method("eq")->with(
-            $this->equalTo('id'),
-            $this->equalTo('some_id')
-        )->willReturn("*eq-return*");
+        $this->expr->method("eq")->willReturn("*eq-return*");
 
         /** @var array $actualData */
-        $actualData = $this->dataLoader->loadDBALDataForEntity($entity, $entityManager);
+        $actualData = $this->dataLoader->loadDBALDataForEntity($entity, $this->entityManager);
 
         $this->assertEquals($expectedData, $actualData);
     }
@@ -130,57 +198,91 @@ final class DataSimpleSelectLoaderTest extends TestCase
      */
     public function storesDataInDatabase()
     {
-        /** @var mixed $classMetaData */
-        $classMetaData = new ClassMetadata(EntityExample::class);
-        $classMetaData->table = ['name' => 'some_table'];
-        $classMetaData->identifier = ["id"];
-        $classMetaData->fieldMappings = [
-            "id" => [
-                'columnName' => 'id'
-            ]
+        $this->mappings['faz'] = new ChoiceMapping('faz_column', []);
+
+        $this->setUp();
+
+        $this->classMetaData->identifier = ["id", "faz"];
+        $this->classMetaData->fieldMappings = [
+            "id"  => ['columnName' => 'id'],
+            "faz" => ['columnName' => 'faz']
         ];
 
-        $fooMapping = new ChoiceMapping('foo_column', []);
-        $barMapping = new ChoiceMapping('bar_column', []);
+        /** @var ServiceExample $fazService */
+        $fazService = $this->createMock(ServiceExample::class);
 
-        $entityMapping = new EntityMapping(EntityExample::class, [
-            'foo' => $fooMapping,
-            'bar' => $barMapping
-        ]);
+        $entity = new EntityExample(null, null, null, $fazService);
+        $entity->id = "some_id";
+        $entity->foo = "some_ipsum_service";
+        $entity->bar = "some_dolor_service";
 
-        /** @var Connection $connection */
-        $connection = $this->createMock(Connection::class);
+        $this->valueResolver->method("revertValue")->will($this->returnValueMap([
+            [$this->mappings['foo'], $entity, "some_ipsum_service", ["foo_column" => "ipsum"]],
+            [$this->mappings['bar'], $entity, "some_dolor_service", ["bar_column" => "dolor"]],
+            [$this->mappings['faz'], $entity, $fazService,          ["faz_column" => "sit"]],
+        ]));
 
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $this->connection->expects($this->once())->method("update")->with(
+            $this->equalTo("some_table"),
+            $this->equalTo([
+                'foo_column' => 'ipsum',
+                'bar_column' => 'dolor',
+                'faz_column' => 'sit'
+            ]),
+            $this->equalTo([
+                'id'  => "some_id",
+                'faz' => $fazService
+            ])
+        );
 
-        /** @var UnitOfWork $unitOfWork */
-        $unitOfWork = $this->createMock(UnitOfWork::class);
+        $this->dataLoader->storeDBALDataForEntity($entity, $this->entityManager);
+    }
 
-        $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn($entityMapping);
-        $entityManager->method("getClassMetadata")->willReturn($classMetaData);
-        $entityManager->method("getConnection")->willReturn($connection);
-        $entityManager->method("getUnitOfWork")->willReturn($unitOfWork);
-
+    /**
+     * @test
+     */
+    public function shouldNotUpdateIfDataDidNotChange()
+    {
         $entity = new EntityExample();
         $entity->id = "some_id";
         $entity->foo = "some_ipsum_service";
         $entity->bar = "some_dolor_service";
 
         $this->valueResolver->method("revertValue")->will($this->returnValueMap([
-            [$fooMapping, $entity, "some_ipsum_service", ["foo_column" => "ipsum"]],
-            [$barMapping, $entity, "some_dolor_service", ["bar_column" => "dolor"]],
+            [$this->mappings['foo'], $entity, "some_ipsum_service", ["foo_column" => "ipsum"]],
+            [$this->mappings['bar'], $entity, "some_dolor_service", ["bar_column" => "dolor"]],
         ]));
 
-        $connection->expects($this->once())->method("update")->with(
-            $this->equalTo("some_table"),
-            $this->equalTo([
-                'foo_column' => 'ipsum',
-                'bar_column' => 'dolor'
-            ])
-        );
+        $this->connection->expects($this->never())->method("update");
 
-        $this->dataLoader->storeDBALDataForEntity($entity, $entityManager);
+        /** @var array $expectedData */
+        $expectedData = [
+            'foo_column' => 'ipsum',
+            'bar_column' => 'dolor'
+        ];
+
+        $this->statement->method('fetch')->willReturn($expectedData);
+
+        $this->dataLoader->loadDBALDataForEntity($entity, $this->entityManager);
+        $this->dataLoader->storeDBALDataForEntity($entity, $this->entityManager);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldRemoveDBALForEntity()
+    {
+        $this->dataLoader->removeDBALDataForEntity(new EntityExample(), $this->entityManager);
+        $this->assertTrue(true);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldPrepareOnMetadataLoad()
+    {
+        $this->dataLoader->prepareOnMetadataLoad($this->entityManager, $this->classMetaData);
+        $this->assertTrue(true);
     }
 
 }

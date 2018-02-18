@@ -147,7 +147,7 @@ final class MappingYamlDriver implements MappingDriverInterface
         $lax = false;
 
         if (isset($serviceYaml["lax"])) {
-            $lax = (strtolower($serviceYaml["lax"]) === 'true');
+            $lax = (bool)$serviceYaml["lax"];
         }
 
         return new ServiceMapping($serviceId, $lax, sprintf(

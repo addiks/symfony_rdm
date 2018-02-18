@@ -25,3 +25,4 @@ Addiks\RDMBundle\Tests\Hydration\EntityExample:
                 ipsum:
                     service:
                         id: ipsum_service
+                        lax: true
