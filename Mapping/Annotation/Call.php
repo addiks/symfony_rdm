@@ -4,34 +4,36 @@
  * This package (including this file) was released under the terms of the GPL-3.0.
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/> or send me a mail so i can send you a copy.
+ *
  * @license GPL-3.0
+ *
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Tests\Hydration;
+namespace Addiks\RDMBundle\Mapping\Annotation;
 
-class ServiceExample
+use Doctrine\ORM\Mapping\Annotation;
+
+/**
+ * @Annotation
+ * @Target("PROPERTY")
+ */
+class Call
 {
 
-    public function __construct(string $lorem, int $ipsum)
-    {
-        $this->lorem = $lorem;
-        $this->ipsum = $ipsum;
-    }
+    /**
+     * @var string|null
+     */
+    public $object;
 
     /**
-     * @var string
+     * @var string|null
      */
-    public $lorem;
+    public $routine;
 
     /**
-     * @var integer
+     * @var array<object>
      */
-    public $ipsum;
-
-    public function getLorem($dolor = "")
-    {
-        return $this->lorem . $dolor;
-    }
+    public $arguments = array();
 
 }

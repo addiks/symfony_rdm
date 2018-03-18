@@ -8,7 +8,7 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks;
+namespace Addiks\RDMBundle\Tests\ValueResolver;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\ValueResolver\ServiceValueResolver;

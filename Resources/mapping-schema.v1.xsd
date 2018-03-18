@@ -2,6 +2,7 @@
 <!-- @author gerrit addiks <gerrit.addiks@brille24.de> -->
 <xs:schema
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:orm="https://raw.githubusercontent.com/doctrine/doctrine2/master/doctrine-mapping.xsd"
     xmlns:rdm="https://github.com/addiks/symfony_rdm/raw/master/Resources/mapping-schema.v1.xsd"
     targetNamespace="https://github.com/addiks/symfony_rdm/raw/master/Resources/mapping-schema.v1.xsd"
     elementFormDefault="qualified"
@@ -9,30 +10,9 @@
 
     <xs:import namespace="http://doctrine-project.org/schemas/orm/doctrine-mapping" />
 
-    <xs:element name="service" type="rdm:root_service" />
-    <xs:element name="choice" type="rdm:root_choice" />
-
-    <xs:complexType name="root_service">
-        <xs:attribute name="field" type="xs:string" use="required" />
-        <xs:attribute name="id"    type="xs:string" use="required" />
-        <xs:attribute name="lax"   type="xs:string" />
-    </xs:complexType>
-
-    <xs:complexType name="root_choice">
-        <xs:sequence>
-            <xs:element name="option" minOccurs="1" maxOccurs="unbounded">
-                <xs:complexType>
-                    <xs:choice minOccurs="1" maxOccurs="1">
-                        <xs:element name="service" type="rdm:service" />
-                        <xs:element name="service" type="rdm:choice" />
-                    </xs:choice>
-                    <xs:attribute name="name" type="xs:string" use="required" />
-                </xs:complexType>
-            </xs:element>
-        </xs:sequence>
-        <xs:attribute name="field" type="xs:string" use="required" />
-        <xs:attribute name="column" type="xs:string" use="required" />
-    </xs:complexType>
+    <xs:element name="service" type="rdm:service" />
+    <xs:element name="choice" type="rdm:choice" />
+    <xs:element name="object" type="rdm:object" />
 
     <xs:complexType name="choice">
         <xs:sequence>
@@ -41,15 +21,36 @@
                     <xs:choice minOccurs="1" maxOccurs="1">
                         <xs:element name="service" type="rdm:service" />
                         <xs:element name="service" type="rdm:choice" />
+                        <xs:element name="service" type="rdm:object" />
                     </xs:choice>
                     <xs:attribute name="name" type="xs:string" use="required" />
                 </xs:complexType>
             </xs:element>
         </xs:sequence>
+        <xs:attribute name="field"  type="xs:string" />
         <xs:attribute name="column" type="xs:string" use="required" />
     </xs:complexType>
 
+    <xs:complexType name="object">
+        <xs:sequence>
+            <xs:element name="factory" minOccurs="0" maxOccurs="1">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="field" type="orm:field" minOccurs="0" maxOccurs="unbounded">
+                    </xs:sequence>
+                    <xs:attribute name="object" type="xs:string" use="required" />
+                    <xs:attribute name="method" type="xs:string" use="required" />
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="class"     type="xs:string" use="required" />
+        <xs:attribute name="field"     type="xs:string" />
+        <xs:attribute name="factory"   type="xs:string" />
+        <xs:attribute name="serialize" type="xs:string" />
+    </xs:complexType>
+
     <xs:complexType name="service">
+        <xs:attribute name="field" type="xs:string" />
         <xs:attribute name="id"    type="xs:string" use="required" />
         <xs:attribute name="lax"   type="xs:string" />
     </xs:complexType>

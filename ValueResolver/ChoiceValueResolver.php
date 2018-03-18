@@ -78,7 +78,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
         $valueFromEntityField
     ): array {
         /** @var array<scalar> $data */
-        $data = null;
+        $data = array();
 
         if ($fieldMapping instanceof ChoiceMappingInterface) {
             /** @var string $determinatorColumn */

@@ -25,6 +25,10 @@ use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Doctrine\ORM\Mapping\Column as ColumnAnnotation;
 use Doctrine\DBAL\Schema\Column as DBALColumn;
 use Doctrine\DBAL\Types\Type;
+use Addiks\RDMBundle\Mapping\ObjectMapping;
+use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
+use Addiks\RDMBundle\Mapping\FieldMapping;
+use Addiks\RDMBundle\Mapping\Annotation\Obj;
 
 final class MappingAnnotationDriver implements MappingDriverInterface
 {
@@ -82,7 +86,8 @@ final class MappingAnnotationDriver implements MappingDriverInterface
     private function convertAnnotationToMapping(
         $annotation,
         string $fieldName,
-        string $className
+        string $className,
+        bool $convertFieldsOnRootLevel = false
     ): ?MappingInterface {
         /** @var ?MappingInterface $fieldMapping */
         $fieldMapping = null;
@@ -156,6 +161,61 @@ final class MappingAnnotationDriver implements MappingDriverInterface
             $fieldMapping = new ChoiceMapping(
                 $dbalColumn,
                 $choiceMappings,
+                sprintf(
+                    "in entity '%s' on field '%s'",
+                    $className,
+                    $fieldName
+                )
+            );
+
+        } elseif ($annotation instanceof Obj) {
+            /** @var array<MappingInterface> $subFieldMappings */
+            $subFieldMappings = array();
+
+            /** @var null|CallDefinitionInterface $factory */
+            $factory = null;
+
+            /** @var null|CallDefinitionInterface $serializer */
+            $serializer = null;
+
+            foreach ($annotation->fields as $subFieldName => $subFieldAnnotation) {
+                /** @var object $fieldAnnotation */
+
+                $subFieldMappings[$subFieldName] = $this->convertAnnotationToMapping(
+                    $subFieldAnnotation,
+                    $fieldName . "->" . $subFieldName,
+                    $className,
+                    true
+                );
+            }
+
+            $fieldMapping = new ObjectMapping(
+                $annotation->{"class"},
+                $subFieldMappings,
+                sprintf(
+                    "in entity '%s' on field '%s'",
+                    $className,
+                    $fieldName
+                ),
+                $factory,
+                $serializer
+            );
+
+        } elseif ($annotation instanceof ColumnAnnotation && $convertFieldsOnRootLevel) {
+            /** @var DBALColumn $dbalColumn */
+            $dbalColumn = new DBALColumn(
+                $annotation->name,
+                Type::getType($annotation->type),
+                [
+                    'notnull'   => !$annotation->nullable,
+                    'length'    => $annotation->length,
+                    'precision' => $annotation->precision,
+                    'scale'     => $annotation->scale,
+                ]
+            );
+
+            $fieldMapping = new FieldMapping(
+                $dbalColumn,
                 sprintf(
                     "in entity '%s' on field '%s'",
                     $className,

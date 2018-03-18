@@ -20,9 +20,14 @@ use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\Annotation\Choice;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
-use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Column as DBALColumn;
 use Doctrine\DBAL\Types\Type;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Mapping\Annotation\Obj;
+use Addiks\RDMBundle\Tests\ValueObjectExample;
+use Addiks\RDMBundle\Mapping\ObjectMapping;
+use Doctrine\ORM\Mapping\Column as ORMColumn;
+use Addiks\RDMBundle\Mapping\FieldMapping;
 
 final class MappingAnnotationDriverTest extends TestCase
 {
@@ -76,6 +81,17 @@ final class MappingAnnotationDriverTest extends TestCase
             'bar' => $someAnnotationB,
         ];
 
+        $someAnnotationF = new ORMColumn();
+        $someAnnotationF->name = "someField";
+        $someAnnotationF->length = 12;
+
+        $someAnnotationE = new Obj();
+        $someAnnotationE->{"class"} = ValueObjectExample::class;
+        $someAnnotationE->fields = [
+            'foo' => $someAnnotationA,
+            'bar' => $someAnnotationF,
+        ];
+
         /** @var string $entityClass */
         $entityClass = EntityExample::class;
 
@@ -87,13 +103,21 @@ final class MappingAnnotationDriverTest extends TestCase
                 'foo' => new ServiceMapping("some_service", false, "in entity '{$entityClass}' on field 'baz'"),
                 'bar' => new ServiceMapping("other_service", true, "in entity '{$entityClass}' on field 'baz'"),
             ], "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'baz'"),
-            'faz' => new ChoiceMapping(new Column('faz_column', Type::getType('string'), [
+            'faz' => new ChoiceMapping(new DBALColumn('faz_column', Type::getType('string'), [
                 'notnull' => true,
                 'length' => 255,
             ]), [
                 'foo' => new ServiceMapping("some_service", false, "in entity '{$entityClass}' on field 'faz'"),
                 'bar' => new ServiceMapping("other_service", true, "in entity '{$entityClass}' on field 'faz'"),
             ], "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'faz'"),
+            'boo' => new ObjectMapping(ValueObjectExample::class, [
+                'foo' => new ServiceMapping("some_service", false, "in entity '{$entityClass}' on field 'boo->foo'"),
+                'bar' => new FieldMapping(new DBALColumn('someField', Type::getType('string'), [
+                    'notnull' => true,
+                    'precision' => 0,
+                    'length' => 12,
+                ]), "in entity '{$entityClass}' on field 'boo->bar'"),
+            ], "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'boo'"),
         ];
 
         /** @var array<array<Service>> $annotationMap */
@@ -102,6 +126,7 @@ final class MappingAnnotationDriverTest extends TestCase
             'bar' => [$someAnnotationB],
             'baz' => [$someAnnotationC],
             'faz' => [$someAnnotationD],
+            'boo' => [$someAnnotationE],
         ];
 
         $this->annotationReader->method('getPropertyAnnotations')->will($this->returnCallback(

@@ -22,6 +22,10 @@ use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
+use Addiks\RDMBundle\Mapping\ObjectMapping;
+use Addiks\RDMBundle\Tests\ValueObjectExample;
+use Addiks\RDMBundle\Mapping\CallDefinition;
+use Addiks\RDMBundle\Mapping\FieldMapping;
 
 final class MappingXmlDriverTest extends TestCase
 {
@@ -68,7 +72,66 @@ final class MappingXmlDriverTest extends TestCase
             'far' => new ChoiceMapping(new Column("far_column", Type::getType('string'), ['notnull' => false]), [
                 'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
                 'ipsum' => new ServiceMapping("ipsum_service", false, "in file '{$mappingFilePath}'"),
+                'dolor' => new ObjectMapping(
+                    ValueObjectExample::class,
+                    [],
+                    "in file '{$mappingFilePath}'",
+                    new CallDefinition("createFromJson", "self"),
+                    new CallDefinition("serializeJson")
+                ),
             ], "in file '{$mappingFilePath}'"),
+            'boo' => new ObjectMapping(ValueObjectExample::class, [
+                'scalarValue' => new FieldMapping(
+                    new Column("scalarValue", Type::getType('string'), ['notnull' => false]),
+                    "in file '{$mappingFilePath}'"
+                ),
+                'lorem' => new FieldMapping(
+                    new Column("lorem", Type::getType('string'), ['notnull' => false]),
+                    "in file '{$mappingFilePath}'"
+                ),
+                'dolor' => new FieldMapping(
+                    new Column("dolor", Type::getType('integer'), ['notnull' => false]),
+                    "in file '{$mappingFilePath}'"
+                ),
+            ], "in file '{$mappingFilePath}'"),
+            'abc' => new ObjectMapping(
+                ValueObjectExample::class,
+                [],
+                "in file '{$mappingFilePath}'",
+                new CallDefinition("createFromJson", "self"),
+                new CallDefinition("serializeJson")
+            ),
+            'def' => new ObjectMapping(
+                ValueObjectExample::class,
+                [
+                    'lorem' => new FieldMapping(
+                        new Column("lorem", Type::getType('string'), ['notnull' => false]),
+                        "in file '{$mappingFilePath}'"
+                    ),
+                    'dolor' => new FieldMapping(
+                        new Column("dolor", Type::getType('integer'), ['notnull' => false]),
+                        "in file '{$mappingFilePath}'"
+                    ),
+                ],
+                "in file '{$mappingFilePath}'",
+                new CallDefinition("createValueObject", "@value_object.factory", [
+                    new FieldMapping(
+                        new Column("def", Type::getType('integer'), ['notnull' => false]),
+                        "in file '{$mappingFilePath}'"
+                    )
+                ])
+            ),
+            'ghi' => new ObjectMapping(
+                ValueObjectExample::class,
+                [],
+                "in file '{$mappingFilePath}'",
+                new CallDefinition("createValueObject", "@value_object.factory", [
+                    new ChoiceMapping('baz_column', [
+                        'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
+                        'ipsum' => new ServiceMapping("ipsum_service", true,  "in file '{$mappingFilePath}'"),
+                    ], "in file '{$mappingFilePath}'")
+                ])
+            ),
         ]);
 
         $this->fileLocator->method('fileExists')->willReturn(true);

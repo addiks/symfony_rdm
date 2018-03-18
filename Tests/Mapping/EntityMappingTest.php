@@ -57,6 +57,23 @@ final class EntityMappingTest extends TestCase
     /**
      * @test
      */
+    public function shouldStoreClassName()
+    {
+        $this->assertEquals(EntityExample::class, $this->entityMapping->getClassName());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldHaveNoFactoryOrSerializer()
+    {
+        $this->assertSame(null, $this->entityMapping->getFactory());
+        $this->assertSame(null, $this->entityMapping->getSerializer());
+    }
+
+    /**
+     * @test
+     */
     public function shouldStoreFieldMappings()
     {
         $this->assertEquals([

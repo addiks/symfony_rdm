@@ -4,19 +4,20 @@
  * This package (including this file) was released under the terms of the GPL-3.0.
  * You should have received a copy of the GNU General Public License along with this program.
  * If not, see <http://www.gnu.org/licenses/> or send me a mail so i can send you a copy.
+ *
  * @license GPL-3.0
+ *
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
 namespace Addiks\RDMBundle\Mapping;
 
-use Addiks\RDMBundle\Mapping\MappingInterface;
-use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\ObjectMappingInterface;
 use Doctrine\DBAL\Schema\Column;
-use Addiks\RDMBundle\Mapping\ObjectMapping;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
 
-final class EntityMapping implements EntityMappingInterface
+final class ObjectMapping implements ObjectMappingInterface
 {
 
     /**
@@ -29,9 +30,32 @@ final class EntityMapping implements EntityMappingInterface
      */
     private $fieldMappings = array();
 
-    public function __construct(string $className, array $fieldMappings)
-    {
+    /**
+     * @var CallDefinitionInterface|null
+     */
+    private $factory;
+
+    /**
+     * @var CallDefinitionInterface|null
+     */
+    private $serializer;
+
+    /**
+     * @var string
+     */
+    private $origin;
+
+    public function __construct(
+        string $className,
+        array $fieldMappings,
+        string $origin = "undefined",
+        CallDefinitionInterface $factory = null,
+        CallDefinitionInterface $serializer = null
+    ) {
         $this->className = $className;
+        $this->factory = $factory;
+        $this->serializer = $serializer;
+        $this->origin = $origin;
 
         foreach ($fieldMappings as $fieldName => $fieldMapping) {
             /** @var MappingInterface $fieldMapping */
@@ -40,11 +64,6 @@ final class EntityMapping implements EntityMappingInterface
 
             $this->fieldMappings[$fieldName] = $fieldMapping;
         }
-    }
-
-    public function getEntityClassName(): string
-    {
-        return $this->className;
     }
 
     public function getClassName(): string
@@ -59,7 +78,7 @@ final class EntityMapping implements EntityMappingInterface
 
     public function describeOrigin(): string
     {
-        return $this->className;
+        return $this->origin;
     }
 
     public function collectDBALColumns(): array
@@ -81,12 +100,12 @@ final class EntityMapping implements EntityMappingInterface
 
     public function getFactory(): ?CallDefinitionInterface
     {
-        return null;
+        return $this->factory;
     }
 
     public function getSerializer(): ?CallDefinitionInterface
     {
-        return null;
+        return $this->serializer;
     }
 
 }

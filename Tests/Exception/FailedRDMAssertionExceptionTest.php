@@ -15,6 +15,7 @@ use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
 use ReflectionClass;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
+use Addiks\RDMBundle\Tests\ValueObjectExample;
 
 final class FailedRDMAssertionExceptionTest extends TestCase
 {
@@ -77,6 +78,28 @@ final class FailedRDMAssertionExceptionTest extends TestCase
                 EntityExample::class,
                 ServiceExample::class,
                 spl_object_hash($serviceB)
+            ),
+            $actualException->getMessage()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldCreateExpectedInstanceOfException()
+    {
+        /** @var FailedRDMAssertionException $actualException */
+        $actualException = FailedRDMAssertionException::expectedInstanceOf(
+            ValueObjectExample::class,
+            EntityExample::class,
+            "some origin"
+        );
+
+        $this->assertEquals(
+            sprintf(
+                "Expected instance of %s on entity %s as specified in some origin!",
+                ValueObjectExample::class,
+                EntityExample::class
             ),
             $actualException->getMessage()
         );

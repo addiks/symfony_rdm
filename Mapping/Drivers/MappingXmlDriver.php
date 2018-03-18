@@ -23,6 +23,14 @@ use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use DOMAttr;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
+use Addiks\RDMBundle\Mapping\ObjectMapping;
+use Addiks\RDMBundle\Mapping\ObjectMappingInterface;
+use Addiks\RDMBundle\Mapping\ChoiceMappingInterface;
+use Addiks\RDMBundle\Mapping\ServiceMappingInterface;
+use DOMNamedNodeMap;
+use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
+use Addiks\RDMBundle\Mapping\CallDefinition;
+use Addiks\RDMBundle\Mapping\FieldMapping;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -63,32 +71,34 @@ final class MappingXmlDriver implements MappingDriverInterface
             $dom = new DOMDocument();
             $dom->loadXML(file_get_contents($mappingFile));
 
-            /** @var string $rdmPrefix */
-            $rdmPrefix = $dom->lookupPrefix(self::RDM_SCHEMA_URI);
+            /** @var DOMXPath $xpath */
+            $xpath = $this->createXPath($dom->documentElement);
 
-            if (!empty($rdmPrefix)) {
-                $xpath = new DOMXPath($dom);
+            foreach ($xpath->query("//orm:entity/rdm:service", $dom) as $serviceNode) {
+                /** @var DOMNode $serviceNode */
 
-                $xpath->registerNamespace($rdmPrefix, self::RDM_SCHEMA_URI);
-                $xpath->registerNamespace("d", self::DOCTRINE_SCHEMA_URI);
+                /** @var string $fieldName */
+                $fieldName = (string)$serviceNode->attributes->getNamedItem("field")->nodeValue;
 
-                foreach ($xpath->query("//d:entity/{$rdmPrefix}:service", $dom) as $serviceNode) {
-                    /** @var DOMNode $serviceNode */
+                $fieldMappings[$fieldName] = $this->readService($serviceNode, $mappingFile);
+            }
 
-                    /** @var string $fieldName */
-                    $fieldName = (string)$serviceNode->attributes->getNamedItem("field")->nodeValue;
+            foreach ($xpath->query("//orm:entity/rdm:choice", $dom) as $choiceNode) {
+                /** @var DOMNode $choiceNode */
 
-                    $fieldMappings[$fieldName] = $this->readService($serviceNode, $mappingFile);
-                }
+                /** @var string $fieldName */
+                $fieldName = (string)$choiceNode->attributes->getNamedItem("field")->nodeValue;
 
-                foreach ($xpath->query("//d:entity/{$rdmPrefix}:choice", $dom) as $choiceNode) {
-                    /** @var DOMNode $choiceNode */
+                $fieldMappings[$fieldName] = $this->readChoice($choiceNode, $mappingFile, $fieldName);
+            }
 
-                    /** @var string $fieldName */
-                    $fieldName = (string)$choiceNode->attributes->getNamedItem("field")->nodeValue;
+            foreach ($xpath->query("//orm:entity/rdm:object", $dom) as $objectNode) {
+                /** @var DOMNode $objectNode */
 
-                    $fieldMappings[$fieldName] = $this->readChoice($choiceNode, $mappingFile, $fieldName);
-                }
+                /** @var string $fieldName */
+                $fieldName = (string)$objectNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = $this->readObject($objectNode, $mappingFile);
             }
         }
 
@@ -99,9 +109,96 @@ final class MappingXmlDriver implements MappingDriverInterface
         return $mapping;
     }
 
-    private function readChoice(DOMNode $choiceNode, string $mappingFile, string $defaultColumnName): ChoiceMapping
+    private function createXPath(DOMNode $node): DOMXPath
     {
-        /** @var string|Colum $columnName */
+        $xpath = new DOMXPath($node->ownerDocument);
+        $xpath->registerNamespace('rdm', self::RDM_SCHEMA_URI);
+        $xpath->registerNamespace('orm', self::DOCTRINE_SCHEMA_URI);
+
+        return $xpath;
+    }
+
+    private function readObject(DOMNode $objectNode, string $mappingFile): ObjectMappingInterface
+    {
+        /** @var DOMNamedNodeMap $attributes */
+        $objectNodeAttributes = $objectNode->attributes;
+
+        $className = (string)$objectNodeAttributes->getNamedItem("class")->nodeValue;
+
+        /** @var CallDefinitionInterface|null $factory */
+        $factory = null;
+
+        /** @var CallDefinitionInterface|null $factory */
+        $serializer = null;
+
+        /** @var DOMXPath $xpath */
+        $xpath = $this->createXPath($objectNode);
+
+        foreach ($xpath->query('rdm:factory', $objectNode) as $factoryNode) {
+            /** @var DOMNode $factoryNode */
+
+            /** @var array<MappingInterface> $argumentMappings */
+            $argumentMappings = $this->readFieldMappings($factoryNode, $mappingFile);
+
+            /** @var string $routineName */
+            $routineName = (string)$factoryNode->attributes->getNamedItem('method')->nodeValue;
+
+            /** @var string $objectReference */
+            $objectReference = (string)$factoryNode->attributes->getNamedItem('object')->nodeValue;
+
+            $factory = new CallDefinition($routineName, $objectReference, $argumentMappings);
+        }
+
+        if ($objectNodeAttributes->getNamedItem("factory") !== null && is_null($factory)) {
+            $factory = $this->readCallDefinition(
+                (string)$objectNodeAttributes->getNamedItem("factory")->nodeValue
+            );
+        }
+
+        if ($objectNodeAttributes->getNamedItem("serialize") !== null) {
+            $serializer = $this->readCallDefinition(
+                (string)$objectNodeAttributes->getNamedItem("serialize")->nodeValue
+            );
+        }
+
+        /** @var array<MappingInterface> $fieldMappings */
+        $fieldMappings = $this->readFieldMappings($objectNode, $mappingFile);
+
+        return new ObjectMapping(
+            $className,
+            $fieldMappings,
+            sprintf(
+                "in file '%s'",
+                $mappingFile
+            ),
+            $factory,
+            $serializer
+        );
+    }
+
+    private function readCallDefinition(string $callDefinition): CallDefinitionInterface
+    {
+        /** @var string $routineName */
+        $routineName = $callDefinition;
+
+        /** @var string|null $objectReference */
+        $objectReference = null;
+
+        $callDefinition = str_replace('->', '::', $callDefinition);
+
+        if (strpos($callDefinition, '::') !== false) {
+            [$objectReference, $routineName] = explode('::', $callDefinition);
+        }
+
+        return new CallDefinition($routineName, $objectReference);
+    }
+
+    private function readChoice(
+        DOMNode $choiceNode,
+        string $mappingFile,
+        string $defaultColumnName
+    ): ChoiceMappingInterface {
+        /** @var string|Column $columnName */
         $column = $defaultColumnName;
 
         if (!is_null($choiceNode->attributes->getNamedItem("column"))) {
@@ -111,46 +208,29 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var array<MappingInterface> $choiceMappings */
         $choiceMappings = array();
 
-        foreach ($choiceNode->childNodes as $optionNode) {
+        /** @var DOMXPath $xpath */
+        $xpath = $this->createXPath($choiceNode);
+
+        foreach ($xpath->query('rdm:option', $choiceNode) as $optionNode) {
             /** @var DOMNode $optionNode */
 
-            while ($optionNode instanceof DOMNode && in_array($optionNode->nodeType, [
-                XML_TEXT_NODE,
-                XML_COMMENT_NODE
-            ])) {
-                $optionNode = $optionNode->nextSibling;
+            /** @var string $determinator */
+            $determinator = (string)$optionNode->attributes->getNamedItem("name")->nodeValue;
+
+            /** @var string $optionDefaultColumnName */
+            $optionDefaultColumnName = sprintf("%s_%s", $defaultColumnName, $determinator);
+
+            foreach ($this->readFieldMappings($optionNode, $mappingFile, $optionDefaultColumnName) as $mapping) {
+                /** @var MappingInterface $mapping */
+
+                $choiceMappings[$determinator] = $mapping;
             }
+        }
 
-            if ($optionNode instanceof DOMNode) {
-                /** @var mixed $nodeName */
-                $nodeName = $optionNode->namespaceURI . ":" . $optionNode->localName;
+        foreach ($xpath->query('orm:field', $choiceNode) as $fieldNode) {
+            /** @var DOMNode $fieldNode */
 
-                if ($nodeName === self::RDM_SCHEMA_URI . ":option") {
-                    /** @var string $determinator */
-                    $determinator = (string)$optionNode->attributes->getNamedItem("name")->nodeValue;
-
-                    /** @var DOMNode $optionMappingNode */
-                    $optionMappingNode = $optionNode->firstChild;
-
-                    while (in_array($optionMappingNode->nodeType, [XML_TEXT_NODE, XML_COMMENT_NODE])) {
-                        $optionMappingNode = $optionMappingNode->nextSibling;
-                    }
-
-                    if ($optionMappingNode->nodeName === $optionMappingNode->prefix . ":service") {
-                        $choiceMappings[$determinator] = $this->readService($optionMappingNode, $mappingFile);
-
-                    } elseif ($optionMappingNode->nodeName === $optionMappingNode->prefix . ":choice") {
-                        $choiceMappings[$determinator] = $this->readChoice($optionMappingNode, $mappingFile, sprintf(
-                            "%s_%s",
-                            $defaultColumnName,
-                            $determinator
-                        ));
-                    }
-
-                } elseif ($nodeName === self::DOCTRINE_SCHEMA_URI . ":field") {
-                    $column = $this->readDoctrineField($optionNode);
-                }
-            }
+            $column = $this->readDoctrineField($fieldNode);
         }
 
         return new ChoiceMapping($column, $choiceMappings, sprintf(
@@ -159,7 +239,97 @@ final class MappingXmlDriver implements MappingDriverInterface
         ));
     }
 
-    private function readService(DOMNode $serviceNode, string $mappingFile): ServiceMapping
+    /**
+     * @return array<MappingInterface>
+     */
+    private function readFieldMappings(
+        DOMNode $objectNode,
+        string $mappingFile,
+        string $choiceDefaultColumnName = null
+    ): array {
+        /** @var DOMXPath $xpath */
+        $xpath = $this->createXPath($objectNode);
+
+        /** @var array<MappingInterface> $fieldMappings */
+        $fieldMappings = array();
+
+        foreach ($xpath->query('rdm:service', $objectNode) as $serviceNode) {
+            /** @var DOMNode $serviceNode */
+
+            $serviceMapping = $this->readService($serviceNode, $mappingFile);
+
+            if (!is_null($serviceNode->attributes->getNamedItem("field"))) {
+                /** @var string $fieldName */
+                $fieldName = (string)$serviceNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = $serviceMapping;
+
+            } else {
+                $fieldMappings[] = $serviceMapping;
+            }
+        }
+
+        foreach ($xpath->query('rdm:choice', $objectNode) as $choiceNode) {
+            /** @var DOMNode $choiceNode */
+
+            /** @var string $defaultColumnName */
+            $defaultColumnName = "";
+
+            if (!is_null($choiceDefaultColumnName)) {
+                $defaultColumnName = $choiceDefaultColumnName;
+
+            } elseif (!is_null($choiceNode->attributes->getNamedItem("field"))) {
+                $defaultColumnName = (string)$choiceNode->attributes->getNamedItem("field")->nodeValue;
+            }
+
+            $choiceMapping = $this->readChoice($choiceNode, $mappingFile, $defaultColumnName);
+
+            if (!is_null($choiceNode->attributes->getNamedItem("field"))) {
+                /** @var string $fieldName */
+                $fieldName = (string)$choiceNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = $choiceMapping;
+
+            } else {
+                $fieldMappings[] = $choiceMapping;
+            }
+        }
+
+        foreach ($xpath->query('rdm:object', $objectNode) as $objectNode) {
+            /** @var DOMNode $objectNode */
+
+            /** @var ObjectMappingInterface $innerObjectMapping */
+            $objectMapping = $this->readObject($objectNode, $mappingFile);
+
+            if (!is_null($objectNode->attributes->getNamedItem("field"))) {
+                /** @var string $fieldName */
+                $fieldName = (string)$objectNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = $objectMapping;
+
+            } else {
+                $fieldMappings[] = $objectMapping;
+            }
+        }
+
+        foreach ($xpath->query('orm:field', $objectNode) as $fieldNode) {
+            /** @var DOMNode $fieldNode */
+
+            /** @var Column $column */
+            $column = $this->readDoctrineField($fieldNode);
+
+            $fieldName = $column->getName();
+
+            $fieldMappings[$fieldName] = new FieldMapping(
+                $column,
+                sprintf("in file '%s'", $mappingFile)
+            );
+        }
+
+        return $fieldMappings;
+    }
+
+    private function readService(DOMNode $serviceNode, string $mappingFile): ServiceMappingInterface
     {
         /** @var bool $lax */
         $lax = false;

@@ -44,7 +44,54 @@
             <rdm:option name="ipsum">
                 <rdm:service id="ipsum_service" />
             </rdm:option>
+            <rdm:option name="dolor">
+                <rdm:object
+                    class="Addiks\RDMBundle\Tests\ValueObjectExample"
+                    factory="self::createFromJson"
+                    serialize="serializeJson"
+                />
+            </rdm:option>
         </rdm:choice>
+
+        <rdm:object field="boo" class="Addiks\RDMBundle\Tests\ValueObjectExample">
+            <field type="string"  name="scalarValue" nullable="true" />
+            <field type="string"  name="lorem" nullable="true" />
+            <field type="integer" name="dolor" nullable="true" />
+        </rdm:object>
+
+        <rdm:object
+            field="abc"
+            class="Addiks\RDMBundle\Tests\ValueObjectExample"
+            factory="self::createFromJson"
+            serialize="serializeJson"
+        />
+
+        <rdm:object
+            field="def"
+            class="Addiks\RDMBundle\Tests\ValueObjectExample"
+        >
+            <rdm:factory object="@value_object.factory" method="createValueObject">
+                <field type="integer" name="def" nullable="true" />
+            </rdm:factory>
+            <field type="string"  name="lorem" nullable="true" />
+            <field type="integer" name="dolor" nullable="true" />
+        </rdm:object>
+
+        <rdm:object
+            field="ghi"
+            class="Addiks\RDMBundle\Tests\ValueObjectExample"
+        >
+            <rdm:factory object="@value_object.factory" method="createValueObject">
+                <rdm:choice column="baz_column">
+                    <rdm:option name="lorem">
+                        <rdm:service id="lorem_service" />
+                    </rdm:option>
+                    <rdm:option name="ipsum">
+                        <rdm:service id="ipsum_service" lax="true" />
+                    </rdm:option>
+                </rdm:choice>
+            </rdm:factory>
+        </rdm:object>
 
     </entity>
 

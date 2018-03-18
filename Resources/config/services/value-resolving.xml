@@ -18,6 +18,16 @@
                     key="Addiks\RDMBundle\Mapping\ChoiceMapping"
                     id="addiks_rdm.value_resolver.choice"
                 />
+                <argument
+                    type="service"
+                    key="Addiks\RDMBundle\Mapping\ObjectMapping"
+                    id="addiks_rdm.value_resolver.object"
+                />
+                <argument
+                    type="service"
+                    key="Addiks\RDMBundle\Mapping\FieldMapping"
+                    id="addiks_rdm.value_resolver.field"
+                />
             </argument>
         </service>
 
@@ -34,6 +44,23 @@
         </service>
 
         <service id="addiks_rdm.value_resolver.choice" class="Addiks\RDMBundle\ValueResolver\ChoiceValueResolver">
+            <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
+        </service>
+
+        <service id="addiks_rdm.value_resolver.object" class="Addiks\RDMBundle\ValueResolver\ObjectValueResolver">
+            <argument type="service" id="service_container" />
+            <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
+            <argument type="service" id="addiks_rdm.value_resolver.call_definition_executer" />
+        </service>
+
+        <service id="addiks_rdm.value_resolver.field" class="Addiks\RDMBundle\ValueResolver\FieldValueResolver">
+        </service>
+
+        <service
+            id="addiks_rdm.value_resolver.call_definition_executer"
+            class="Addiks\RDMBundle\ValueResolver\CallDefinitionExecuter"
+        >
+            <argument type="service" id="service_container" />
             <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
         </service>
 

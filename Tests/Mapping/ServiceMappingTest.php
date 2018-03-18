@@ -8,7 +8,7 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Tests\Mapping\ServiceMapping;
+namespace Addiks\RDMBundle\Tests\Mapping;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\ServiceMapping;

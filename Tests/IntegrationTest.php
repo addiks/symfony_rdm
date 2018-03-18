@@ -51,6 +51,9 @@ use Doctrine\DBAL\Statement;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\Event\PostFlushEventArgs;
+use Addiks\RDMBundle\Tests\ValueObjectExample;
+use Addiks\RDMBundle\Mapping\Annotation\Call;
+use Addiks\RDMBundle\Mapping\Annotation\Obj;
 
 /**
  * This is an integration-test that test's the bundle as a whole.
@@ -377,6 +380,11 @@ final class IntegrationTest extends TestCase
                 ]),
             ],
             'baz' => [],
+            'boo' => [
+                Object::class => $this->createObject(ValueObjectExample::class, [
+                    'lorem' => $this->createColumn('lorem')
+                ])
+            ]
         );
 
         $this->configureMockedAnnotationReader($this->annotationReader, $annotationMap);
@@ -410,7 +418,8 @@ final class IntegrationTest extends TestCase
 
         $statement->method("fetch")->willReturn([
             'foo_column' => null,
-            'bar_column' => 'a'
+            'bar_column' => 'a',
+            'lorem' => 'ipsum'
         ]);
 
         $classTable = new Table("some_table");
@@ -437,6 +446,7 @@ final class IntegrationTest extends TestCase
 
         $this->assertTrue($classTable->hasColumn("foo_column"));
         $this->assertTrue($classTable->hasColumn("bar_column"));
+        $this->assertTrue($classTable->hasColumn("lorem"));
 
         $entity = new EntityExample();
         $entity->id = 123;
@@ -469,6 +479,8 @@ final class IntegrationTest extends TestCase
         ));
 
         $this->assertSame($serviceA, $loadedEntity->bar);
+        $this->assertTrue($loadedEntity->getBoo() instanceof ValueObjectExample);
+        $this->assertEquals("ipsum", $loadedEntity->getBoo()->lorem);
     }
 
     private function spawnEventListener(): EventListener
@@ -555,6 +567,21 @@ final class IntegrationTest extends TestCase
         $service->id = $id;
 
         return $service;
+    }
+
+    private function createObject(
+        string $className,
+        array $fields,
+        Call $factory = null,
+        Call $serialize = null
+    ): Obj {
+        $object = new Obj();
+        $object->{"class"} = $className;
+        $object->fields = $fields;
+        $object->factory = $factory;
+        $object->serialize = $serialize;
+
+        return $object;
     }
 
     private function createChoice(string $columnName = null, array $choices = array()): Choice

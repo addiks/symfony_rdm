@@ -11,6 +11,7 @@
 namespace Addiks\RDMBundle\Tests\Hydration;
 
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
+use Addiks\RDMBundle\Tests\ValueObjectExample;
 
 class EntityExample
 {
@@ -40,16 +41,33 @@ class EntityExample
      */
     private $faz;
 
+    /**
+     * @var null|ValueObjectExample
+     */
+    public $boo;
+
+    /**
+     * @var null|mixed
+     */
+    public $abc;
+
+    /**
+     * @var null|mixed
+     */
+    public $def;
+
     public function __construct(
         ServiceExample $foo = null,
         ServiceExample $bar = null,
         ServiceExample $baz = null,
-        ServiceExample $faz = null
+        ServiceExample $faz = null,
+        ValueObjectExample $boo = null
     ) {
         $this->foo = $foo;
         $this->bar = $bar;
         $this->baz = $baz;
         $this->faz = $faz;
+        $this->boo = $boo;
     }
 
     public static $staticMetadata;
@@ -62,6 +80,11 @@ class EntityExample
     public function getFaz(): ?ServiceExample
     {
         return $this->faz;
+    }
+
+    public function getBoo(): ?ValueObjectExample
+    {
+        return $this->boo;
     }
 
 }

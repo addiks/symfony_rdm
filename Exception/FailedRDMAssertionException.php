@@ -88,4 +88,21 @@ final class FailedRDMAssertionException extends ErrorException implements Failed
         );
     }
 
+    public static function expectedInstanceOf(
+        string $expectedClassName,
+        string $actualClassName,
+        string $declarationOrigin
+    ): FailedRDMAssertionException {
+        return new self(
+            sprintf(
+                "Expected instance of %s on entity %s as specified in %s!",
+                $expectedClassName,
+                $actualClassName,
+                $declarationOrigin
+            ),
+            "EXPECTED_INSTNACE_OF",
+            [$expectedClassName, $actualClassName, $declarationOrigin]
+        );
+    }
+
 }
