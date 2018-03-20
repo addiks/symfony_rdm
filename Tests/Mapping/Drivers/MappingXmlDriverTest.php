@@ -26,6 +26,7 @@ use Addiks\RDMBundle\Mapping\ObjectMapping;
 use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Mapping\CallDefinition;
 use Addiks\RDMBundle\Mapping\FieldMapping;
+use Addiks\RDMBundle\Mapping\ArrayMapping;
 
 final class MappingXmlDriverTest extends TestCase
 {
@@ -131,6 +132,23 @@ final class MappingXmlDriverTest extends TestCase
                         'ipsum' => new ServiceMapping("ipsum_service", true,  "in file '{$mappingFilePath}'"),
                     ], "in file '{$mappingFilePath}'")
                 ])
+            ),
+            'jkl' => new ArrayMapping(
+                [
+                    new ObjectMapping(ValueObjectExample::class, [], "in file '{$mappingFilePath}'"),
+                    new ObjectMapping(ValueObjectExample::class, [
+                        'qwe' => new ArrayMapping([], "in file '{$mappingFilePath}'")
+                    ], "in file '{$mappingFilePath}'"),
+                    new ObjectMapping(ValueObjectExample::class, [], "in file '{$mappingFilePath}'"),
+                ],
+                "in file '{$mappingFilePath}'"
+            ),
+            'mno' => new ArrayMapping(
+                [
+                    'foo' => new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
+                    'bar' => new ServiceMapping('other_service', false, "in file '{$mappingFilePath}'"),
+                ],
+                "in file '{$mappingFilePath}'"
             ),
         ]);
 

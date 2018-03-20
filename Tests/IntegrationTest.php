@@ -54,6 +54,7 @@ use Doctrine\ORM\Event\PostFlushEventArgs;
 use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Mapping\Annotation\Call;
 use Addiks\RDMBundle\Mapping\Annotation\Obj;
+use Addiks\RDMBundle\Mapping\Annotation\Arr;
 
 /**
  * This is an integration-test that test's the bundle as a whole.
@@ -381,9 +382,14 @@ final class IntegrationTest extends TestCase
             ],
             'baz' => [],
             'boo' => [
-                Object::class => $this->createObject(ValueObjectExample::class, [
+                Obj::class => $this->createObject(ValueObjectExample::class, [
                     'lorem' => $this->createColumn('lorem')
                 ])
+            ],
+            'arr' => [
+                Arr::class => $this->createArray([
+                    'dolor' => $this->createColumn('dolor')
+                ]),
             ]
         );
 
@@ -419,7 +425,8 @@ final class IntegrationTest extends TestCase
         $statement->method("fetch")->willReturn([
             'foo_column' => null,
             'bar_column' => 'a',
-            'lorem' => 'ipsum'
+            'lorem' => 'ipsum',
+            'dolor' => 'sit amet'
         ]);
 
         $classTable = new Table("some_table");
@@ -447,6 +454,7 @@ final class IntegrationTest extends TestCase
         $this->assertTrue($classTable->hasColumn("foo_column"));
         $this->assertTrue($classTable->hasColumn("bar_column"));
         $this->assertTrue($classTable->hasColumn("lorem"));
+        $this->assertTrue($classTable->hasColumn("dolor"));
 
         $entity = new EntityExample();
         $entity->id = 123;
@@ -481,6 +489,7 @@ final class IntegrationTest extends TestCase
         $this->assertSame($serviceA, $loadedEntity->bar);
         $this->assertTrue($loadedEntity->getBoo() instanceof ValueObjectExample);
         $this->assertEquals("ipsum", $loadedEntity->getBoo()->lorem);
+        $this->assertEquals("sit amet", $loadedEntity->arr['dolor']);
     }
 
     private function spawnEventListener(): EventListener
@@ -591,6 +600,14 @@ final class IntegrationTest extends TestCase
         $choice->choices = $choices;
 
         return $choice;
+    }
+
+    private function createArray(array $entries)
+    {
+        $array = new Arr();
+        $array->entries = $entries;
+
+        return $array;
     }
 
 }

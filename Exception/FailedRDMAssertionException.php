@@ -56,24 +56,10 @@ final class FailedRDMAssertionException extends ErrorException implements Failed
         $actualService
     ): FailedRDMAssertionException {
         /** @var string $actualDescription */
-        $actualDescription = null;
-
-        if (is_object($actualService)) {
-            $actualDescription = get_class($actualService) . '#' . spl_object_hash($actualService);
-
-        } else {
-            $actualDescription = gettype($actualService);
-        }
+        $actualDescription = self::generateDescriptionForValue($actualService);
 
         /** @var string $expectedDescription */
-        $expectedDescription = null;
-
-        if (is_object($expectedService)) {
-            $expectedDescription = get_class($expectedService) . '#' . spl_object_hash($expectedService);
-
-        } else {
-            $expectedDescription = gettype($expectedService);
-        }
+        $expectedDescription = self::generateDescriptionForValue($expectedService);
 
         return new self(
             sprintf(
@@ -95,7 +81,7 @@ final class FailedRDMAssertionException extends ErrorException implements Failed
     ): FailedRDMAssertionException {
         return new self(
             sprintf(
-                "Expected instance of %s on entity %s as specified in %s!",
+                "Expected instance of %s instead of %s as specified in %s!",
                 $expectedClassName,
                 $actualClassName,
                 $declarationOrigin
@@ -103,6 +89,46 @@ final class FailedRDMAssertionException extends ErrorException implements Failed
             "EXPECTED_INSTNACE_OF",
             [$expectedClassName, $actualClassName, $declarationOrigin]
         );
+    }
+
+    /**
+     * @param mixed $actualValue
+     */
+    public static function expectedArray(
+        $actualValue,
+        string $declarationOrigin
+    ): FailedRDMAssertionException {
+
+        /** @var string $description */
+        $description = self::generateDescriptionForValue($actualValue);
+
+        return new self(
+            sprintf(
+                "Expected array, got %s as specified in %s!",
+                $description,
+                $declarationOrigin
+            ),
+            "EXPECTED_INSTNACE_OF",
+            [$actualValue, $declarationOrigin]
+        );
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private static function generateDescriptionForValue($value): string
+    {
+        /** @var string $description */
+        $description = null;
+
+        if (is_object($value)) {
+            $description = get_class($value) . '#' . spl_object_hash($value);
+
+        } else {
+            $description = gettype($value);
+        }
+
+        return $description;
     }
 
 }

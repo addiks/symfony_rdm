@@ -56,6 +56,11 @@ class EntityExample
      */
     public $def;
 
+    /**
+     * @var null|array
+     */
+    public $arr;
+
     public function __construct(
         ServiceExample $foo = null,
         ServiceExample $bar = null,

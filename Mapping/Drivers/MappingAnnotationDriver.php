@@ -29,6 +29,8 @@ use Addiks\RDMBundle\Mapping\ObjectMapping;
 use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
 use Addiks\RDMBundle\Mapping\FieldMapping;
 use Addiks\RDMBundle\Mapping\Annotation\Obj;
+use Addiks\RDMBundle\Mapping\Annotation\Arr;
+use Addiks\RDMBundle\Mapping\ArrayMapping;
 
 final class MappingAnnotationDriver implements MappingDriverInterface
 {
@@ -199,6 +201,28 @@ final class MappingAnnotationDriver implements MappingDriverInterface
                 ),
                 $factory,
                 $serializer
+            );
+
+        } elseif ($annotation instanceof Arr) {
+            /** @var array<MappingInterface> $entryMappings */
+            $entryMappings = array();
+
+            foreach ($annotation->entries as $key => $entryAnnotaton) {
+                $entryMappings[$key] = $this->convertAnnotationToMapping(
+                    $entryAnnotaton,
+                    $fieldName . "->" . $key,
+                    $className,
+                    true
+                );
+            }
+
+            $fieldMapping = new ArrayMapping(
+                $entryMappings,
+                sprintf(
+                    "in entity '%s' on field '%s'",
+                    $className,
+                    $fieldName
+                )
             );
 
         } elseif ($annotation instanceof ColumnAnnotation && $convertFieldsOnRootLevel) {

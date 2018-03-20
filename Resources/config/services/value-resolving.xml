@@ -25,6 +25,11 @@
                 />
                 <argument
                     type="service"
+                    key="Addiks\RDMBundle\Mapping\ArrayMapping"
+                    id="addiks_rdm.value_resolver.array"
+                />
+                <argument
+                    type="service"
                     key="Addiks\RDMBundle\Mapping\FieldMapping"
                     id="addiks_rdm.value_resolver.field"
                 />
@@ -51,6 +56,10 @@
             <argument type="service" id="service_container" />
             <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
             <argument type="service" id="addiks_rdm.value_resolver.call_definition_executer" />
+        </service>
+
+        <service id="addiks_rdm.value_resolver.array" class="Addiks\RDMBundle\ValueResolver\ArrayValueResolver">
+            <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
         </service>
 
         <service id="addiks_rdm.value_resolver.field" class="Addiks\RDMBundle\ValueResolver\FieldValueResolver">

@@ -97,11 +97,32 @@ final class FailedRDMAssertionExceptionTest extends TestCase
 
         $this->assertEquals(
             sprintf(
-                "Expected instance of %s on entity %s as specified in some origin!",
+                "Expected instance of %s instead of %s as specified in some origin!",
                 ValueObjectExample::class,
                 EntityExample::class
             ),
             $actualException->getMessage()
         );
     }
+
+    /**
+     * @test
+     */
+    public function shouldCreateExpectedArrayException()
+    {
+        /** @var FailedRDMAssertionException $actualException */
+        $actualException = FailedRDMAssertionException::expectedArray(
+            ValueObjectExample::class,
+            "some origin"
+        );
+
+        $this->assertEquals(
+            sprintf(
+                "Expected array, got string as specified in some origin!",
+                ValueObjectExample::class
+            ),
+            $actualException->getMessage()
+        );
+    }
+
 }

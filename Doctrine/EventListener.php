@@ -141,11 +141,16 @@ final class EventListener
             foreach ($additionalColumns as $column) {
                 /** @var Column $column */
 
-                $table->addColumn(
-                    $column->getName(),
-                    $column->getType()->getName(),
-                    $column->toArray()
-                );
+                /** @var string $columnName */
+                $columnName = $column->getName();
+
+                if (!$table->hasColumn($columnName)) {
+                    $table->addColumn(
+                        $columnName,
+                        $column->getType()->getName(),
+                        $column->toArray()
+                    );
+                }
             }
         }
     }

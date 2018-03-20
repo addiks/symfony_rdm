@@ -28,6 +28,8 @@ use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Mapping\ObjectMapping;
 use Doctrine\ORM\Mapping\Column as ORMColumn;
 use Addiks\RDMBundle\Mapping\FieldMapping;
+use Addiks\RDMBundle\Mapping\Annotation\Arr;
+use Addiks\RDMBundle\Mapping\ArrayMapping;
 
 final class MappingAnnotationDriverTest extends TestCase
 {
@@ -92,6 +94,12 @@ final class MappingAnnotationDriverTest extends TestCase
             'bar' => $someAnnotationF,
         ];
 
+        $someAnnotationG = new Arr();
+        $someAnnotationG->entries = [
+            'foo' => $someAnnotationA,
+            'bar' => $someAnnotationF,
+        ];
+
         /** @var string $entityClass */
         $entityClass = EntityExample::class;
 
@@ -118,6 +126,14 @@ final class MappingAnnotationDriverTest extends TestCase
                     'length' => 12,
                 ]), "in entity '{$entityClass}' on field 'boo->bar'"),
             ], "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'boo'"),
+            'arr' => new ArrayMapping([
+                'foo' => new ServiceMapping("some_service", false, "in entity '{$entityClass}' on field 'arr->foo'"),
+                'bar' => new FieldMapping(new DBALColumn('someField', Type::getType('string'), [
+                    'notnull' => true,
+                    'precision' => 0,
+                    'length' => 12,
+                ]), "in entity '{$entityClass}' on field 'arr->bar'"),
+            ], "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'arr'")
         ];
 
         /** @var array<array<Service>> $annotationMap */
@@ -127,6 +143,7 @@ final class MappingAnnotationDriverTest extends TestCase
             'baz' => [$someAnnotationC],
             'faz' => [$someAnnotationD],
             'boo' => [$someAnnotationE],
+            'arr' => [$someAnnotationG],
         ];
 
         $this->annotationReader->method('getPropertyAnnotations')->will($this->returnCallback(

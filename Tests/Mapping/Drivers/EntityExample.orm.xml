@@ -93,6 +93,24 @@
             </rdm:factory>
         </rdm:object>
 
+        <rdm:array field="jkl">
+            <rdm:object class="Addiks\RDMBundle\Tests\ValueObjectExample" />
+            <rdm:object class="Addiks\RDMBundle\Tests\ValueObjectExample">
+                <rdm:array field="qwe" />
+            </rdm:object>
+            <rdm:object class="Addiks\RDMBundle\Tests\ValueObjectExample" />
+        </rdm:array>
+
+        <rdm:array field="mno">
+            <rdm:entry key="foo">
+                <rdm:service id="some_service" />
+            </rdm:entry>
+            <rdm:entry key="bar">
+                <rdm:service id="other_service" />
+                <rdm:service id="some_service" />
+            </rdm:entry>
+        </rdm:array>
+
     </entity>
 
 </doctrine-mapping>

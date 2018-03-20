@@ -31,6 +31,8 @@ use DOMNamedNodeMap;
 use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
 use Addiks\RDMBundle\Mapping\CallDefinition;
 use Addiks\RDMBundle\Mapping\FieldMapping;
+use Addiks\RDMBundle\Mapping\ArrayMapping;
+use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -99,6 +101,15 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $fieldName = (string)$objectNode->attributes->getNamedItem("field")->nodeValue;
 
                 $fieldMappings[$fieldName] = $this->readObject($objectNode, $mappingFile);
+            }
+
+            foreach ($xpath->query("//orm:entity/rdm:array", $dom) as $arrayNode) {
+                /** @var DOMNode $arrayNode */
+
+                /** @var string $fieldName */
+                $fieldName = (string)$arrayNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = $this->readArray($arrayNode, $mappingFile);
             }
         }
 
@@ -298,7 +309,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         foreach ($xpath->query('rdm:object', $objectNode) as $objectNode) {
             /** @var DOMNode $objectNode */
 
-            /** @var ObjectMappingInterface $innerObjectMapping */
+            /** @var ObjectMappingInterface $objectMapping */
             $objectMapping = $this->readObject($objectNode, $mappingFile);
 
             if (!is_null($objectNode->attributes->getNamedItem("field"))) {
@@ -326,6 +337,23 @@ final class MappingXmlDriver implements MappingDriverInterface
             );
         }
 
+        foreach ($xpath->query('rdm:array', $objectNode) as $arrayNode) {
+            /** @var DOMNode $arrayNode */
+
+            /** @var ArrayMappingInterface $arrayMapping */
+            $arrayMapping = $this->readArray($arrayNode, $mappingFile);
+
+            if (!is_null($arrayNode->attributes->getNamedItem("field"))) {
+                /** @var string $fieldName */
+                $fieldName = (string)$arrayNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = $arrayMapping;
+
+            } else {
+                $fieldMappings[] = $arrayMapping;
+            }
+        }
+
         return $fieldMappings;
     }
 
@@ -342,6 +370,44 @@ final class MappingXmlDriver implements MappingDriverInterface
         $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->nodeValue;
 
         return new ServiceMapping($serviceId, $lax, sprintf(
+            "in file '%s'",
+            $mappingFile
+        ));
+    }
+
+    private function readArray(DOMNode $arrayNode, string $mappingFile): ArrayMappingInterface
+    {
+        /** @var array<MappingInterface> $entryMappings */
+        $entryMappings = $this->readFieldMappings($arrayNode, $mappingFile);
+
+        /** @var DOMXPath $xpath */
+        $xpath = $this->createXPath($arrayNode);
+
+        foreach ($xpath->query('rdm:entry', $arrayNode) as $entryNode) {
+            /** @var DOMNode $entryNode */
+
+            /** @var string|null $key */
+            $key = null;
+
+            if ($entryNode->attributes->getNamedItem("key") instanceof DOMNode) {
+                $key = (string)$entryNode->attributes->getNamedItem("key")->nodeValue;
+            }
+
+            foreach ($this->readFieldMappings($entryNode, $mappingFile) as $entryMapping) {
+                /** @var MappingInterface $entryMapping */
+
+                if (is_null($key)) {
+                    $entryMappings[] = $entryMapping;
+
+                } else {
+                    $entryMappings[$key] = $entryMapping;
+                }
+
+                break;
+            }
+        }
+
+        return new ArrayMapping($entryMappings, sprintf(
             "in file '%s'",
             $mappingFile
         ));

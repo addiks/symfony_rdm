@@ -13,6 +13,7 @@
     <xs:element name="service" type="rdm:service" />
     <xs:element name="choice" type="rdm:choice" />
     <xs:element name="object" type="rdm:object" />
+    <xs:element name="service" type="rdm:array" />
 
     <xs:complexType name="choice">
         <xs:sequence>
@@ -20,8 +21,10 @@
                 <xs:complexType>
                     <xs:choice minOccurs="1" maxOccurs="1">
                         <xs:element name="service" type="rdm:service" />
-                        <xs:element name="service" type="rdm:choice" />
-                        <xs:element name="service" type="rdm:object" />
+                        <xs:element name="choice" type="rdm:choice" />
+                        <xs:element name="object" type="rdm:object" />
+                        <xs:element name="array" type="rdm:array" />
+                        <xs:element name="field" type="orm:field">
                     </xs:choice>
                     <xs:attribute name="name" type="xs:string" use="required" />
                 </xs:complexType>
@@ -35,9 +38,13 @@
         <xs:sequence>
             <xs:element name="factory" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="field" type="orm:field" minOccurs="0" maxOccurs="unbounded">
-                    </xs:sequence>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:element name="service" type="rdm:service" />
+                        <xs:element name="choice" type="rdm:choice" />
+                        <xs:element name="object" type="rdm:object" />
+                        <xs:element name="array" type="rdm:array" />
+                        <xs:element name="field" type="orm:field">
+                    </xs:choice>
                     <xs:attribute name="object" type="xs:string" use="required" />
                     <xs:attribute name="method" type="xs:string" use="required" />
                 </xs:complexType>
@@ -47,6 +54,29 @@
         <xs:attribute name="field"     type="xs:string" />
         <xs:attribute name="factory"   type="xs:string" />
         <xs:attribute name="serialize" type="xs:string" />
+    </xs:complexType>
+
+    <xs:complexType name="array">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="entry" type="rdm:entry" />
+            <xs:element name="service" type="rdm:service" />
+            <xs:element name="choice" type="rdm:choice" />
+            <xs:element name="object" type="rdm:object" />
+            <xs:element name="array" type="rdm:array" />
+            <xs:element name="field" type="orm:field">
+        </xs:choice>
+        <xs:attribute name="field" type="xs:string" />
+    </xs:complexType>
+
+    <xs:complexType name="entry">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="service" type="rdm:service" />
+            <xs:element name="choice" type="rdm:choice" />
+            <xs:element name="object" type="rdm:object" />
+            <xs:element name="array" type="rdm:array" />
+            <xs:element name="field" type="orm:field">
+        </xs:choice>
+        <xs:attribute name="key" type="xs:string" />
     </xs:complexType>
 
     <xs:complexType name="service">
