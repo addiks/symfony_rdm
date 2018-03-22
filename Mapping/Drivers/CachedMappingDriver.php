@@ -14,6 +14,7 @@ use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\CacheItemInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
 final class CachedMappingDriver implements MappingDriverInterface
 {
@@ -30,36 +31,56 @@ final class CachedMappingDriver implements MappingDriverInterface
      */
     private $cacheItemPool;
 
+    /**
+     * @var array<string, MappingInterface>
+     */
+    private $internalCachedMappings = array();
+
+    /**
+     * @var int
+     */
+    private $internalCachedMappingLimit;
+
     public function __construct(
         MappingDriverInterface $innerMappingDriver,
-        CacheItemPoolInterface $cacheItemPool
+        CacheItemPoolInterface $cacheItemPool,
+        int $internalCachedMappingLimit = 100
     ) {
         $this->innerMappingDriver = $innerMappingDriver;
         $this->cacheItemPool = $cacheItemPool;
+        $this->internalCachedMappingLimit = $internalCachedMappingLimit;
     }
 
     public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
-        /** @var ?EntityMappingInterface $mapping */
-        $mapping = null;
+        if (!array_key_exists($className, $this->internalCachedMappings)) {
+            /** @var ?EntityMappingInterface $mapping */
+            $mapping = null;
 
-        /** @var CacheItemInterface $cacheItem */
-        $cacheItem = $this->cacheItemPool->getItem(sprintf(
-            self::CACHE_KEY_FORMAT,
-            preg_replace("/[^a-zA-Z0-9]/is", "_", $className)
-        ));
+            /** @var CacheItemInterface $cacheItem */
+            $cacheItem = $this->cacheItemPool->getItem(sprintf(
+                self::CACHE_KEY_FORMAT,
+                preg_replace("/[^a-zA-Z0-9]/is", "_", $className)
+            ));
 
-        if ($cacheItem->isHit()) {
-            $mapping = unserialize($cacheItem->get());
+            if ($cacheItem->isHit()) {
+                $mapping = unserialize($cacheItem->get());
 
-        } else {
-            $mapping = $this->innerMappingDriver->loadRDMMetadataForClass($className);
+            } else {
+                $mapping = $this->innerMappingDriver->loadRDMMetadataForClass($className);
 
-            $cacheItem->set(serialize($mapping));
-            $this->cacheItemPool->saveDeferred($cacheItem);
+                $cacheItem->set(serialize($mapping));
+                $this->cacheItemPool->saveDeferred($cacheItem);
+            }
+
+            $this->internalCachedMappings[$className] = $mapping;
+
+            if (count($this->internalCachedMappings) > $this->internalCachedMappingLimit) {
+                array_shift($this->internalCachedMappings);
+            }
         }
 
-        return $mapping;
+        return $this->internalCachedMappings[$className];
     }
 
 }
