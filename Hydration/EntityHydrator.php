@@ -20,6 +20,7 @@ use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Addiks\RDMBundle\Hydration\HydrationContext;
 
 final class EntityHydrator implements EntityHydratorInterface
 {
@@ -76,13 +77,15 @@ final class EntityHydrator implements EntityHydratorInterface
             }
 
             if ($mapping instanceof EntityMappingInterface) {
+                $context = new HydrationContext($entity, $entityManager);
+
                 foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
                     /** @var MappingInterface $fieldMapping */
 
                     /** @var mixed $value */
                     $value = $this->valueResolver->resolveValue(
                         $fieldMapping,
-                        $entity,
+                        $context,
                         $dataFromAdditionalColumns
                     );
 
@@ -122,6 +125,8 @@ final class EntityHydrator implements EntityHydratorInterface
             }
 
             if ($mapping instanceof EntityMappingInterface) {
+                $context = new HydrationContext($entity, $entityManager);
+
                 foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
                     /** @var MappingInterface $fieldMapping */
 
@@ -135,7 +140,7 @@ final class EntityHydrator implements EntityHydratorInterface
 
                     $this->valueResolver->assertValue(
                         $fieldMapping,
-                        $entity,
+                        $context,
                         $dataFromAdditionalColumns,
                         $actualValue
                     );

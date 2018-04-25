@@ -75,6 +75,7 @@
             id="addiks_rdm.mapping.driver_factory.xml"
             class="Addiks\RDMBundle\Mapping\DriverFactories\MappingXMLDriverFactory"
         >
+            <argument type="service" id="kernel" />
             <argument>@=service('kernel').locateResource('@AddiksRDMBundle/Resources/mapping-schema.v1.xsd')</argument>
         </service>
 

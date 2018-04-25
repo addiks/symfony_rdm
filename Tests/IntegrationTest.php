@@ -53,8 +53,8 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Mapping\Annotation\Call;
-use Addiks\RDMBundle\Mapping\Annotation\Obj;
-use Addiks\RDMBundle\Mapping\Annotation\Arr;
+use Addiks\RDMBundle\Mapping\Annotation\RDMArray;
+use Addiks\RDMBundle\Mapping\Annotation\RDMObject;
 
 /**
  * This is an integration-test that test's the bundle as a whole.
@@ -382,12 +382,12 @@ final class IntegrationTest extends TestCase
             ],
             'baz' => [],
             'boo' => [
-                Obj::class => $this->createObject(ValueObjectExample::class, [
+                RDMObject::class => $this->createObject(ValueObjectExample::class, [
                     'lorem' => $this->createColumn('lorem')
                 ])
             ],
             'arr' => [
-                Arr::class => $this->createArray([
+                RDMArray::class => $this->createArray([
                     'dolor' => $this->createColumn('dolor')
                 ]),
             ]
@@ -583,8 +583,8 @@ final class IntegrationTest extends TestCase
         array $fields,
         Call $factory = null,
         Call $serialize = null
-    ): Obj {
-        $object = new Obj();
+    ): RDMObject {
+        $object = new RDMObject();
         $object->{"class"} = $className;
         $object->fields = $fields;
         $object->factory = $factory;
@@ -602,9 +602,9 @@ final class IntegrationTest extends TestCase
         return $choice;
     }
 
-    private function createArray(array $entries)
+    private function createArray(array $entries): RDMArray
     {
-        $array = new Arr();
+        $array = new RDMArray();
         $array->entries = $entries;
 
         return $array;

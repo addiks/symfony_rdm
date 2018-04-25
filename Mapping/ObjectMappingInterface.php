@@ -14,11 +14,14 @@ namespace Addiks\RDMBundle\Mapping;
 
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
+use Doctrine\DBAL\Schema\Column;
 
 interface ObjectMappingInterface extends MappingInterface
 {
 
     public function getClassName(): string;
+
+    public function getDBALColumn(): ?Column;
 
     /**
      * @return array<string, MappingInterface>
@@ -28,5 +31,11 @@ interface ObjectMappingInterface extends MappingInterface
     public function getFactory(): ?CallDefinitionInterface;
 
     public function getSerializer(): ?CallDefinitionInterface;
+
+    public function getId(): ?string;
+
+    public function getReferredObjectMapping(): ?MappingInterface;
+
+    public function getReferencedId(): ?string;
 
 }

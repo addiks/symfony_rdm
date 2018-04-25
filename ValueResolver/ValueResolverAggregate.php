@@ -12,6 +12,7 @@ namespace Addiks\RDMBundle\ValueResolver;
 
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ValueResolverAggregate implements ValueResolverInterface
 {
@@ -32,7 +33,7 @@ final class ValueResolverAggregate implements ValueResolverInterface
 
     public function revertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
         /** @var string $mappingClassName */
@@ -41,7 +42,7 @@ final class ValueResolverAggregate implements ValueResolverInterface
         if (isset($this->innerValueResolvers[$mappingClassName])) {
             return $this->innerValueResolvers[$mappingClassName]->revertValue(
                 $fieldMapping,
-                $entity,
+                $context,
                 $valueFromEntityField
             );
         }
@@ -51,7 +52,7 @@ final class ValueResolverAggregate implements ValueResolverInterface
 
     public function resolveValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
         /** @var string $mappingClassName */
@@ -60,7 +61,7 @@ final class ValueResolverAggregate implements ValueResolverInterface
         if (isset($this->innerValueResolvers[$mappingClassName])) {
             return $this->innerValueResolvers[$mappingClassName]->resolveValue(
                 $fieldMapping,
-                $entity,
+                $context,
                 $dataFromAdditionalColumns
             );
         }
@@ -68,7 +69,7 @@ final class ValueResolverAggregate implements ValueResolverInterface
 
     public function assertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
         $actualValue
     ): void {
@@ -78,7 +79,7 @@ final class ValueResolverAggregate implements ValueResolverInterface
         if (isset($this->innerValueResolvers[$mappingClassName])) {
             $this->innerValueResolvers[$mappingClassName]->assertValue(
                 $fieldMapping,
-                $entity,
+                $context,
                 $dataFromAdditionalColumns,
                 $actualValue
             );

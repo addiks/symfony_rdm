@@ -10,20 +10,26 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Mapping;
+namespace Addiks\RDMBundle\Mapping\Annotation;
 
-interface CallDefinitionInterface
+use Doctrine\ORM\Mapping\Annotation;
+use Doctrine\DBAL\Schema\Column;
+
+/**
+ * @Annotation
+ * @Target("PROPERTY")
+ */
+final class RDMList
 {
 
-    public function getObjectReference(): ?string;
-
-    public function getRoutineName(): string;
+    /**
+     * @var string|null|Column
+     */
+    public $column;
 
     /**
-     * @return array<MappingInterface>
+     * @var array
      */
-    public function getArgumentMappings(): array;
-
-    public function isStaticCall(): bool;
+    public $entries = array();
 
 }

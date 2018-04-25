@@ -28,8 +28,9 @@ use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Mapping\ObjectMapping;
 use Doctrine\ORM\Mapping\Column as ORMColumn;
 use Addiks\RDMBundle\Mapping\FieldMapping;
-use Addiks\RDMBundle\Mapping\Annotation\Arr;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
+use Addiks\RDMBundle\Mapping\Annotation\RDMObject;
+use Addiks\RDMBundle\Mapping\Annotation\RDMArray;
 
 final class MappingAnnotationDriverTest extends TestCase
 {
@@ -87,14 +88,14 @@ final class MappingAnnotationDriverTest extends TestCase
         $someAnnotationF->name = "someField";
         $someAnnotationF->length = 12;
 
-        $someAnnotationE = new Obj();
+        $someAnnotationE = new RDMObject();
         $someAnnotationE->{"class"} = ValueObjectExample::class;
         $someAnnotationE->fields = [
             'foo' => $someAnnotationA,
             'bar' => $someAnnotationF,
         ];
 
-        $someAnnotationG = new Arr();
+        $someAnnotationG = new RDMArray();
         $someAnnotationG->entries = [
             'foo' => $someAnnotationA,
             'bar' => $someAnnotationF,

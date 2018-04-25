@@ -13,6 +13,7 @@
 namespace Addiks\RDMBundle\ValueResolver;
 
 use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 interface CallDefinitionExecuterInterface
 {
@@ -25,7 +26,7 @@ interface CallDefinitionExecuterInterface
      */
     public function executeCallDefinition(
         CallDefinitionInterface $callDefinition,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     );
 

@@ -14,6 +14,7 @@ use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\ChoiceMappingInterface;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ChoiceValueResolver implements ValueResolverInterface
 {
@@ -31,7 +32,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
 
     public function resolveValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
         /** @var mixed $value */
@@ -53,7 +54,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
                         "Invalid option-value '%s' for choice-column '%s' on entity %s!",
                         $determinatorValue,
                         $determinatorColumn,
-                        get_class($entity)
+                        $context->getEntityClass()
                     ));
                 }
 
@@ -62,7 +63,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
 
                     $value = $this->innerValueResolver->resolveValue(
                         $choiceMapping,
-                        $entity,
+                        $context,
                         $dataFromAdditionalColumns
                     );
                 }
@@ -74,7 +75,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
 
     public function revertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
         /** @var array<scalar> $data */
@@ -95,7 +96,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
 
                 $choiceValue = $this->innerValueResolver->resolveValue(
                     $choiceMapping,
-                    $entity,
+                    $context,
                     [] # <= I'm not sure how this parameter should be handled correctly in the future,
                        #    but with the current supported features it *should* be irrelevant.
                 );
@@ -114,7 +115,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
 
     public function assertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
         $actualValue
     ): void {
@@ -134,7 +135,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
                         "Invalid option-value '%s' for choice-column '%s' on entity %s!",
                         $determinatorValue,
                         $determinatorColumn,
-                        get_class($entity)
+                        $context->getEntityClass()
                     ));
                 }
 
@@ -143,7 +144,7 @@ final class ChoiceValueResolver implements ValueResolverInterface
 
                     $this->innerValueResolver->assertValue(
                         $choiceMapping,
-                        $entity,
+                        $context,
                         $dataFromAdditionalColumns,
                         $actualValue
                     );

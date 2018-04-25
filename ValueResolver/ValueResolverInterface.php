@@ -12,6 +12,7 @@ namespace Addiks\RDMBundle\ValueResolver;
 
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 interface ValueResolverInterface
 {
@@ -19,15 +20,13 @@ interface ValueResolverInterface
     /**
      * Resolves a mapping to a value.
      *
-     * @param MappingInterface $fieldMapping
-     * @param object           $entity
      * @param array<scalar>    $dataFromAdditionalColumns
      *
      * @return mixed
      */
     public function resolveValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     );
 
@@ -36,23 +35,19 @@ interface ValueResolverInterface
      * The data in the returned array will be the same format as
      * in $dataFromAdditionalColumns from "self::resolveValue()".
      *
-     * @param MappingInterface $fieldMapping
-     * @param object           $entity
      * @param mixed            $valueFromEntityField
      *
      * @return array<scalar>
      */
     public function revertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         $valueFromEntityField
     ): array;
 
     /**
      * Checks if the given value as a valid value for given mapping.
      *
-     * @param MappingInterface $fieldMapping
-     * @param object           $entity
      * @param array<mixed>     $dataFromAdditionalColumns
      * @param mixed            $actualValue
      *
@@ -60,7 +55,7 @@ interface ValueResolverInterface
      */
     public function assertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
         $actualValue
     ): void;

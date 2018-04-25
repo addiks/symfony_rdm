@@ -47,6 +47,11 @@ final class EntityMapping implements EntityMappingInterface
         return $this->className;
     }
 
+    public function getDBALColumn(): ?Column
+    {
+        return null;
+    }
+
     public function getClassName(): string
     {
         return $this->className;
@@ -85,6 +90,21 @@ final class EntityMapping implements EntityMappingInterface
     }
 
     public function getSerializer(): ?CallDefinitionInterface
+    {
+        return null;
+    }
+
+    public function getId(): ?string
+    {
+        return null;
+    }
+
+    public function getReferredObjectMapping(): ?MappingInterface
+    {
+        return null;
+    }
+
+    public function getReferencedId(): ?string
     {
         return null;
     }

@@ -17,6 +17,8 @@ use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
 
 final class CallDefinitionExecuter implements CallDefinitionExecuterInterface
 {
@@ -41,7 +43,7 @@ final class CallDefinitionExecuter implements CallDefinitionExecuterInterface
 
     public function executeCallDefinition(
         CallDefinitionInterface $callDefinition,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
         /** @var mixed $result */
@@ -57,16 +59,23 @@ final class CallDefinitionExecuter implements CallDefinitionExecuterInterface
         $argumentMappings = $callDefinition->getArgumentMappings();
 
         /** @var null|object|string $callee */
-        $callee = $this->resolveCallee($objectReference, $entity);
+        $callee = $this->resolveCallee($objectReference, $context);
+
+        if ($callDefinition->isStaticCall() && is_object($callee)) {
+            $callee = get_class($callee);
+        }
 
         /** @var array<mixed> $arguments */
         $arguments = $this->resolveArguments(
             $argumentMappings,
-            $entity,
+            $context,
             $dataFromAdditionalColumns
         );
 
-        if (is_null($callee)) {
+        if (is_null($callee) && !empty($objectReference)) {
+            $result = null;
+
+        } elseif (is_null($callee)) {
             $result = call_user_func_array($routineName, $arguments);
 
         } elseif (is_string($callee)) {
@@ -80,18 +89,32 @@ final class CallDefinitionExecuter implements CallDefinitionExecuterInterface
     }
 
     /**
-     * @param object $entity
-     *
      * (This return type should be nullable, but there seems to be a bug in current version psalm preventing it.)
      *
      * @return object|string
      */
-    private function resolveCallee(string $objectReference, $entity) {
+    private function resolveCallee(
+        string $objectReference,
+        HydrationContextInterface $context
+    ) {
         /** @var object|string $callee */
         $callee = null;
 
-        if (in_array($objectReference, ['self', 'this', '$this'])) {
-            $callee = $entity;
+        /** @var array<mixed> $hydrationStack */
+        $hydrationStack = $context->getObjectHydrationStack();
+
+        if ($objectReference[0] === '$') {
+            $objectReference = substr($objectReference, 1);
+        }
+
+        if (in_array($objectReference, ['root', 'entity'])) {
+            $callee = $context->getEntity();
+
+        } elseif (in_array($objectReference, ['self', 'this'])) {
+            $callee = $hydrationStack[count($hydrationStack)-1];
+
+        } elseif (in_array($objectReference, ['parent'])) {
+            $callee = $hydrationStack[count($hydrationStack)-2];
 
         } elseif ($objectReference[0] === '@') {
             /** @var string $serviceId */
@@ -101,6 +124,9 @@ final class CallDefinitionExecuter implements CallDefinitionExecuterInterface
 
         } elseif (class_exists($objectReference)) {
             $callee = $objectReference;
+
+        } elseif ($context->hasRegisteredValue($objectReference)) {
+            $callee = $context->getRegisteredValue($objectReference);
         }
 
         return $callee;
@@ -108,25 +134,29 @@ final class CallDefinitionExecuter implements CallDefinitionExecuterInterface
 
     /**
      * @param array<MappingInterface> $argumentMappings
-     * @param object                  $entity
      * @param array<scalar>           $dataFromAdditionalColumns
      *
      * @return array<mixed>
      */
     private function resolveArguments(
         array $argumentMappings,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ): array {
         /** @var array<mixed> $arguments */
         $arguments = array();
+
+        if (isset($dataFromAdditionalColumns[''])) {
+            $arguments[] = $dataFromAdditionalColumns[''];
+            unset($dataFromAdditionalColumns['']);
+        }
 
         foreach ($argumentMappings as $argumentMapping) {
             /** @var MappingInterface $argumentMapping */
 
             $arguments[] = $this->argumentResolver->resolveValue(
                 $argumentMapping,
-                $entity,
+                $context,
                 $dataFromAdditionalColumns
             );
         }

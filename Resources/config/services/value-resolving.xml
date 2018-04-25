@@ -30,8 +30,23 @@
                 />
                 <argument
                     type="service"
+                    key="Addiks\RDMBundle\Mapping\ListMapping"
+                    id="addiks_rdm.value_resolver.list"
+                />
+                <argument
+                    type="service"
                     key="Addiks\RDMBundle\Mapping\FieldMapping"
                     id="addiks_rdm.value_resolver.field"
+                />
+                <argument
+                    type="service"
+                    key="Addiks\RDMBundle\Mapping\NullMapping"
+                    id="addiks_rdm.value_resolver.null"
+                />
+                <argument
+                    type="service"
+                    key="Addiks\RDMBundle\Mapping\NullableMapping"
+                    id="addiks_rdm.value_resolver.nullable"
                 />
             </argument>
         </service>
@@ -62,7 +77,18 @@
             <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
         </service>
 
+        <service id="addiks_rdm.value_resolver.list" class="Addiks\RDMBundle\ValueResolver\ListValueResolver">
+            <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
+        </service>
+
         <service id="addiks_rdm.value_resolver.field" class="Addiks\RDMBundle\ValueResolver\FieldValueResolver">
+        </service>
+
+        <service id="addiks_rdm.value_resolver.null" class="Addiks\RDMBundle\ValueResolver\NullValueResolver">
+        </service>
+
+        <service id="addiks_rdm.value_resolver.nullable" class="Addiks\RDMBundle\ValueResolver\NullableValueResolver">
+            <argument type="service" id="addiks_rdm.value_resolver.lazy_load_proxy" />
         </service>
 
         <service

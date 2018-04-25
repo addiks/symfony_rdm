@@ -16,6 +16,7 @@ use Doctrine\ORM\Mapping\Driver\XmlDriver;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingXmlDriver;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 final class MappingXMLDriverFactory implements MappingDriverFactoryInterface
 {
@@ -25,8 +26,16 @@ final class MappingXMLDriverFactory implements MappingDriverFactoryInterface
      */
     private $schemaFilePath;
 
-    public function __construct(string $schemaFilePath)
-    {
+    /**
+     * @var KernelInterface
+     */
+    private $kernel;
+
+    public function __construct(
+        KernelInterface $kernel,
+        string $schemaFilePath
+    ) {
+        $this->kernel = $kernel;
         $this->schemaFilePath = $schemaFilePath;
     }
 
@@ -40,7 +49,11 @@ final class MappingXMLDriverFactory implements MappingDriverFactoryInterface
             /** @var FileLocator $fileLocator */
             $fileLocator = $mappingDriver->getLocator();
 
-            $rdmMappingDriver = new MappingXmlDriver($fileLocator, $this->schemaFilePath);
+            $rdmMappingDriver = new MappingXmlDriver(
+                $fileLocator,
+                $this->kernel,
+                $this->schemaFilePath
+            );
         }
 
         return $rdmMappingDriver;

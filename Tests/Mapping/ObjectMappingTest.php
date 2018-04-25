@@ -45,12 +45,18 @@ final class ObjectMappingTest extends TestCase
      */
     private $fieldMappingB;
 
+    /**
+     * @var Column
+     */
+    private $column;
+
     public function setUp()
     {
         $this->factory = $this->createMock(CallDefinitionInterface::class);
         $this->serializer = $this->createMock(CallDefinitionInterface::class);
         $this->fieldMappingA = $this->createMock(MappingInterface::class);
         $this->fieldMappingB = $this->createMock(MappingInterface::class);
+        $this->column = $this->createMock(Column::class);
 
         $this->subject = new ObjectMapping(
             ValueObjectExample::class,
@@ -58,6 +64,7 @@ final class ObjectMappingTest extends TestCase
                 $this->fieldMappingA,
                 $this->fieldMappingB,
             ],
+            $this->column,
             "some cool origin",
             $this->factory,
             $this->serializer
@@ -103,7 +110,7 @@ final class ObjectMappingTest extends TestCase
         $columnB = $this->createMock(Column::class);
 
         /** @var array<Column> $expectedColumns */
-        $expectedColumns = [$columnA, $columnB];
+        $expectedColumns = [$columnA, $columnB, $this->column];
 
         $this->fieldMappingA->method('collectDBALColumns')->willReturn([$columnA]);
         $this->fieldMappingB->method('collectDBALColumns')->willReturn([$columnB]);

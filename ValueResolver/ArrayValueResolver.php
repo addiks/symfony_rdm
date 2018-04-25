@@ -16,6 +16,7 @@ use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ArrayValueResolver implements ValueResolverInterface
 {
@@ -32,7 +33,7 @@ final class ArrayValueResolver implements ValueResolverInterface
 
     public function resolveValue(
         MappingInterface $arrayMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
         /** @var null|array<mixed> $value */
@@ -46,7 +47,7 @@ final class ArrayValueResolver implements ValueResolverInterface
 
                 $value[$key] = $this->entryValueResolver->resolveValue(
                     $entryMapping,
-                    $entity,
+                    $context,
                     $dataFromAdditionalColumns
                 );
             }
@@ -57,7 +58,7 @@ final class ArrayValueResolver implements ValueResolverInterface
 
     public function revertValue(
         MappingInterface $arrayMapping,
-        $entity,
+        HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
         /** @var array<string, string> $data */
@@ -78,7 +79,7 @@ final class ArrayValueResolver implements ValueResolverInterface
                     $data,
                     $this->entryValueResolver->revertValue(
                         $entryMapping,
-                        $entity,
+                        $context,
                         $valueFromEntry
                     )
                 );
@@ -90,7 +91,7 @@ final class ArrayValueResolver implements ValueResolverInterface
 
     public function assertValue(
         MappingInterface $arrayMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
         $actualValue
     ): void {

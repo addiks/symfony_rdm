@@ -14,6 +14,7 @@ use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use ErrorException;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ValueResolverLazyLoadProxy implements ValueResolverInterface
 {
@@ -41,37 +42,37 @@ final class ValueResolverLazyLoadProxy implements ValueResolverInterface
 
     public function resolveValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
         return $this->getInnerValueResolver()->resolveValue(
             $fieldMapping,
-            $entity,
+            $context,
             $dataFromAdditionalColumns
         );
     }
 
     public function revertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
         return $this->getInnerValueResolver()->revertValue(
             $fieldMapping,
-            $entity,
+            $context,
             $valueFromEntityField
         );
     }
 
     public function assertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
         $actualValue
     ): void {
         $this->getInnerValueResolver()->assertValue(
             $fieldMapping,
-            $entity,
+            $context,
             $dataFromAdditionalColumns,
             $actualValue
         );

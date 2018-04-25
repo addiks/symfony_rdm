@@ -34,13 +34,20 @@ final class CallDefinition implements CallDefinitionInterface
      */
     private $argumentMappings = array();
 
+    /**
+     * @var bool
+     */
+    private $isStaticCall;
+
     public function __construct(
         string $routineName,
         string $objectReference = null,
-        array $argumentMappings = array()
+        array $argumentMappings = array(),
+        bool $isStaticCall = false
     ) {
         $this->routineName = $routineName;
         $this->objectReference = $objectReference;
+        $this->isStaticCall = $isStaticCall;
 
         foreach ($argumentMappings as $argumentMapping) {
             /** @var MappingInterface $argumentMapping */
@@ -64,6 +71,11 @@ final class CallDefinition implements CallDefinitionInterface
     public function getArgumentMappings(): array
     {
         return $this->argumentMappings;
+    }
+
+    public function isStaticCall(): bool
+    {
+        return $this->isStaticCall;
     }
 
 }

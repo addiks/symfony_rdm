@@ -13,37 +13,17 @@
 namespace Addiks\RDMBundle\Mapping\Annotation;
 
 use Doctrine\ORM\Mapping\Annotation;
-use Addiks\RDMBundle\Mapping\Annotation\Call;
 
 /**
- * The object annotation.
- *
- * Why only "Obj" without the "ect"? Because "Object" is a reserved word. :-/
- *
  * @Annotation
  * @Target("PROPERTY")
  */
-class Obj
+class RDMArray
 {
 
     /**
-     * @var string|null
+     * @var array
      */
-    public $class;
-
-    /**
-     * @var array<object>
-     */
-    public $fields = array();
-
-    /**
-     * @var null|string|Call
-     */
-    public $factory;
-
-    /**
-     * @var null|string|Call
-     */
-    public $serialize;
+    public $entries = array();
 
 }

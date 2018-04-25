@@ -31,6 +31,11 @@ final class ObjectMapping implements ObjectMappingInterface
     private $fieldMappings = array();
 
     /**
+     * @var Column|null
+     */
+    private $column;
+
+    /**
      * @var CallDefinitionInterface|null
      */
     private $factory;
@@ -45,22 +50,46 @@ final class ObjectMapping implements ObjectMappingInterface
      */
     private $origin;
 
+    /**
+     * @var string|null
+     */
+    private $id;
+
+    /**
+     * @var string|null
+     */
+    private $referencedId;
+
+    /**
+     * @var ObjectMappingInterface|null
+     */
+    private $referredObjectMapping;
+
     public function __construct(
         string $className,
         array $fieldMappings,
+        Column $column = null,
         string $origin = "undefined",
         CallDefinitionInterface $factory = null,
-        CallDefinitionInterface $serializer = null
+        CallDefinitionInterface $serializer = null,
+        string $id = null,
+        string $referencedId = null,
+        ObjectMappingInterface $referredObjectMapping = null
     ) {
         $this->className = $className;
         $this->factory = $factory;
+        $this->column = $column;
         $this->serializer = $serializer;
         $this->origin = $origin;
+        $this->id = $id;
+        $this->referencedId = $referencedId;
+        $this->referredObjectMapping = $referredObjectMapping;
 
         foreach ($fieldMappings as $fieldName => $fieldMapping) {
             /** @var MappingInterface $fieldMapping */
 
             Assert::isInstanceOf($fieldMapping, MappingInterface::class);
+            Assert::false(is_numeric($fieldName));
 
             $this->fieldMappings[$fieldName] = $fieldMapping;
         }
@@ -69,6 +98,11 @@ final class ObjectMapping implements ObjectMappingInterface
     public function getClassName(): string
     {
         return $this->className;
+    }
+
+    public function getDBALColumn(): ?Column
+    {
+        return $this->column;
     }
 
     public function getFieldMappings(): array
@@ -85,6 +119,10 @@ final class ObjectMapping implements ObjectMappingInterface
     {
         /** @var array<Column> $additionalColumns */
         $additionalColumns = array();
+
+        if ($this->column instanceof Column) {
+            $additionalColumns[] = $this->column;
+        }
 
         foreach ($this->fieldMappings as $fieldMapping) {
             /** @var MappingInterface $fieldMapping */
@@ -106,6 +144,21 @@ final class ObjectMapping implements ObjectMappingInterface
     public function getSerializer(): ?CallDefinitionInterface
     {
         return $this->serializer;
+    }
+
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
+
+    public function getReferredObjectMapping(): ?MappingInterface
+    {
+        return $this->referredObjectMapping;
+    }
+
+    public function getReferencedId(): ?string
+    {
+        return $this->referencedId;
     }
 
 }

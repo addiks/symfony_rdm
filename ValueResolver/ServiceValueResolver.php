@@ -17,6 +17,7 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
 use Addiks\RDMBundle\Mapping\ServiceMappingInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ServiceValueResolver implements ValueResolverInterface
 {
@@ -33,7 +34,7 @@ final class ServiceValueResolver implements ValueResolverInterface
 
     public function resolveValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $databaseData
     ) {
         /** @var object $service */
@@ -60,7 +61,7 @@ final class ServiceValueResolver implements ValueResolverInterface
 
     public function revertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
         return []; # Nothing to revert to for static services
@@ -68,13 +69,13 @@ final class ServiceValueResolver implements ValueResolverInterface
 
     public function assertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $databaseData,
         $actualService
     ): void {
         if ($fieldMapping instanceof ServiceMappingInterface && !$fieldMapping->isLax()) {
             /** @var object $expectedService */
-            $expectedService = $this->resolveValue($fieldMapping, $entity, $databaseData);
+            $expectedService = $this->resolveValue($fieldMapping, $context, $databaseData);
 
             /** @var string $serviceId */
             $serviceId = $fieldMapping->getServiceId();
@@ -82,7 +83,7 @@ final class ServiceValueResolver implements ValueResolverInterface
             if ($expectedService !== $actualService) {
                 throw FailedRDMAssertionException::expectedDifferentService(
                     $serviceId,
-                    new ReflectionClass(get_class($entity)),
+                    new ReflectionClass($context->getEntityClass()),
                     $expectedService,
                     $actualService
                 );

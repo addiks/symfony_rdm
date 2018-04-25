@@ -10,24 +10,18 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks\RDMBundle\Mapping\Annotation;
+namespace Addiks\RDMBundle\Mapping;
 
-use Doctrine\ORM\Mapping\Annotation;
+use Addiks\RDMBundle\Mapping\MappingInterface;
+use Doctrine\DBAL\Schema\Column;
 
-/**
- * Array annotation.
- *
- * Why only "Arr" without the "ay"? Because "Array" is a reserved word. :-/
- *
- * @Annotation
- * @Target("PROPERTY")
- */
-class Arr
+interface NullableMappingInterface extends MappingInterface
 {
 
-    /**
-     * @var array
-     */
-    public $entries = array();
+    public function getDBALColumn(): ?Column;
+
+    public function getInnerMapping(): MappingInterface;
+
+    public function getDeterminatorColumnName(): ?string;
 
 }

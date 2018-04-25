@@ -21,6 +21,10 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use ReflectionProperty;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
 use Addiks\RDMBundle\ValueResolver\CallDefinitionExecuterInterface;
+use Doctrine\DBAL\Schema\Column;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Connection;
 
 final class ObjectValueResolver implements ValueResolverInterface
 {
@@ -52,7 +56,7 @@ final class ObjectValueResolver implements ValueResolverInterface
 
     public function resolveValue(
         MappingInterface $objectMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
         /** @var mixed $object */
@@ -65,18 +69,66 @@ final class ObjectValueResolver implements ValueResolverInterface
             /** @var null|CallDefinitionInterface $factory */
             $factory = $objectMapping->getFactory();
 
+            /** @var string|null $id */
+            $id = $objectMapping->getId();
+
+            /** @var string|null $referencedId */
+            $referencedId = $objectMapping->getReferencedId();
+
             $reflectionClass = new ReflectionClass($className);
 
-            if ($factory instanceof CallDefinitionInterface) {
+            /** @var object|string $object */
+            $object = $className;
+
+            if ($reflectionClass->isInstantiable()) {
+                $object = $reflectionClass->newInstanceWithoutConstructor();
+            }
+
+            $context->pushOnObjectHydrationStack($object);
+
+            if (!empty($referencedId)) {
+                $object = $context->getRegisteredValue($referencedId);
+
+            } elseif ($factory instanceof CallDefinitionInterface) {
+                /** @var array<string, string> $factoryData */
+                $factoryData = $dataFromAdditionalColumns;
+
+                /** @var Column|null $column */
+                $column = $objectMapping->getDBALColumn();
+
+                if ($column instanceof Column && !array_key_exists("", $factoryData)) {
+                    /** @var Type $type */
+                    $type = $column->getType();
+
+                    /** @var string $columnName */
+                    $columnName = $column->getName();
+
+                    if (isset($dataFromAdditionalColumns[$columnName])) {
+                        /** @var Connection $connection */
+                        $connection = $context->getEntityManager()->getConnection();
+
+                        $dataFromAdditionalColumns[$columnName] = $type->convertToPHPValue(
+                            $dataFromAdditionalColumns[$columnName],
+                            $connection->getDatabasePlatform()
+                        );
+
+                        $factoryData[""] = $dataFromAdditionalColumns[$columnName];
+                    }
+                }
+
                 $object = $this->callDefinitionExecuter->executeCallDefinition(
                     $factory,
-                    $entity,
-                    $dataFromAdditionalColumns
+                    $context,
+                    $factoryData
                 );
+            }
 
-            } else {
-                /** @var object $object */
-                $object = $reflectionClass->newInstanceWithoutConstructor();
+            // $object may have been replaced during creation, re-assign on top of stack.
+            $context->popFromObjectHydrationStack();
+            $context->pushOnObjectHydrationStack($object);
+
+            if (!empty($id) && !$context->hasRegisteredValue($id)) {
+                $context->registerValue($id, $object);
             }
 
             foreach ($objectMapping->getFieldMappings() as $fieldName => $fieldMapping) {
@@ -85,7 +137,7 @@ final class ObjectValueResolver implements ValueResolverInterface
                 /** @var mixed $fieldValue */
                 $fieldValue = $this->fieldValueResolver->resolveValue(
                     $fieldMapping,
-                    $entity,
+                    $context,
                     $dataFromAdditionalColumns
                 );
 
@@ -96,6 +148,7 @@ final class ObjectValueResolver implements ValueResolverInterface
                 $reflectionProperty->setValue($object, $fieldValue);
             }
 
+            $context->popFromObjectHydrationStack();
         }
 
         return $object;
@@ -103,7 +156,7 @@ final class ObjectValueResolver implements ValueResolverInterface
 
     public function revertValue(
         MappingInterface $objectMapping,
-        $entity,
+        HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
         /** @var array<scalar> $data */
@@ -114,6 +167,8 @@ final class ObjectValueResolver implements ValueResolverInterface
             $className = $objectMapping->getClassName();
 
             $reflectionClass = new ReflectionClass($className);
+
+            $context->pushOnObjectHydrationStack($valueFromEntityField);
 
             foreach ($objectMapping->getFieldMappings() as $fieldName => $fieldMapping) {
                 /** @var MappingInterface $fieldMapping */
@@ -128,12 +183,56 @@ final class ObjectValueResolver implements ValueResolverInterface
                     $valueFromField = $reflectionProperty->getValue($valueFromEntityField);
                 }
 
-                $data = array_merge($data, $this->fieldValueResolver->revertValue(
+                /** @var array<string, mixed> $fieldData */
+                $fieldData = $this->fieldValueResolver->revertValue(
                     $fieldMapping,
-                    $entity,
+                    $context,
                     $valueFromField
-                ));
+                );
+
+                if (array_key_exists("", $fieldData)) {
+                    $fieldData[$fieldName] = $fieldData[""];
+                    unset($fieldData[""]);
+                }
+
+                $data = array_merge($data, $fieldData);
             }
+
+            /** @var null|CallDefinitionInterface $serializerMapping */
+            $serializerMapping = $objectMapping->getSerializer();
+
+            if ($serializerMapping instanceof CallDefinitionInterface) {
+                /** @var string $columnName */
+                $columnName = '';
+
+                /** @var Column|null $column */
+                $column = $objectMapping->getDBALColumn();
+
+                if ($column instanceof Column) {
+                    $columnName = $column->getName();
+                }
+
+                $data[$columnName] = $this->callDefinitionExecuter->executeCallDefinition(
+                    $serializerMapping,
+                    $context,
+                    $data
+                );
+
+                if ($column instanceof Column) {
+                    /** @var Type $type */
+                    $type = $column->getType();
+
+                    /** @var Connection $connection */
+                    $connection = $context->getEntityManager()->getConnection();
+
+                    $data[$columnName] = $type->convertToDatabaseValue(
+                        $data[$columnName],
+                        $connection->getDatabasePlatform()
+                    );
+                }
+            }
+
+            $context->popFromObjectHydrationStack();
         }
 
         return $data;
@@ -141,7 +240,7 @@ final class ObjectValueResolver implements ValueResolverInterface
 
     public function assertValue(
         MappingInterface $objectMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
         $actualValue
     ): void {
@@ -152,7 +251,7 @@ final class ObjectValueResolver implements ValueResolverInterface
             if (!is_null($actualValue) && !$actualValue instanceof $className) {
                 throw FailedRDMAssertionException::expectedInstanceOf(
                     $objectMapping->getClassName(),
-                    get_class($entity),
+                    $context->getEntityClass(),
                     $objectMapping->describeOrigin()
                 );
             }

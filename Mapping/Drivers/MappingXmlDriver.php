@@ -33,6 +33,13 @@ use Addiks\RDMBundle\Mapping\CallDefinition;
 use Addiks\RDMBundle\Mapping\FieldMapping;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
 use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
+use Addiks\RDMBundle\Mapping\ListMapping;
+use Addiks\RDMBundle\Mapping\ListMappingInterface;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Addiks\RDMBundle\Mapping\NullMapping;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Addiks\RDMBundle\Mapping\NullableMapping;
+use Addiks\RDMBundle\Mapping\NullableMappingInterface;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -43,7 +50,12 @@ final class MappingXmlDriver implements MappingDriverInterface
     /**
      * @var FileLocator
      */
-    private $fileLocator;
+    private $doctrineFileLocator;
+
+    /**
+     * @var KernelInterface
+     */
+    private $kernel;
 
     /**
      * @var string
@@ -51,10 +63,12 @@ final class MappingXmlDriver implements MappingDriverInterface
     private $schemaFilePath;
 
     public function __construct(
-        FileLocator $fileLocator,
+        FileLocator $doctrineFileLocator,
+        KernelInterface $kernel,
         string $schemaFilePath
     ) {
-        $this->fileLocator = $fileLocator;
+        $this->doctrineFileLocator = $doctrineFileLocator;
+        $this->kernel = $kernel;
         $this->schemaFilePath = $schemaFilePath;
     }
 
@@ -66,51 +80,11 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var array<MappingInterface> $fieldMappings */
         $fieldMappings = array();
 
-        if ($this->fileLocator->fileExists($className)) {
+        if ($this->doctrineFileLocator->fileExists($className)) {
             /** @var string $mappingFile */
-            $mappingFile = $this->fileLocator->findMappingFile($className);
+            $mappingFile = $this->doctrineFileLocator->findMappingFile($className);
 
-            $dom = new DOMDocument();
-            $dom->loadXML(file_get_contents($mappingFile));
-
-            /** @var DOMXPath $xpath */
-            $xpath = $this->createXPath($dom->documentElement);
-
-            foreach ($xpath->query("//orm:entity/rdm:service", $dom) as $serviceNode) {
-                /** @var DOMNode $serviceNode */
-
-                /** @var string $fieldName */
-                $fieldName = (string)$serviceNode->attributes->getNamedItem("field")->nodeValue;
-
-                $fieldMappings[$fieldName] = $this->readService($serviceNode, $mappingFile);
-            }
-
-            foreach ($xpath->query("//orm:entity/rdm:choice", $dom) as $choiceNode) {
-                /** @var DOMNode $choiceNode */
-
-                /** @var string $fieldName */
-                $fieldName = (string)$choiceNode->attributes->getNamedItem("field")->nodeValue;
-
-                $fieldMappings[$fieldName] = $this->readChoice($choiceNode, $mappingFile, $fieldName);
-            }
-
-            foreach ($xpath->query("//orm:entity/rdm:object", $dom) as $objectNode) {
-                /** @var DOMNode $objectNode */
-
-                /** @var string $fieldName */
-                $fieldName = (string)$objectNode->attributes->getNamedItem("field")->nodeValue;
-
-                $fieldMappings[$fieldName] = $this->readObject($objectNode, $mappingFile);
-            }
-
-            foreach ($xpath->query("//orm:entity/rdm:array", $dom) as $arrayNode) {
-                /** @var DOMNode $arrayNode */
-
-                /** @var string $fieldName */
-                $fieldName = (string)$arrayNode->attributes->getNamedItem("field")->nodeValue;
-
-                $fieldMappings[$fieldName] = $this->readArray($arrayNode, $mappingFile);
-            }
+            $fieldMappings = $this->readFieldMappingsFromFile($mappingFile);
         }
 
         if (!empty($fieldMappings)) {
@@ -120,9 +94,53 @@ final class MappingXmlDriver implements MappingDriverInterface
         return $mapping;
     }
 
+    /**
+     * @return array<MappingInterface>
+     */
+    private function readFieldMappingsFromFile(string $mappingFile): array
+    {
+        if ($mappingFile[0] === '@') {
+            $mappingFile = $this->kernel->locateResource($mappingFile);
+        }
+
+        $dom = new DOMDocument();
+        $dom->loadXML(file_get_contents($mappingFile));
+
+        /** @var DOMXPath $xpath */
+        $xpath = $this->createXPath($dom->documentElement);
+
+        /** @var array<MappingInterface> $fieldMappings */
+        $fieldMappings = $this->readFieldMappings(
+            $dom,
+            $mappingFile,
+            null,
+            false
+        );
+
+        foreach ($xpath->query("//orm:entity", $dom) as $entityNode) {
+            /** @var DOMNode $entityNode */
+
+            $fieldMappings = array_merge($fieldMappings, $this->readFieldMappings(
+                $entityNode,
+                $mappingFile,
+                null,
+                false
+            ));
+        }
+
+        return $fieldMappings;
+    }
+
     private function createXPath(DOMNode $node): DOMXPath
     {
-        $xpath = new DOMXPath($node->ownerDocument);
+        /** @var DOMNode $ownerDocument */
+        $ownerDocument = $node;
+
+        if (!$ownerDocument instanceof DOMDocument) {
+            $ownerDocument = $node->ownerDocument;
+        }
+
+        $xpath = new DOMXPath($ownerDocument);
         $xpath->registerNamespace('rdm', self::RDM_SCHEMA_URI);
         $xpath->registerNamespace('orm', self::DOCTRINE_SCHEMA_URI);
 
@@ -133,6 +151,13 @@ final class MappingXmlDriver implements MappingDriverInterface
     {
         /** @var DOMNamedNodeMap $attributes */
         $objectNodeAttributes = $objectNode->attributes;
+
+        if (is_null($objectNodeAttributes->getNamedItem("class"))) {
+            throw new InvalidMappingException(sprintf(
+                "Missing 'class' attribute on 'object' mapping in %s",
+                $mappingFile
+            ));
+        }
 
         $className = (string)$objectNodeAttributes->getNamedItem("class")->nodeValue;
 
@@ -145,7 +170,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var DOMXPath $xpath */
         $xpath = $this->createXPath($objectNode);
 
-        foreach ($xpath->query('rdm:factory', $objectNode) as $factoryNode) {
+        foreach ($xpath->query('./rdm:factory', $objectNode) as $factoryNode) {
             /** @var DOMNode $factoryNode */
 
             /** @var array<MappingInterface> $argumentMappings */
@@ -175,15 +200,59 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var array<MappingInterface> $fieldMappings */
         $fieldMappings = $this->readFieldMappings($objectNode, $mappingFile);
 
+        /** @var Column|null $dbalColumn */
+        $dbalColumn = null;
+
+        if ($objectNodeAttributes->getNamedItem("column") !== null) {
+            /** @var bool $notnull */
+            $notnull = true;
+
+            /** @var string $type */
+            $type = "string";
+
+            if ($objectNodeAttributes->getNamedItem("nullable")) {
+                $notnull = (strtolower($objectNodeAttributes->getNamedItem("nullable")->nodeValue) !== 'true');
+            }
+
+            if ($objectNodeAttributes->getNamedItem("column-type")) {
+                $type = (string)$objectNodeAttributes->getNamedItem("column-type")->nodeValue;
+            }
+
+            $dbalColumn = new Column(
+                (string)$objectNodeAttributes->getNamedItem("column")->nodeValue,
+                Type::getType($type),
+                [
+                    'notnull' => $notnull
+                ]
+            );
+        }
+
+        /** @var string|null $id */
+        $id = null;
+
+        /** @var string|null $referencedId */
+        $referencedId = null;
+
+        if ($objectNodeAttributes->getNamedItem("id") !== null) {
+            $id = (string)$objectNodeAttributes->getNamedItem("id")->nodeValue;
+        }
+
+        if ($objectNodeAttributes->getNamedItem("references-id") !== null) {
+            $referencedId = (string)$objectNodeAttributes->getNamedItem("references-id")->nodeValue;
+        }
+
         return new ObjectMapping(
             $className,
             $fieldMappings,
+            $dbalColumn,
             sprintf(
                 "in file '%s'",
                 $mappingFile
             ),
             $factory,
-            $serializer
+            $serializer,
+            $id,
+            $referencedId
         );
     }
 
@@ -195,13 +264,19 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var string|null $objectReference */
         $objectReference = null;
 
-        $callDefinition = str_replace('->', '::', $callDefinition);
+        /** @var bool $isStaticCall */
+        $isStaticCall = false;
 
         if (strpos($callDefinition, '::') !== false) {
             [$objectReference, $routineName] = explode('::', $callDefinition);
+            $isStaticCall = true;
         }
 
-        return new CallDefinition($routineName, $objectReference);
+        if (strpos($callDefinition, '->') !== false) {
+            [$objectReference, $routineName] = explode('->', $callDefinition);
+        }
+
+        return new CallDefinition($routineName, $objectReference, [], $isStaticCall);
     }
 
     private function readChoice(
@@ -222,7 +297,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var DOMXPath $xpath */
         $xpath = $this->createXPath($choiceNode);
 
-        foreach ($xpath->query('rdm:option', $choiceNode) as $optionNode) {
+        foreach ($xpath->query('./rdm:option', $choiceNode) as $optionNode) {
             /** @var DOMNode $optionNode */
 
             /** @var string $determinator */
@@ -238,7 +313,7 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
-        foreach ($xpath->query('orm:field', $choiceNode) as $fieldNode) {
+        foreach ($xpath->query('./orm:field', $choiceNode) as $fieldNode) {
             /** @var DOMNode $fieldNode */
 
             $column = $this->readDoctrineField($fieldNode);
@@ -254,17 +329,18 @@ final class MappingXmlDriver implements MappingDriverInterface
      * @return array<MappingInterface>
      */
     private function readFieldMappings(
-        DOMNode $objectNode,
+        DOMNode $parentNode,
         string $mappingFile,
-        string $choiceDefaultColumnName = null
+        string $choiceDefaultColumnName = null,
+        bool $readFields = true
     ): array {
         /** @var DOMXPath $xpath */
-        $xpath = $this->createXPath($objectNode);
+        $xpath = $this->createXPath($parentNode);
 
         /** @var array<MappingInterface> $fieldMappings */
         $fieldMappings = array();
 
-        foreach ($xpath->query('rdm:service', $objectNode) as $serviceNode) {
+        foreach ($xpath->query('./rdm:service', $parentNode) as $serviceNode) {
             /** @var DOMNode $serviceNode */
 
             $serviceMapping = $this->readService($serviceNode, $mappingFile);
@@ -280,7 +356,7 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
-        foreach ($xpath->query('rdm:choice', $objectNode) as $choiceNode) {
+        foreach ($xpath->query('./rdm:choice', $parentNode) as $choiceNode) {
             /** @var DOMNode $choiceNode */
 
             /** @var string $defaultColumnName */
@@ -306,7 +382,7 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
-        foreach ($xpath->query('rdm:object', $objectNode) as $objectNode) {
+        foreach ($xpath->query('./rdm:object', $parentNode) as $objectNode) {
             /** @var DOMNode $objectNode */
 
             /** @var ObjectMappingInterface $objectMapping */
@@ -323,21 +399,23 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
-        foreach ($xpath->query('orm:field', $objectNode) as $fieldNode) {
-            /** @var DOMNode $fieldNode */
+        if ($readFields) {
+            foreach ($xpath->query('./orm:field', $parentNode) as $fieldNode) {
+                /** @var DOMNode $fieldNode */
 
-            /** @var Column $column */
-            $column = $this->readDoctrineField($fieldNode);
+                /** @var Column $column */
+                $column = $this->readDoctrineField($fieldNode);
 
-            $fieldName = $column->getName();
+                $fieldName = (string)$fieldNode->attributes->getNamedItem('name')->nodeValue;
 
-            $fieldMappings[$fieldName] = new FieldMapping(
-                $column,
-                sprintf("in file '%s'", $mappingFile)
-            );
+                $fieldMappings[$fieldName] = new FieldMapping(
+                    $column,
+                    sprintf("in file '%s'", $mappingFile)
+                );
+            }
         }
 
-        foreach ($xpath->query('rdm:array', $objectNode) as $arrayNode) {
+        foreach ($xpath->query('./rdm:array', $parentNode) as $arrayNode) {
             /** @var DOMNode $arrayNode */
 
             /** @var ArrayMappingInterface $arrayMapping */
@@ -351,6 +429,89 @@ final class MappingXmlDriver implements MappingDriverInterface
 
             } else {
                 $fieldMappings[] = $arrayMapping;
+            }
+        }
+
+        foreach ($xpath->query('./rdm:list', $parentNode) as $listNode) {
+            /** @var DOMNode $listNode */
+
+            /** @var string $defaultColumnName */
+            $defaultColumnName = "";
+
+            if (!is_null($choiceDefaultColumnName)) {
+                $defaultColumnName = $choiceDefaultColumnName;
+
+            } elseif (!is_null($listNode->attributes->getNamedItem("field"))) {
+                $defaultColumnName = (string)$listNode->attributes->getNamedItem("field")->nodeValue;
+            }
+
+            /** @var ArrayMappingInterface $listMapping */
+            $listMapping = $this->readList($listNode, $mappingFile, $defaultColumnName);
+
+            if (!is_null($listNode->attributes->getNamedItem("field"))) {
+                /** @var string $fieldName */
+                $fieldName = (string)$listNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = $listMapping;
+
+            } else {
+                $fieldMappings[] = $listMapping;
+            }
+        }
+
+        foreach ($xpath->query('./rdm:null', $parentNode) as $nullNode) {
+            /** @var DOMNode $nullNode */
+
+            if (!is_null($nullNode->attributes->getNamedItem("field"))) {
+                /** @var string $fieldName */
+                $fieldName = (string)$nullNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = new NullMapping($mappingFile);
+
+            } else {
+                $fieldMappings[] = new NullMapping($mappingFile);
+            }
+        }
+
+        foreach ($xpath->query('./rdm:nullable', $parentNode) as $nullableNode) {
+            /** @var DOMNode $nullableNode */
+
+            /** @var NullableMapping $nullableMapping */
+            $nullableMapping = $this->readNullable($nullableNode, $mappingFile);
+
+            if (!is_null($nullableNode->attributes->getNamedItem("field"))) {
+                /** @var string $fieldName */
+                $fieldName = (string)$nullableNode->attributes->getNamedItem("field")->nodeValue;
+
+                $fieldMappings[$fieldName] = $nullableMapping;
+
+            } else {
+                $fieldMappings[] = $nullableMapping;
+            }
+        }
+
+        foreach ($xpath->query('./rdm:import', $parentNode) as $importNode) {
+            /** @var DOMNode $importNode */
+
+            /** @var string $path */
+            $path = (string)$importNode->attributes->getNamedItem("path")->nodeValue;
+
+            /** @var string $forcedFieldName */
+            $forcedFieldName = null;
+
+            if (!is_null($importNode->attributes->getNamedItem("field"))) {
+                $forcedFieldName = (string)$importNode->attributes->getNamedItem("field")->nodeValue;
+            }
+
+            foreach ($this->readFieldMappingsFromFile($path) as $fieldName => $fieldMapping) {
+                /** @var MappingInterface $fieldMapping */
+
+                if (!empty($forcedFieldName)) {
+                    $fieldMappings[$forcedFieldName] = $fieldMapping;
+                } else {
+
+                    $fieldMappings[$fieldName] = $fieldMapping;
+                }
             }
         }
 
@@ -383,7 +544,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var DOMXPath $xpath */
         $xpath = $this->createXPath($arrayNode);
 
-        foreach ($xpath->query('rdm:entry', $arrayNode) as $entryNode) {
+        foreach ($xpath->query('./rdm:entry', $arrayNode) as $entryNode) {
             /** @var DOMNode $entryNode */
 
             /** @var string|null $key */
@@ -413,6 +574,72 @@ final class MappingXmlDriver implements MappingDriverInterface
         ));
     }
 
+    private function readList(
+        DOMNode $listNode,
+        string $mappingFile,
+        string $defaultColumnName
+    ): ListMappingInterface {
+        /** @var string $columnName */
+        $columnName = $defaultColumnName;
+
+        if (!is_null($listNode->attributes->getNamedItem("column"))) {
+            $columnName = (string)$listNode->attributes->getNamedItem("column")->nodeValue;
+        }
+
+        /** @var array<MappingInterface> $entryMappings */
+        $entryMappings = $this->readFieldMappings($listNode, $mappingFile);
+
+        $column = new Column(
+            $columnName,
+            Type::getType("string"),
+            []
+        );
+
+        return new ListMapping($column, array_values($entryMappings)[0], sprintf(
+            "in file '%s'",
+            $mappingFile
+        ));
+    }
+
+    private function readNullable(
+        DOMNode $nullableNode,
+        string $mappingFile
+    ): NullableMappingInterface {
+        /** @var array<MappingInterface> $innerMappings */
+        $innerMappings = $this->readFieldMappings($nullableNode, $mappingFile);
+
+        if (count($innerMappings) !== 1) {
+            throw new InvalidMappingException(sprintf(
+                "A nullable mapping can only contain one inner mapping in '%s'!",
+                $mappingFile
+            ));
+        }
+
+        /** @var MappingInterface $innerMapping */
+        $innerMapping = array_values($innerMappings)[0];
+
+        /** @var Column|null $column */
+        $column = null;
+
+        if (!is_null($nullableNode->attributes->getNamedItem("column"))) {
+            /** @var string $columnName */
+            $columnName = (string)$nullableNode->attributes->getNamedItem("column")->nodeValue;
+
+            $column = new Column(
+                $columnName,
+                Type::getType("boolean"),
+                [
+                    'notnull' => false
+                ]
+            );
+        }
+
+        return new NullableMapping($innerMapping, $column, sprintf(
+            "in file '%s'",
+            $mappingFile
+        ));
+    }
+
     private function readDoctrineField(DOMNode $fieldNode): Column
     {
         /** @var array<string> $attributes */
@@ -420,7 +647,7 @@ final class MappingXmlDriver implements MappingDriverInterface
 
         /** @var array<string> $keyMap */
         $keyMap = array(
-            'name'              => 'name',
+            'column'            => 'name',
             'type'              => 'type',
             'nullable'          => 'notnull',
             'length'            => 'length',
@@ -433,14 +660,14 @@ final class MappingXmlDriver implements MappingDriverInterface
         $columnName = null;
 
         /** @var Type $type */
-        $type = null;
+        $type = Type::getType('string');
 
         foreach ($fieldNode->attributes as $key => $attribute) {
             /** @var DOMAttr $attribute */
 
             $attributeValue = (string)$attribute->nodeValue;
 
-            if ($key === 'name') {
+            if ($key === 'column') {
                 $columnName = $attributeValue;
 
             } elseif ($key === 'type') {

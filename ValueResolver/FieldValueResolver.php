@@ -17,13 +17,16 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\FieldMappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Connection;
 
 final class FieldValueResolver implements ValueResolverInterface
 {
 
     public function resolveValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
         /** @var mixed $value */
@@ -33,9 +36,19 @@ final class FieldValueResolver implements ValueResolverInterface
             /** @var Column $dbalColumn */
             $dbalColumn = $fieldMapping->getDBALColumn();
 
-            # TODO: use doctrine's field to value mapping system here (whatever that is)
+            /** @var Type $type */
+            $type = $dbalColumn->getType();
+
+            /** @var Connection $connection */
+            $connection = $context->getEntityManager()->getConnection();
+
             if (isset($dataFromAdditionalColumns[$dbalColumn->getName()])) {
                 $value = $dataFromAdditionalColumns[$dbalColumn->getName()];
+
+                $value = $type->convertToPHPValue(
+                    $value,
+                    $connection->getDatabasePlatform()
+                );
             }
         }
 
@@ -44,7 +57,7 @@ final class FieldValueResolver implements ValueResolverInterface
 
     public function revertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
         /** @var mixed $data */
@@ -54,8 +67,20 @@ final class FieldValueResolver implements ValueResolverInterface
             /** @var Column $dbalColumn */
             $dbalColumn = $fieldMapping->getDBALColumn();
 
+            /** @var Type $type */
+            $type = $dbalColumn->getType();
+
+            /** @var Connection $connection */
+            $connection = $context->getEntityManager()->getConnection();
+
+            /** @var scalar $databaseValue */
+            $databaseValue = $type->convertToDatabaseValue(
+                $valueFromEntityField,
+                $connection->getDatabasePlatform()
+            );
+
             # TODO: use doctrine's field to value mapping system here (whatever that is)
-            $data[$dbalColumn->getName()] = $valueFromEntityField;
+            $data[$dbalColumn->getName()] = $databaseValue;
         }
 
         return $data;
@@ -63,7 +88,7 @@ final class FieldValueResolver implements ValueResolverInterface
 
     public function assertValue(
         MappingInterface $fieldMapping,
-        $entity,
+        HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
         $actualValue
     ): void {

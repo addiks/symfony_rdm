@@ -12,18 +12,14 @@
 
 namespace Addiks\RDMBundle\Mapping;
 
-interface CallDefinitionInterface
+use Addiks\RDMBundle\Mapping\MappingInterface;
+use Doctrine\DBAL\Schema\Column;
+
+interface ListMappingInterface extends MappingInterface
 {
 
-    public function getObjectReference(): ?string;
+    public function getDBALColumn(): Column;
 
-    public function getRoutineName(): string;
-
-    /**
-     * @return array<MappingInterface>
-     */
-    public function getArgumentMappings(): array;
-
-    public function isStaticCall(): bool;
+    public function getEntryMapping(): MappingInterface;
 
 }

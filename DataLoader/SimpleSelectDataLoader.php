@@ -26,6 +26,7 @@ use Doctrine\DBAL\Driver\Statement;
 use PDO;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
+use Addiks\RDMBundle\Hydration\HydrationContext;
 
 /**
  * A very simple loader that just executes one simple select statement for every entity to load the data for.
@@ -128,6 +129,9 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
                 if (!empty($idValue)) {
                     $hasId = true;
+                    if (!is_numeric($idValue) || empty($idValue)) {
+                        $idValue = "'{$idValue}'";
+                    }
                     $queryBuilder->andWhere($expr->eq($idColumn['columnName'], $idValue));
                 }
             }
@@ -176,7 +180,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
         if ($entityMapping instanceof EntityMappingInterface) {
             /** @var array<scalar> */
-            $additionalData = $this->collectAdditionalDataForEntity($entity, $entityMapping);
+            $additionalData = $this->collectAdditionalDataForEntity($entity, $entityMapping, $entityManager);
 
             if ($this->hasDataChanged($entity, $additionalData)) {
                 /** @var ClassMetadata $classMetaData */
@@ -240,13 +244,18 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
     /**
      * @param object $entity
      */
-    private function collectAdditionalDataForEntity($entity, EntityMappingInterface $entityMapping): array
-    {
+    private function collectAdditionalDataForEntity(
+        $entity,
+        EntityMappingInterface $entityMapping,
+        EntityManagerInterface $entityManager
+    ): array {
         /** @var array<scalar> */
         $additionalData = array();
 
         /** @var mixed $reflectionClass */
         $reflectionClass = new ReflectionClass($entityMapping->getEntityClassName());
+
+        $context = new HydrationContext($entity, $entityManager);
 
         foreach ($entityMapping->getFieldMappings() as $fieldName => $entityFieldMapping) {
             /** @var MappingInterface $entityFieldMapping */
@@ -262,7 +271,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             /** @var array<scalar> $fieldAdditionalData */
             $fieldAdditionalData = $this->valueResolver->revertValue(
                 $entityFieldMapping,
-                $entity,
+                $context,
                 $valueFromEntityField
             );
 

@@ -65,7 +65,7 @@ final class ServiceFormType implements FormTypeInterface
                 /**
                  * @return ?object
                  */
-                function (string $serviceId) use ($container) {
+                function (string $serviceId = null) use ($container) {
                     /** @var ?object $service */
                     $service = null;
 

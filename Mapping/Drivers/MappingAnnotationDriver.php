@@ -28,9 +28,9 @@ use Doctrine\DBAL\Types\Type;
 use Addiks\RDMBundle\Mapping\ObjectMapping;
 use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
 use Addiks\RDMBundle\Mapping\FieldMapping;
-use Addiks\RDMBundle\Mapping\Annotation\Obj;
-use Addiks\RDMBundle\Mapping\Annotation\Arr;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
+use Addiks\RDMBundle\Mapping\Annotation\RDMObject;
+use Addiks\RDMBundle\Mapping\Annotation\RDMArray;
 
 final class MappingAnnotationDriver implements MappingDriverInterface
 {
@@ -170,7 +170,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
                 )
             );
 
-        } elseif ($annotation instanceof Obj) {
+        } elseif ($annotation instanceof RDMObject) {
             /** @var array<MappingInterface> $subFieldMappings */
             $subFieldMappings = array();
 
@@ -194,6 +194,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
             $fieldMapping = new ObjectMapping(
                 $annotation->{"class"},
                 $subFieldMappings,
+                null, # TODO: column
                 sprintf(
                     "in entity '%s' on field '%s'",
                     $className,
@@ -203,7 +204,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
                 $serializer
             );
 
-        } elseif ($annotation instanceof Arr) {
+        } elseif ($annotation instanceof RDMArray) {
             /** @var array<MappingInterface> $entryMappings */
             $entryMappings = array();
 
