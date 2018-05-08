@@ -15,6 +15,11 @@ use Addiks\RDMBundle\ValueResolver\FieldValueResolver;
 use Addiks\RDMBundle\Mapping\FieldMappingInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Doctrine\DBAL\Schema\Column;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 final class FieldValueResolverTest extends TestCase
 {
@@ -37,8 +42,10 @@ final class FieldValueResolverTest extends TestCase
         /** @var FieldMappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(FieldMappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+        $context->method('getEntityManager')->willReturn($this->createEntityManagerMock());
 
         /** @var Column $column */
         $column = $this->createMock(Column::class);
@@ -48,9 +55,10 @@ final class FieldValueResolverTest extends TestCase
 
         $fieldMapping->method('getDBALColumn')->willReturn($column);
         $column->method('getName')->willReturn('foo');
+        $column->method('getType')->willReturn(Type::getType('string'));
 
         /** @var mixed $actualResult */
-        $actualResult = $this->valueResolver->resolveValue($fieldMapping, $entity, [
+        $actualResult = $this->valueResolver->resolveValue($fieldMapping, $context, [
             'foo' => $expectedResult
         ]);
 
@@ -65,18 +73,21 @@ final class FieldValueResolverTest extends TestCase
         /** @var FieldMappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(FieldMappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+        $context->method('getEntityManager')->willReturn($this->createEntityManagerMock());
 
         /** @var Column $column */
         $column = $this->createMock(Column::class);
 
         $fieldMapping->method('getDBALColumn')->willReturn($column);
         $column->method('getName')->willReturn('foo');
+        $column->method('getType')->willReturn(Type::getType('string'));
 
         $this->assertEquals(
             ['foo' => "Lorem ipsum"],
-            $this->valueResolver->revertValue($fieldMapping, $entity, "Lorem ipsum")
+            $this->valueResolver->revertValue($fieldMapping, $context, "Lorem ipsum")
         );
     }
 
@@ -88,15 +99,35 @@ final class FieldValueResolverTest extends TestCase
         /** @var FieldMappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(FieldMappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+        $context->method('getEntityManager')->willReturn($this->createEntityManagerMock());
 
         $this->assertSame(null, $this->valueResolver->assertValue(
             $fieldMapping,
-            $entity,
+            $context,
             [],
             "Foo"
         ));
+    }
+
+    private function createEntityManagerMock(): EntityManagerInterface
+    {
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+
+        /** @var Connection $connection */
+        $connection = $this->createMock(Connection::class);
+
+        $entityManager->method('getConnection')->willReturn($connection);
+
+        /** @var AbstractPlatform $platform */
+        $platform = $this->createMock(AbstractPlatform::class);
+
+        $connection->method('getDatabasePlatform')->willReturn($platform);
+
+        return $entityManager;
     }
 
 }

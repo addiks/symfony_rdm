@@ -29,6 +29,11 @@ final class NullableMapping implements NullableMappingInterface
      */
     private $dbalColumn;
 
+    /**
+     * @var string
+     */
+    private $origin;
+
     public function __construct(
         MappingInterface $innerMapping,
         Column $dbalColumn = null,

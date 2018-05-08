@@ -17,6 +17,7 @@ use Addiks\RDMBundle\Mapping\ServiceMappingInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ServiceValueResolverTest extends TestCase
 {
@@ -61,7 +62,7 @@ final class ServiceValueResolverTest extends TestCase
         /** @var mixed $actualValue */
         $actualService = $this->valueResolver->resolveValue(
             $fieldMapping,
-            $this->createMock(EntityExample::class),
+            $this->createMock(HydrationContextInterface::class),
             []
         );
 
@@ -78,7 +79,7 @@ final class ServiceValueResolverTest extends TestCase
 
         $this->assertEquals([], $this->valueResolver->revertValue(
             $fieldMapping,
-            $this->createMock(EntityExample::class),
+            $this->createMock(HydrationContextInterface::class),
             null
         ));
     }
@@ -94,8 +95,6 @@ final class ServiceValueResolverTest extends TestCase
         $fieldMapping->method('isLax')->willReturn(false);
         $fieldMapping->method('getServiceId')->willReturn("some_service");
 
-        $entity = new EntityExample();
-
         $service = new ServiceExample("lorem", 123);
         $otherService = new ServiceExample("ipsum", 456);
 
@@ -109,7 +108,11 @@ final class ServiceValueResolverTest extends TestCase
 
         $this->expectException(FailedRDMAssertionExceptionInterface::class);
 
-        $this->valueResolver->assertValue($fieldMapping, $entity, [], $otherService);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+
+        $this->valueResolver->assertValue($fieldMapping, $context, [], $otherService);
     }
 
     /**
@@ -124,11 +127,13 @@ final class ServiceValueResolverTest extends TestCase
 
         $fieldMapping->expects($this->never())->method('getServiceId');
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         $service = new ServiceExample("lorem", 123);
 
-        $this->valueResolver->assertValue($fieldMapping, $entity, [], $service);
+        $this->valueResolver->assertValue($fieldMapping, $context, [], $service);
     }
 
 }

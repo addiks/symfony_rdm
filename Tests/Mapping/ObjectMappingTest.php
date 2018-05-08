@@ -61,8 +61,8 @@ final class ObjectMappingTest extends TestCase
         $this->subject = new ObjectMapping(
             ValueObjectExample::class,
             [
-                $this->fieldMappingA,
-                $this->fieldMappingB,
+                'a' => $this->fieldMappingA,
+                'b' => $this->fieldMappingB,
             ],
             $this->column,
             "some cool origin",
@@ -85,8 +85,8 @@ final class ObjectMappingTest extends TestCase
     public function shouldStoreFieldMappings()
     {
         $this->assertEquals([
-            $this->createMock(MappingInterface::class),
-            $this->createMock(MappingInterface::class),
+            'a' => $this->createMock(MappingInterface::class),
+            'b' => $this->createMock(MappingInterface::class),
         ], $this->subject->getFieldMappings());
     }
 

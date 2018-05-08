@@ -16,6 +16,7 @@ use Addiks\RDMBundle\ValueResolver\ValueResolverLazyLoadProxy;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ValueResolverLazyLoadProxyTest extends TestCase
 {
@@ -52,7 +53,9 @@ final class ValueResolverLazyLoadProxyTest extends TestCase
         /** @var MappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(MappingInterface::class);
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var array<scalar> $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = [
@@ -61,13 +64,13 @@ final class ValueResolverLazyLoadProxyTest extends TestCase
 
         $innerResolver->expects($this->once())->method("resolveValue")->with(
             $this->equalTo($fieldMapping),
-            $this->equalTo($entity),
+            $this->equalTo($context),
             $this->equalTo($dataFromAdditionalColumns)
         );
 
         $this->valueResolver->resolveValue(
             $fieldMapping,
-            $entity,
+            $context,
             $dataFromAdditionalColumns
         );
     }
@@ -87,20 +90,22 @@ final class ValueResolverLazyLoadProxyTest extends TestCase
         /** @var MappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(MappingInterface::class);
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var string $valueFromEntityField */
         $valueFromEntityField = 'lorem ipsum';
 
         $innerResolver->expects($this->once())->method("revertValue")->with(
             $this->equalTo($fieldMapping),
-            $this->equalTo($entity),
+            $this->equalTo($context),
             $this->equalTo($valueFromEntityField)
         );
 
         $this->valueResolver->revertValue(
             $fieldMapping,
-            $entity,
+            $context,
             $valueFromEntityField
         );
     }
@@ -120,7 +125,9 @@ final class ValueResolverLazyLoadProxyTest extends TestCase
         /** @var MappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(MappingInterface::class);
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var array<scalar> $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = [
@@ -132,14 +139,14 @@ final class ValueResolverLazyLoadProxyTest extends TestCase
 
         $innerResolver->expects($this->once())->method("assertValue")->with(
             $this->equalTo($fieldMapping),
-            $this->equalTo($entity),
+            $this->equalTo($context),
             $this->equalTo($dataFromAdditionalColumns),
             $this->equalTo($actualValue)
         );
 
         $this->valueResolver->assertValue(
             $fieldMapping,
-            $entity,
+            $context,
             $dataFromAdditionalColumns,
             $actualValue
         );

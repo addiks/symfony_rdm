@@ -25,6 +25,7 @@ use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class EntityHydratorTest extends TestCase
 {
@@ -85,11 +86,22 @@ final class EntityHydratorTest extends TestCase
 
         $entity = new EntityExample();
 
-        $this->valueResolver->method("resolveValue")->will($this->returnValueMap([
-            [$fooMapping, $entity, [], $serviceA],
-            [$barMapping, $entity, [], $serviceB],
-            [$fazMapping, $entity, [], $serviceC],
-        ]));
+        /** @var array $mappingMap */
+        $mappingMap = array(
+            [$fooMapping, $serviceA],
+            [$barMapping, $serviceB],
+            [$fazMapping, $serviceC],
+        );
+
+        $this->valueResolver->method("resolveValue")->will($this->returnCallback(
+            function ($fieldMapping, $context, $data) use ($mappingMap) {
+                foreach ($mappingMap as [$mapping, $service]) {
+                    if ($mapping === $fieldMapping) {
+                        return $service;
+                    }
+                }
+            }
+        ));
 
         $this->hydrator->hydrateEntity($entity, $this->createMock(EntityManagerInterface::class));
 
@@ -118,7 +130,7 @@ final class EntityHydratorTest extends TestCase
 
         $this->valueResolver->expects($this->once())->method("assertValue")->with(
             $this->equalTo($fazMapping),
-            $this->equalTo($entity),
+            $this->isInstanceOf(HydrationContextInterface::class),
             $this->equalTo([]),
             $this->equalTo($fazService)
         );

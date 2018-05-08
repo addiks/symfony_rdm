@@ -22,6 +22,11 @@ class EntityExample
     public $id;
 
     /**
+     * @var string
+     */
+    public $secondId;
+
+    /**
      * @var ServiceExample
      */
     public $foo;

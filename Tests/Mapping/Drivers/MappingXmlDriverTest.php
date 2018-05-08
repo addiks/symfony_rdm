@@ -27,6 +27,7 @@ use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Mapping\CallDefinition;
 use Addiks\RDMBundle\Mapping\FieldMapping;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 final class MappingXmlDriverTest extends TestCase
 {
@@ -41,12 +42,19 @@ final class MappingXmlDriverTest extends TestCase
      */
     private $fileLocator;
 
+    /**
+     * @var KernelInterface
+     */
+    private $kernel;
+
     public function setUp()
     {
         $this->fileLocator = $this->createMock(FileLocator::class);
+        $this->kernel = $this->createMock(KernelInterface::class);
 
         $this->mappingDriver = new MappingXmlDriver(
             $this->fileLocator,
+            $this->kernel,
             realpath(__DIR__ . "/../../../Resources/mapping-schema.v1.xsd")
         );
     }
@@ -76,8 +84,9 @@ final class MappingXmlDriverTest extends TestCase
                 'dolor' => new ObjectMapping(
                     ValueObjectExample::class,
                     [],
+                    null,
                     "in file '{$mappingFilePath}'",
-                    new CallDefinition("createFromJson", "self"),
+                    new CallDefinition("createFromJson", "self", [], true),
                     new CallDefinition("serializeJson")
                 ),
             ], "in file '{$mappingFilePath}'"),
@@ -94,12 +103,13 @@ final class MappingXmlDriverTest extends TestCase
                     new Column("dolor", Type::getType('integer'), ['notnull' => false]),
                     "in file '{$mappingFilePath}'"
                 ),
-            ], "in file '{$mappingFilePath}'"),
+            ], null, "in file '{$mappingFilePath}'"),
             'abc' => new ObjectMapping(
                 ValueObjectExample::class,
                 [],
+                null,
                 "in file '{$mappingFilePath}'",
-                new CallDefinition("createFromJson", "self"),
+                new CallDefinition("createFromJson", "self", [], true),
                 new CallDefinition("serializeJson")
             ),
             'def' => new ObjectMapping(
@@ -114,6 +124,7 @@ final class MappingXmlDriverTest extends TestCase
                         "in file '{$mappingFilePath}'"
                     ),
                 ],
+                null,
                 "in file '{$mappingFilePath}'",
                 new CallDefinition("createValueObject", "@value_object.factory", [
                     new FieldMapping(
@@ -125,6 +136,7 @@ final class MappingXmlDriverTest extends TestCase
             'ghi' => new ObjectMapping(
                 ValueObjectExample::class,
                 [],
+                null,
                 "in file '{$mappingFilePath}'",
                 new CallDefinition("createValueObject", "@value_object.factory", [
                     new ChoiceMapping('baz_column', [
@@ -135,11 +147,11 @@ final class MappingXmlDriverTest extends TestCase
             ),
             'jkl' => new ArrayMapping(
                 [
-                    new ObjectMapping(ValueObjectExample::class, [], "in file '{$mappingFilePath}'"),
+                    new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}'"),
                     new ObjectMapping(ValueObjectExample::class, [
                         'qwe' => new ArrayMapping([], "in file '{$mappingFilePath}'")
-                    ], "in file '{$mappingFilePath}'"),
-                    new ObjectMapping(ValueObjectExample::class, [], "in file '{$mappingFilePath}'"),
+                    ], null, "in file '{$mappingFilePath}'"),
+                    new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}'"),
                 ],
                 "in file '{$mappingFilePath}'"
             ),

@@ -65,6 +65,9 @@ interface HydrationContextInterface
      */
     public function getObjectHydrationStack(): array;
 
+    /**
+     * @param object|string|null $value
+     */
     public function pushOnObjectHydrationStack($value): void;
 
     /**

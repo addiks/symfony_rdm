@@ -141,9 +141,10 @@ final class DataSimpleSelectLoaderTest extends TestCase
             'bar_column' => 'dolor sit amet'
         );
 
-        $this->classMetaData->identifier = ["id", "faz"];
+        $this->classMetaData->identifier = ["id", "secondId"];
         $this->classMetaData->fieldMappings = [
             "id"  => ['columnName' => 'id'],
+            "secondId"  => ['columnName' => 'secondId'],
             "faz" => ['columnName' => 'faz']
         ];
 
@@ -159,6 +160,7 @@ final class DataSimpleSelectLoaderTest extends TestCase
 
         $entity = new EntityExample(null, null, null, $fazService);
         $entity->id = "some_id";
+        $entity->secondId = "second_id";
 
         $this->expr->method("eq")->willReturn("*eq-return*");
 
@@ -216,11 +218,22 @@ final class DataSimpleSelectLoaderTest extends TestCase
         $entity->foo = "some_ipsum_service";
         $entity->bar = "some_dolor_service";
 
-        $this->valueResolver->method("revertValue")->will($this->returnValueMap([
-            [$this->mappings['foo'], $entity, "some_ipsum_service", ["foo_column" => "ipsum"]],
-            [$this->mappings['bar'], $entity, "some_dolor_service", ["bar_column" => "dolor"]],
-            [$this->mappings['faz'], $entity, $fazService,          ["faz_column" => "sit"]],
-        ]));
+        /** @var array $map */
+        $map = array(
+            [$this->mappings['foo'], ["foo_column" => "ipsum"]],
+            [$this->mappings['bar'], ["bar_column" => "dolor"]],
+            [$this->mappings['faz'], ["faz_column" => "sit"]],
+        );
+
+        $this->valueResolver->method("revertValue")->will($this->returnCallback(
+            function ($fieldMapping, $context, $value) use ($map) {
+                foreach ($map as [$mapping, $data]) {
+                    if ($mapping === $fieldMapping) {
+                        return $data;
+                    }
+                }
+            }
+        ));
 
         $this->connection->expects($this->once())->method("update")->with(
             $this->equalTo("some_table"),
@@ -248,10 +261,22 @@ final class DataSimpleSelectLoaderTest extends TestCase
         $entity->foo = "some_ipsum_service";
         $entity->bar = "some_dolor_service";
 
-        $this->valueResolver->method("revertValue")->will($this->returnValueMap([
-            [$this->mappings['foo'], $entity, "some_ipsum_service", ["foo_column" => "ipsum"]],
-            [$this->mappings['bar'], $entity, "some_dolor_service", ["bar_column" => "dolor"]],
-        ]));
+        /** @var array $map */
+        $map = array(
+            "some_ipsum_service" => ["foo_column" => "ipsum"],
+            "some_dolor_service" => ["bar_column" => "dolor"],
+        );
+
+        $this->valueResolver->method("revertValue")->will($this->returnCallback(
+            function ($fieldMapping, $context, $value) use ($map) {
+                return $map[$value];
+            }
+        ));
+
+#        $this->valueResolver->method("revertValue")->will($this->returnValueMap([
+#            [$this->mappings['foo'], $entity, "some_ipsum_service", ["foo_column" => "ipsum"]],
+#            [$this->mappings['bar'], $entity, "some_dolor_service", ["bar_column" => "dolor"]],
+#        ]));
 
         $this->connection->expects($this->never())->method("update");
 

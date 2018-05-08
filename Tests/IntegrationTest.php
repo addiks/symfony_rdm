@@ -55,6 +55,7 @@ use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Mapping\Annotation\Call;
 use Addiks\RDMBundle\Mapping\Annotation\RDMArray;
 use Addiks\RDMBundle\Mapping\Annotation\RDMObject;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 /**
  * This is an integration-test that test's the bundle as a whole.
@@ -413,6 +414,10 @@ final class IntegrationTest extends TestCase
             [EntityExample::class, $classMetadata]
         ]));
 
+        /** @var AbstractPlatform $platform */
+        $platform = $this->createMock(AbstractPlatform::class);
+
+        $connection->method('getDatabasePlatform')->willReturn($platform);
         $connection->method('createQueryBuilder')->willReturn($queryBuilder);
 
         $queryBuilder->method('expr')->willReturn($expr);

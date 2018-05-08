@@ -17,6 +17,7 @@ use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ArrayValueResolverTest extends TestCase
 {
@@ -46,8 +47,9 @@ final class ArrayValueResolverTest extends TestCase
         /** @var ArrayMappingInterface $arrayMapping */
         $arrayMapping = $this->createMock(ArrayMappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var MappingInterface $fooMapping */
         $fooMapping = $this->createMock(MappingInterface::class);
@@ -73,12 +75,12 @@ final class ArrayValueResolverTest extends TestCase
         ]);
 
         $this->entryValueResolver->method('resolveValue')->will($this->returnValueMap([
-            [$fooMapping, $entity, $dataFromAdditionalColumns, 'bar'],
-            [$bazMapping, $entity, $dataFromAdditionalColumns, 3.1415],
+            [$fooMapping, $context, $dataFromAdditionalColumns, 'bar'],
+            [$bazMapping, $context, $dataFromAdditionalColumns, 3.1415],
         ]));
 
         /** @var mixed $actualResult */
-        $actualResult = $this->arrayValueResolver->resolveValue($arrayMapping, $entity, $dataFromAdditionalColumns);
+        $actualResult = $this->arrayValueResolver->resolveValue($arrayMapping, $context, $dataFromAdditionalColumns);
 
         $this->assertEquals($expectedResult, $actualResult);
     }
@@ -91,8 +93,9 @@ final class ArrayValueResolverTest extends TestCase
         /** @var ArrayMappingInterface $arrayMapping */
         $arrayMapping = $this->createMock(ArrayMappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var MappingInterface $fooMapping */
         $fooMapping = $this->createMock(MappingInterface::class);
@@ -118,12 +121,12 @@ final class ArrayValueResolverTest extends TestCase
         ]);
 
         $this->entryValueResolver->method('revertValue')->will($this->returnValueMap([
-            [$fooMapping, $entity, 'bar', ['lorem' => 'ipsum']],
-            [$bazMapping, $entity, 3.1415, ['dolor' => 'sit']],
+            [$fooMapping, $context, 'bar', ['lorem' => 'ipsum']],
+            [$bazMapping, $context, 3.1415, ['dolor' => 'sit']],
         ]));
 
         /** @var mixed $actualResult */
-        $actualResult = $this->arrayValueResolver->revertValue($arrayMapping, $entity, $valueFromEntityField);
+        $actualResult = $this->arrayValueResolver->revertValue($arrayMapping, $context, $valueFromEntityField);
 
         $this->assertEquals($expectedResult, $actualResult);
     }
@@ -136,8 +139,9 @@ final class ArrayValueResolverTest extends TestCase
         /** @var ArrayMappingInterface $arrayMapping */
         $arrayMapping = $this->createMock(ArrayMappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var MappingInterface $fooMapping */
         $fooMapping = $this->createMock(MappingInterface::class);
@@ -151,12 +155,12 @@ final class ArrayValueResolverTest extends TestCase
         ]);
 
         $this->entryValueResolver->method('revertValue')->will($this->returnValueMap([
-            [$fooMapping, $entity, 'bar', ['lorem' => 'ipsum']],
-            [$bazMapping, $entity, 3.1415, ['dolor' => 'sit']],
+            [$fooMapping, $context, 'bar', ['lorem' => 'ipsum']],
+            [$bazMapping, $context, 3.1415, ['dolor' => 'sit']],
         ]));
 
         /** @var mixed $actualResult */
-        $actualResult = $this->arrayValueResolver->revertValue($arrayMapping, $entity, "a non-array");
+        $actualResult = $this->arrayValueResolver->revertValue($arrayMapping, $context, "a non-array");
 
         $this->assertEquals([], $actualResult);
     }
@@ -171,10 +175,11 @@ final class ArrayValueResolverTest extends TestCase
         /** @var ArrayMappingInterface $arrayMapping */
         $arrayMapping = $this->createMock(ArrayMappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
-        $this->arrayValueResolver->assertValue($arrayMapping, $entity, [], "foo");
+        $this->arrayValueResolver->assertValue($arrayMapping, $context, [], "foo");
     }
 
 }

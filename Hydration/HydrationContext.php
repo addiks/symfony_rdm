@@ -46,6 +46,9 @@ final class HydrationContext implements HydrationContextInterface
      */
     private $entityManager;
 
+    /**
+     * @param object $entity
+     */
     public function __construct($entity, EntityManagerInterface $entityManager)
     {
         Assert::true(is_object($entity));

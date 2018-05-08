@@ -19,6 +19,7 @@ use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class CallDefinitionExecuterTest extends TestCase
 {
@@ -65,6 +66,16 @@ final class CallDefinitionExecuterTest extends TestCase
         /** @var EntityExample $entity */
         $entity = $this->createMock(EntityExample::class);
 
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+        $context->method('getEntity')->willReturn($entity);
+        $context->method('getObjectHydrationStack')->willReturn([
+            $entity,
+            $this->createMock(EntityExample::class),
+            $entity
+        ]);
+
         /** @var array<string> $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = array(
             'lorem' => 'ipsum',
@@ -83,7 +94,7 @@ final class CallDefinitionExecuterTest extends TestCase
         /** @var mixed $actualResult */
         $actualResult = $this->callDefinitionExecuter->executeCallDefinition(
             $callDefinition,
-            $entity,
+            $context,
             $dataFromAdditionalColumns
         );
 
@@ -98,8 +109,9 @@ final class CallDefinitionExecuterTest extends TestCase
         /** @var CallDefinitionInterface $callDefinition */
         $callDefinition = $this->createMock(CallDefinitionInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var array<string> $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = array(
@@ -119,7 +131,7 @@ final class CallDefinitionExecuterTest extends TestCase
         /** @var mixed $actualResult */
         $actualResult = $this->callDefinitionExecuter->executeCallDefinition(
             $callDefinition,
-            $entity,
+            $context,
             $dataFromAdditionalColumns
         );
 
@@ -139,8 +151,9 @@ final class CallDefinitionExecuterTest extends TestCase
         /** @var CallDefinitionInterface $callDefinition */
         $callDefinition = $this->createMock(CallDefinitionInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var ValueObjectExample $expectedResult */
         $expectedResult = $this->createMock(ValueObjectExample::class);
@@ -162,7 +175,7 @@ final class CallDefinitionExecuterTest extends TestCase
         $callDefinition->method('getArgumentMappings')->willReturn([$argumentMapping]);
 
         $this->argumentResolver->method('resolveValue')->will($this->returnValueMap([
-            [$argumentMapping, $entity, $dataFromAdditionalColumns, 'foo'],
+            [$argumentMapping, $context, $dataFromAdditionalColumns, 'foo'],
         ]));
 
         $factoryService->method('getLorem')->will($this->returnValueMap([
@@ -176,7 +189,7 @@ final class CallDefinitionExecuterTest extends TestCase
         /** @var mixed $actualResult */
         $actualResult = $this->callDefinitionExecuter->executeCallDefinition(
             $callDefinition,
-            $entity,
+            $context,
             $dataFromAdditionalColumns
         );
 

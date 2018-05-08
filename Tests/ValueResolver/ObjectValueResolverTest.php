@@ -20,6 +20,7 @@ use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\ValueResolver\CallDefinitionExecuterInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ObjectValueResolverTest extends TestCase
 {
@@ -68,8 +69,9 @@ final class ObjectValueResolverTest extends TestCase
         /** @var MappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(MappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var mixed $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = array(
@@ -83,11 +85,11 @@ final class ObjectValueResolverTest extends TestCase
         ]);
 
         $this->fieldValueResolver->method('resolveValue')->will($this->returnValueMap([
-            [$fieldMapping, $entity, $dataFromAdditionalColumns, "FOO BAR BAZ"],
+            [$fieldMapping, $context, $dataFromAdditionalColumns, "FOO BAR BAZ"],
         ]));
 
         /** @var mixed $actualObject */
-        $actualObject = $this->valueResolver->resolveValue($objectMapping, $entity, $dataFromAdditionalColumns);
+        $actualObject = $this->valueResolver->resolveValue($objectMapping, $context, $dataFromAdditionalColumns);
 
         $this->assertTrue($actualObject instanceof ValueObjectExample);
         $this->assertEquals("FOO BAR BAZ", $actualObject->getAmet());
@@ -104,8 +106,9 @@ final class ObjectValueResolverTest extends TestCase
         /** @var MappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(MappingInterface::class);
 
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         $actualObject = new ValueObjectExample("foo");
         $actualObject->setAmet('sit amet');
@@ -116,11 +119,11 @@ final class ObjectValueResolverTest extends TestCase
         ]);
 
         $this->fieldValueResolver->method('revertValue')->will($this->returnValueMap([
-            [$fieldMapping, $entity, 'sit amet', ['amet' => "FOO BAR BAZ"]],
+            [$fieldMapping, $context, 'sit amet', ['amet' => "FOO BAR BAZ"]],
         ]));
 
         /** @var array $actualData */
-        $actualData = $this->valueResolver->revertValue($objectMapping, $entity, $actualObject);
+        $actualData = $this->valueResolver->revertValue($objectMapping, $context, $actualObject);
 
         $this->assertEquals(['amet' => "FOO BAR BAZ"], $actualData);
     }
@@ -132,9 +135,6 @@ final class ObjectValueResolverTest extends TestCase
     {
         /** @var ObjectMappingInterface $objectMapping */
         $objectMapping = $this->createMock(ObjectMappingInterface::class);
-
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
 
         $dataFromAdditionalColumns = array(
             'lorem' => 'ipsum',
@@ -148,7 +148,11 @@ final class ObjectValueResolverTest extends TestCase
 
         $this->expectException(FailedRDMAssertionExceptionInterface::class);
 
-        $this->valueResolver->assertValue($objectMapping, $entity, $dataFromAdditionalColumns, $actualValue);
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+
+        $this->valueResolver->assertValue($objectMapping, $context, $dataFromAdditionalColumns, $actualValue);
     }
 
 }

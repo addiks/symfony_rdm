@@ -17,6 +17,7 @@ use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ChoiceValueResolverTest extends TestCase
 {
@@ -51,7 +52,9 @@ final class ChoiceValueResolverTest extends TestCase
             'bar' => $serviceMappingBar
         ]);
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var array<scalar> $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = array(
@@ -63,14 +66,14 @@ final class ChoiceValueResolverTest extends TestCase
         $expectedValue = "lorem ipsum dolor sit amet";
 
         $this->innerValueResolver->method('resolveValue')->will($this->returnValueMap([
-            [$serviceMappingFoo, $entity, $dataFromAdditionalColumns, $expectedValue],
-            [$serviceMappingBar, $entity, $dataFromAdditionalColumns, "unexpected value"]
+            [$serviceMappingFoo, $context, $dataFromAdditionalColumns, $expectedValue],
+            [$serviceMappingBar, $context, $dataFromAdditionalColumns, "unexpected value"]
         ]));
 
         /** @var mixed $actualValue */
         $actualValue = $this->valueResolver->resolveValue(
             $fieldMapping,
-            $entity,
+            $context,
             $dataFromAdditionalColumns
         );
 
@@ -92,7 +95,9 @@ final class ChoiceValueResolverTest extends TestCase
             'baz' => $serviceMappingBaz
         ]);
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var scalar $valueFromEntityField */
         $valueFromEntityField = 'lorem ipsum';
@@ -103,15 +108,15 @@ final class ChoiceValueResolverTest extends TestCase
         ];
 
         $this->innerValueResolver->method('resolveValue')->will($this->returnValueMap([
-            [$serviceMappingFoo, $entity, [], "unexpected value"],
-            [$serviceMappingBar, $entity, [], "lorem ipsum"],
-            [$serviceMappingBaz, $entity, [], "lorem ipsum"],
+            [$serviceMappingFoo, $context, [], "unexpected value"],
+            [$serviceMappingBar, $context, [], "lorem ipsum"],
+            [$serviceMappingBaz, $context, [], "lorem ipsum"],
         ]));
 
         /** @var mixed $actualValue */
         $actualValue = $this->valueResolver->revertValue(
             $fieldMapping,
-            $entity,
+            $context,
             $valueFromEntityField
         );
 
@@ -131,7 +136,9 @@ final class ChoiceValueResolverTest extends TestCase
             'bar' => $serviceMappingBar
         ]);
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var scalar $valueFromEntityField */
         $valueFromEntityField = 'lorem ipsum';
@@ -147,14 +154,14 @@ final class ChoiceValueResolverTest extends TestCase
 
         $this->innerValueResolver->expects($this->once())->method('assertValue')->with(
             $this->equalTo($serviceMappingFoo),
-            $this->equalTo($entity),
+            $this->equalTo($context),
             $this->equalTo($dataFromAdditionalColumns),
             $this->equalTo($actualValue)
         );
 
         $this->valueResolver->assertValue(
             $fieldMapping,
-            $entity,
+            $context,
             $dataFromAdditionalColumns,
             $actualValue
         );

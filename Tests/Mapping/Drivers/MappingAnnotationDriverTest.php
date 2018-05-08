@@ -126,7 +126,7 @@ final class MappingAnnotationDriverTest extends TestCase
                     'precision' => 0,
                     'length' => 12,
                 ]), "in entity '{$entityClass}' on field 'boo->bar'"),
-            ], "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'boo'"),
+            ], null, "in entity 'Addiks\RDMBundle\Tests\Hydration\EntityExample' on field 'boo'"),
             'arr' => new ArrayMapping([
                 'foo' => new ServiceMapping("some_service", false, "in entity '{$entityClass}' on field 'arr->foo'"),
                 'bar' => new FieldMapping(new DBALColumn('someField', Type::getType('string'), [

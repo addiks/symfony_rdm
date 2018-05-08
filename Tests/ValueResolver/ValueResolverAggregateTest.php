@@ -16,6 +16,7 @@ use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class ValueResolverAggregateTest extends TestCase
 {
@@ -53,7 +54,9 @@ final class ValueResolverAggregateTest extends TestCase
     {
         $fieldMapping = new ServiceMapping("some_service");
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var array<scalar> $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = [
@@ -62,7 +65,7 @@ final class ValueResolverAggregateTest extends TestCase
 
         $this->innerResolverA->expects($this->once())->method("resolveValue")->with(
             $this->equalTo($fieldMapping),
-            $this->equalTo($entity),
+            $this->equalTo($context),
             $this->equalTo($dataFromAdditionalColumns)
         );
 
@@ -70,7 +73,7 @@ final class ValueResolverAggregateTest extends TestCase
 
         $this->valueResolver->resolveValue(
             $fieldMapping,
-            $entity,
+            $context,
             $dataFromAdditionalColumns
         );
     }
@@ -82,7 +85,9 @@ final class ValueResolverAggregateTest extends TestCase
     {
         $fieldMapping = new ChoiceMapping("some_column", []);
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var scalar $valueFromEntityField */
         $valueFromEntityField = 'lorem ipsum';
@@ -91,13 +96,13 @@ final class ValueResolverAggregateTest extends TestCase
 
         $this->innerResolverB->expects($this->once())->method("revertValue")->with(
             $this->equalTo($fieldMapping),
-            $this->equalTo($entity),
+            $this->equalTo($context),
             $this->equalTo($valueFromEntityField)
         );
 
         $this->valueResolver->revertValue(
             $fieldMapping,
-            $entity,
+            $context,
             $valueFromEntityField
         );
     }
@@ -109,7 +114,9 @@ final class ValueResolverAggregateTest extends TestCase
     {
         $fieldMapping = new ChoiceMapping("some_column", []);
 
-        $entity = new EntityExample();
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
 
         /** @var array<scalar> $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = [
@@ -123,14 +130,14 @@ final class ValueResolverAggregateTest extends TestCase
 
         $this->innerResolverB->expects($this->once())->method("assertValue")->with(
             $this->equalTo($fieldMapping),
-            $this->equalTo($entity),
+            $this->equalTo($context),
             $this->equalTo($dataFromAdditionalColumns),
             $this->equalTo($actualValue)
         );
 
         $this->valueResolver->assertValue(
             $fieldMapping,
-            $entity,
+            $context,
             $dataFromAdditionalColumns,
             $actualValue
         );

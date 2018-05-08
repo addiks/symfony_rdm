@@ -100,6 +100,7 @@ final class MappingXmlDriver implements MappingDriverInterface
     private function readFieldMappingsFromFile(string $mappingFile): array
     {
         if ($mappingFile[0] === '@') {
+            /** @var string $mappingFile */
             $mappingFile = $this->kernel->locateResource($mappingFile);
         }
 
@@ -669,6 +670,11 @@ final class MappingXmlDriver implements MappingDriverInterface
 
             if ($key === 'column') {
                 $columnName = $attributeValue;
+
+            } elseif ($key === 'name') {
+                if (empty($columnName)) {
+                    $columnName = $attributeValue;
+                }
 
             } elseif ($key === 'type') {
                 $type = Type::getType($attributeValue);
