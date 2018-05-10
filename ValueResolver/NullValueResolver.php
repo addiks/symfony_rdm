@@ -14,7 +14,7 @@ namespace Addiks\RDMBundle\ValueResolver;
 
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
-use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
+use Addiks\RDMBundle\Mapping\nullMappingInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
@@ -22,7 +22,7 @@ final class NullValueResolver implements ValueResolverInterface
 {
 
     public function resolveValue(
-        MappingInterface $arrayMapping,
+        MappingInterface $nullMapping,
         HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
@@ -30,7 +30,7 @@ final class NullValueResolver implements ValueResolverInterface
     }
 
     public function revertValue(
-        MappingInterface $arrayMapping,
+        MappingInterface $nullMapping,
         HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
@@ -38,7 +38,7 @@ final class NullValueResolver implements ValueResolverInterface
     }
 
     public function assertValue(
-        MappingInterface $arrayMapping,
+        MappingInterface $nullMapping,
         HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
         $actualValue

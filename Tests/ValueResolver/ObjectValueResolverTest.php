@@ -21,6 +21,7 @@ use Addiks\RDMBundle\ValueResolver\CallDefinitionExecuterInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
 
 final class ObjectValueResolverTest extends TestCase
 {
@@ -80,9 +81,15 @@ final class ObjectValueResolverTest extends TestCase
         );
 
         $objectMapping->method('getClassName')->willReturn(ValueObjectExample::class);
+        $objectMapping->method('getFactory')->willReturn($this->createMock(CallDefinitionInterface::class));
         $objectMapping->method('getFieldMappings')->willReturn([
             'amet' => $fieldMapping
         ]);
+
+        /** @var ValueObjectExample $object */
+        $object = $this->createMock(ValueObjectExample::class);
+
+        $this->callDefinitionExecuter->method('executeCallDefinition')->willReturn($object);
 
         $this->fieldValueResolver->method('resolveValue')->will($this->returnValueMap([
             [$fieldMapping, $context, $dataFromAdditionalColumns, "FOO BAR BAZ"],
@@ -91,8 +98,7 @@ final class ObjectValueResolverTest extends TestCase
         /** @var mixed $actualObject */
         $actualObject = $this->valueResolver->resolveValue($objectMapping, $context, $dataFromAdditionalColumns);
 
-        $this->assertTrue($actualObject instanceof ValueObjectExample);
-        $this->assertEquals("FOO BAR BAZ", $actualObject->getAmet());
+        $this->assertSame($actualObject, $object);
     }
 
     /**

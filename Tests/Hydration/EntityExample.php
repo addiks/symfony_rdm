@@ -92,7 +92,7 @@ class EntityExample
         return $this->faz;
     }
 
-    public function getBoo(): ?ValueObjectExample
+    public function getBoo()
     {
         return $this->boo;
     }

@@ -57,24 +57,22 @@ final class CallDefinitionExecuterTest extends TestCase
 
     /**
      * @test
+     * @dataProvider dataProviderForShouldExecuteCallDefinitionOnEntity
      */
-    public function shouldExecuteCallDefinitionOnEntity()
-    {
+    public function shouldExecuteCallDefinitionOnEntity(
+        string $objectReference,
+        $expectedResult,
+        array $hydrationStack,
+        $entity
+    ) {
         /** @var CallDefinitionInterface $callDefinition */
         $callDefinition = $this->createMock(CallDefinitionInterface::class);
-
-        /** @var EntityExample $entity */
-        $entity = $this->createMock(EntityExample::class);
 
         /** @var HydrationContextInterface $context */
         $context = $this->createMock(HydrationContextInterface::class);
         $context->method('getEntityClass')->willReturn(EntityExample::class);
         $context->method('getEntity')->willReturn($entity);
-        $context->method('getObjectHydrationStack')->willReturn([
-            $entity,
-            $this->createMock(EntityExample::class),
-            $entity
-        ]);
+        $context->method('getObjectHydrationStack')->willReturn($hydrationStack);
 
         /** @var array<string> $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = array(
@@ -82,14 +80,9 @@ final class CallDefinitionExecuterTest extends TestCase
             'dolor' => 'sit amet'
         );
 
-        $callDefinition->method('getObjectReference')->willReturn('self');
+        $callDefinition->method('getObjectReference')->willReturn($objectReference);
         $callDefinition->method('getRoutineName')->willReturn('getBoo');
         $callDefinition->method('getArgumentMappings')->willReturn([]);
-
-        /** @var ValueObjectExample $expectedResult */
-        $expectedResult = $this->createMock(ValueObjectExample::class);
-
-        $entity->method('getBoo')->willReturn($expectedResult);
 
         /** @var mixed $actualResult */
         $actualResult = $this->callDefinitionExecuter->executeCallDefinition(
@@ -99,6 +92,50 @@ final class CallDefinitionExecuterTest extends TestCase
         );
 
         $this->assertSame($expectedResult, $actualResult);
+    }
+
+    public function dataProviderForShouldExecuteCallDefinitionOnEntity(): array
+    {
+        /** @var EntityExample $entity */
+        $entity = $this->createMock(EntityExample::class);
+
+        /** @var ValueObjectExample $expectedResult */
+        $expectedResult = $this->createMock(ValueObjectExample::class);
+
+        $entity->method('getBoo')->willReturn($expectedResult);
+
+        return array(
+            [
+                '$this',
+                $expectedResult,
+                [
+                    $entity,
+                    $this->createMock(EntityExample::class),
+                    $entity
+                ],
+                $entity
+            ],
+            [
+                'self',
+                $expectedResult,
+                [
+                    $entity,
+                    $this->createMock(EntityExample::class),
+                    $entity
+                ],
+                $entity
+            ],
+            [
+                'parent',
+                $expectedResult,
+                [
+                    $entity,
+                    $entity,
+                    $this->createMock(EntityExample::class)
+                ],
+                $entity
+            ],
+        );
     }
 
     /**
