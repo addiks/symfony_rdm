@@ -97,11 +97,15 @@ final class MappingXmlDriver implements MappingDriverInterface
     /**
      * @return array<MappingInterface>
      */
-    private function readFieldMappingsFromFile(string $mappingFile): array
+    private function readFieldMappingsFromFile(string $mappingFile, string $parentMappingFile = null): array
     {
         if ($mappingFile[0] === '@') {
             /** @var string $mappingFile */
             $mappingFile = $this->kernel->locateResource($mappingFile);
+        }
+
+        if ($mappingFile[0] !== DIRECTORY_SEPARATOR) {
+            $mappingFile = dirname($parentMappingFile) . DIRECTORY_SEPARATOR . $mappingFile;
         }
 
         $dom = new DOMDocument();
@@ -467,10 +471,10 @@ final class MappingXmlDriver implements MappingDriverInterface
                 /** @var string $fieldName */
                 $fieldName = (string)$nullNode->attributes->getNamedItem("field")->nodeValue;
 
-                $fieldMappings[$fieldName] = new NullMapping($mappingFile);
+                $fieldMappings[$fieldName] = new NullMapping("in file '{$mappingFile}'");
 
             } else {
-                $fieldMappings[] = new NullMapping($mappingFile);
+                $fieldMappings[] = new NullMapping("in file '{$mappingFile}'");
             }
         }
 
@@ -504,7 +508,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $forcedFieldName = (string)$importNode->attributes->getNamedItem("field")->nodeValue;
             }
 
-            foreach ($this->readFieldMappingsFromFile($path) as $fieldName => $fieldMapping) {
+            foreach ($this->readFieldMappingsFromFile($path, $mappingFile) as $fieldName => $fieldMapping) {
                 /** @var MappingInterface $fieldMapping */
 
                 if (!empty($forcedFieldName)) {

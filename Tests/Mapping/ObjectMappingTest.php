@@ -67,7 +67,9 @@ final class ObjectMappingTest extends TestCase
             $this->column,
             "some cool origin",
             $this->factory,
-            $this->serializer
+            $this->serializer,
+            "some_id",
+            "some_reference"
         );
     }
 
@@ -96,6 +98,30 @@ final class ObjectMappingTest extends TestCase
     public function shouldStoreOrigin()
     {
         $this->assertEquals("some cool origin", $this->subject->describeOrigin());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldStoreDBALColumn()
+    {
+        $this->assertSame($this->column, $this->subject->getDBALColumn());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldStoreId()
+    {
+        $this->assertSame("some_id", $this->subject->getId());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldStoreReferenceId()
+    {
+        $this->assertSame("some_reference", $this->subject->getReferencedId());
     }
 
     /**

@@ -1,0 +1,11 @@
+<object
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://github.com/addiks/symfony_rdm/tree/master/Resources/mapping-schema.v1.xsd"
+    class="Addiks\RDMBundle\Tests\ValueObjectExample"
+    column="vwx_column"
+    column-type="integer"
+    nullable="false"
+>
+    <service field="foo" id="some_service" />
+    <service field="bar" id="other_service" />
+</object>

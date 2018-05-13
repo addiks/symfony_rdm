@@ -107,4 +107,28 @@ final class EntityMappingTest extends TestCase
         $this->assertEquals($expectedColumns, $this->entityMapping->collectDBALColumns());
     }
 
+    /**
+     * @test
+     */
+    public function shouldStoreDBALColumn()
+    {
+        $this->assertNull($this->entityMapping->getDBALColumn());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldStoreId()
+    {
+        $this->assertNull($this->entityMapping->getId());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldStoreReferenceId()
+    {
+        $this->assertNull($this->entityMapping->getReferencedId());
+    }
+
 }

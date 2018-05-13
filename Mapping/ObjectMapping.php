@@ -60,11 +60,6 @@ final class ObjectMapping implements ObjectMappingInterface
      */
     private $referencedId;
 
-    /**
-     * @var ObjectMappingInterface|null
-     */
-    private $referredObjectMapping;
-
     public function __construct(
         string $className,
         array $fieldMappings,
@@ -73,8 +68,7 @@ final class ObjectMapping implements ObjectMappingInterface
         CallDefinitionInterface $factory = null,
         CallDefinitionInterface $serializer = null,
         string $id = null,
-        string $referencedId = null,
-        ObjectMappingInterface $referredObjectMapping = null
+        string $referencedId = null
     ) {
         $this->className = $className;
         $this->factory = $factory;
@@ -83,7 +77,6 @@ final class ObjectMapping implements ObjectMappingInterface
         $this->origin = $origin;
         $this->id = $id;
         $this->referencedId = $referencedId;
-        $this->referredObjectMapping = $referredObjectMapping;
 
         foreach ($fieldMappings as $fieldName => $fieldMapping) {
             /** @var MappingInterface $fieldMapping */
@@ -149,11 +142,6 @@ final class ObjectMapping implements ObjectMappingInterface
     public function getId(): ?string
     {
         return $this->id;
-    }
-
-    public function getReferredObjectMapping(): ?MappingInterface
-    {
-        return $this->referredObjectMapping;
     }
 
     public function getReferencedId(): ?string

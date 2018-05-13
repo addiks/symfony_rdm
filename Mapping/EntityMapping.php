@@ -99,11 +99,6 @@ final class EntityMapping implements EntityMappingInterface
         return null;
     }
 
-    public function getReferredObjectMapping(): ?MappingInterface
-    {
-        return null;
-    }
-
     public function getReferencedId(): ?string
     {
         return null;

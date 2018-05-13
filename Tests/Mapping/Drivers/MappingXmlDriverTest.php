@@ -28,6 +28,9 @@ use Addiks\RDMBundle\Mapping\CallDefinition;
 use Addiks\RDMBundle\Mapping\FieldMapping;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Addiks\RDMBundle\Mapping\NullMapping;
+use Addiks\RDMBundle\Mapping\NullableMapping;
+use Addiks\RDMBundle\Mapping\ListMapping;
 
 final class MappingXmlDriverTest extends TestCase
 {
@@ -66,6 +69,9 @@ final class MappingXmlDriverTest extends TestCase
     {
         /** @var string $mappingFilePath */
         $mappingFilePath = __DIR__ . "/EntityExample.orm.xml";
+
+        /** @var string $mappingImportFilePath */
+        $mappingImportFilePath = __DIR__ . "/EntityExampleImport.orm.xml";
 
         $expectedMapping = new EntityMapping(EntityExample::class, [
             'foo' => new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
@@ -159,9 +165,24 @@ final class MappingXmlDriverTest extends TestCase
                 [
                     'foo' => new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
                     'bar' => new ServiceMapping('other_service', false, "in file '{$mappingFilePath}'"),
+                    'baz' => new NullMapping("in file '{$mappingFilePath}'"),
                 ],
                 "in file '{$mappingFilePath}'"
             ),
+            'pqr' => new NullableMapping(
+                new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
+                new Column("pqr_column", Type::getType('boolean'), ['notnull' => false]),
+                "in file '{$mappingFilePath}'"
+            ),
+            'stu' => new ListMapping(
+                new Column("stu_column", Type::getType('string'), ['notnull' => true]),
+                new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}'"),
+                "in file '{$mappingFilePath}'"
+            ),
+            'vwx' => new ObjectMapping(ValueObjectExample::class, [
+                'foo' => new ServiceMapping('some_service', false, "in file '{$mappingImportFilePath}'"),
+                'bar' => new ServiceMapping('other_service', false, "in file '{$mappingImportFilePath}'"),
+            ], new Column("vwx_column", Type::getType('integer'), ['notnull' => true]), "in file '{$mappingImportFilePath}'")
         ]);
 
         $this->fileLocator->method('fileExists')->willReturn(true);

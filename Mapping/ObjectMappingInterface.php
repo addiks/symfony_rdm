@@ -34,8 +34,6 @@ interface ObjectMappingInterface extends MappingInterface
 
     public function getId(): ?string;
 
-    public function getReferredObjectMapping(): ?MappingInterface;
-
     public function getReferencedId(): ?string;
 
 }

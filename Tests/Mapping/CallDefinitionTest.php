@@ -30,7 +30,8 @@ final class CallDefinitionTest extends TestCase
             [
                 $this->createMock(MappingInterface::class),
                 $this->createMock(MappingInterface::class),
-            ]
+            ],
+            true
         );
     }
 
@@ -48,6 +49,14 @@ final class CallDefinitionTest extends TestCase
     public function shouldStoreRoutineName()
     {
         $this->assertEquals("someRoutineName", $this->callDefinition->getRoutineName());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldKnowIfStatic()
+    {
+        $this->assertEquals(true, $this->callDefinition->isStaticCall());
     }
 
     /**
