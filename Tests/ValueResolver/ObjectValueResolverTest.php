@@ -22,6 +22,9 @@ use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
+use ReflectionClass;
+use ReflectionProperty;
+use Doctrine\DBAL\Schema\Column;
 
 final class ObjectValueResolverTest extends TestCase
 {
@@ -70,9 +73,21 @@ final class ObjectValueResolverTest extends TestCase
         /** @var MappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(MappingInterface::class);
 
+        /** @var ValueObjectExample $object */
+        $object = $this->createMock(ValueObjectExample::class);
+
+        /** @var Column $column */
+        $column = $this->createMock(Column::class);
+
+        $column->expects($this->once())->method("getName")->willReturn("some_column");
+
         /** @var HydrationContextInterface $context */
         $context = $this->createMock(HydrationContextInterface::class);
         $context->method('getEntityClass')->willReturn(EntityExample::class);
+        $context->expects($this->once())->method('registerValue')->with(
+            "some_id",
+            $object
+        );
 
         /** @var mixed $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = array(
@@ -81,13 +96,12 @@ final class ObjectValueResolverTest extends TestCase
         );
 
         $objectMapping->method('getClassName')->willReturn(ValueObjectExample::class);
+        $objectMapping->method('getId')->willReturn("some_id");
+        $objectMapping->method('getDBALColumn')->willReturn($column);
         $objectMapping->method('getFactory')->willReturn($this->createMock(CallDefinitionInterface::class));
         $objectMapping->method('getFieldMappings')->willReturn([
             'amet' => $fieldMapping
         ]);
-
-        /** @var ValueObjectExample $object */
-        $object = $this->createMock(ValueObjectExample::class);
 
         $this->callDefinitionExecuter->method('executeCallDefinition')->willReturn($object);
 
@@ -99,6 +113,65 @@ final class ObjectValueResolverTest extends TestCase
         $actualObject = $this->valueResolver->resolveValue($objectMapping, $context, $dataFromAdditionalColumns);
 
         $this->assertSame($actualObject, $object);
+
+        $reflectionClass = new ReflectionClass(ValueObjectExample::class);
+
+        /** @var ReflectionProperty $reflectionProperty */
+        $reflectionProperty = $reflectionClass->getProperty("amet");
+        $reflectionProperty->setAccessible(true);
+
+        $this->assertEquals("FOO BAR BAZ", $reflectionProperty->getValue($object));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotLoadFactoryArgumentsWhenDataGiven()
+    {
+        /** @var ObjectMappingInterface $objectMapping */
+        $objectMapping = $this->createMock(ObjectMappingInterface::class);
+
+        /** @var MappingInterface $fieldMapping */
+        $fieldMapping = $this->createMock(MappingInterface::class);
+
+        /** @var ValueObjectExample $object */
+        $object = $this->createMock(ValueObjectExample::class);
+
+        /** @var Column $column */
+        $column = $this->createMock(Column::class);
+
+        $column->expects($this->never())->method("getName");
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+        $context->expects($this->once())->method('registerValue')->with(
+            "some_id",
+            $object
+        );
+
+        /** @var mixed $dataFromAdditionalColumns */
+        $dataFromAdditionalColumns = array(
+            'lorem' => 'ipsum',
+            'dolor' => 'sit amet',
+            '' => 'foo'
+        );
+
+        $objectMapping->method('getClassName')->willReturn(ValueObjectExample::class);
+        $objectMapping->method('getId')->willReturn("some_id");
+        $objectMapping->method('getDBALColumn')->willReturn($column);
+        $objectMapping->method('getFactory')->willReturn($this->createMock(CallDefinitionInterface::class));
+        $objectMapping->method('getFieldMappings')->willReturn([
+            'amet' => $fieldMapping
+        ]);
+
+        $this->callDefinitionExecuter->method('executeCallDefinition')->willReturn($object);
+
+        $this->fieldValueResolver->method('resolveValue')->will($this->returnValueMap([
+            [$fieldMapping, $context, $dataFromAdditionalColumns, "FOO BAR BAZ"],
+        ]));
+
+        $this->valueResolver->resolveValue($objectMapping, $context, $dataFromAdditionalColumns);
     }
 
     /**

@@ -61,6 +61,8 @@ final class CallDefinitionExecuterTest extends TestCase
      */
     public function shouldExecuteCallDefinitionOnEntity(
         string $objectReference,
+        string $routineName,
+        array $argumentMappings,
         $expectedResult,
         array $hydrationStack,
         $entity
@@ -81,8 +83,14 @@ final class CallDefinitionExecuterTest extends TestCase
         );
 
         $callDefinition->method('getObjectReference')->willReturn($objectReference);
-        $callDefinition->method('getRoutineName')->willReturn('getBoo');
-        $callDefinition->method('getArgumentMappings')->willReturn([]);
+        $callDefinition->method('getRoutineName')->willReturn($routineName);
+        $callDefinition->method('getArgumentMappings')->willReturn($argumentMappings);
+
+        $this->argumentResolver->method('resolveValue')->will($this->returnCallback(
+            function ($argumentMapping, $context, $dataFromAdditionalColumns) {
+                return $argumentMapping;
+            }
+        ));
 
         /** @var mixed $actualResult */
         $actualResult = $this->callDefinitionExecuter->executeCallDefinition(
@@ -102,11 +110,16 @@ final class CallDefinitionExecuterTest extends TestCase
         /** @var ValueObjectExample $expectedResult */
         $expectedResult = $this->createMock(ValueObjectExample::class);
 
+        /** @var MappingInterface $mapping */
+        $mapping = $this->createMock(MappingInterface::class);
+
         $entity->method('getBoo')->willReturn($expectedResult);
 
         return array(
             [
                 '$this',
+                'getBoo',
+                [],
                 $expectedResult,
                 [
                     $entity,
@@ -117,6 +130,8 @@ final class CallDefinitionExecuterTest extends TestCase
             ],
             [
                 'self',
+                'getBoo',
+                [],
                 $expectedResult,
                 [
                     $entity,
@@ -127,7 +142,21 @@ final class CallDefinitionExecuterTest extends TestCase
             ],
             [
                 'parent',
+                'getBoo',
+                [],
                 $expectedResult,
+                [
+                    $entity,
+                    $entity,
+                    $this->createMock(EntityExample::class)
+                ],
+                $entity
+            ],
+            [
+                '',
+                'spl_object_hash',
+                [$mapping],
+                spl_object_hash($mapping),
                 [
                     $entity,
                     $entity,

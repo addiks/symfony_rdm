@@ -100,33 +100,35 @@ final class CallDefinitionExecuter implements CallDefinitionExecuterInterface
         /** @var object|string $callee */
         $callee = null;
 
-        /** @var array<mixed> $hydrationStack */
-        $hydrationStack = $context->getObjectHydrationStack();
+        if (!empty($objectReference)) {
+            /** @var array<mixed> $hydrationStack */
+            $hydrationStack = $context->getObjectHydrationStack();
 
-        if ($objectReference[0] === '$') {
-            $objectReference = substr($objectReference, 1);
-        }
+            if ($objectReference[0] === '$') {
+                $objectReference = substr($objectReference, 1);
+            }
 
-        if (in_array($objectReference, ['root', 'entity'])) {
-            $callee = $context->getEntity();
+            if (in_array($objectReference, ['root', 'entity'])) {
+                $callee = $context->getEntity();
 
-        } elseif (in_array($objectReference, ['self', 'this'])) {
-            $callee = $hydrationStack[count($hydrationStack)-1];
+            } elseif (in_array($objectReference, ['self', 'this'])) {
+                $callee = $hydrationStack[count($hydrationStack)-1];
 
-        } elseif (in_array($objectReference, ['parent'])) {
-            $callee = $hydrationStack[count($hydrationStack)-2];
+            } elseif (in_array($objectReference, ['parent'])) {
+                $callee = $hydrationStack[count($hydrationStack)-2];
 
-        } elseif ($objectReference[0] === '@') {
-            /** @var string $serviceId */
-            $serviceId = substr($objectReference, 1);
+            } elseif ($objectReference[0] === '@') {
+                /** @var string $serviceId */
+                $serviceId = substr($objectReference, 1);
 
-            $callee = $this->container->get($serviceId);
+                $callee = $this->container->get($serviceId);
 
-        } elseif (class_exists($objectReference)) {
-            $callee = $objectReference;
+            } elseif (class_exists($objectReference)) {
+                $callee = $objectReference;
 
-        } elseif ($context->hasRegisteredValue($objectReference)) {
-            $callee = $context->getRegisteredValue($objectReference);
+            } elseif ($context->hasRegisteredValue($objectReference)) {
+                $callee = $context->getRegisteredValue($objectReference);
+            }
         }
 
         return $callee;

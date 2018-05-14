@@ -17,6 +17,7 @@ use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Doctrine\DBAL\Schema\Column;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
 final class ListValueResolverTest extends TestCase
 {
@@ -57,7 +58,7 @@ final class ListValueResolverTest extends TestCase
 
         /** @var array $dataFromAdditionalColumns */
         $dataFromAdditionalColumns = [
-            'some_column' => '["LOREM","IPSUM","DOLOR","SIT","AMET"]',
+            'some_column' => '{"a":"LOREM","b":"IPSUM","c":"DOLOR","d":"SIT","e":"AMET"}',
         ];
 
         $this->entryValueResolver->method('resolveValue')->will($this->returnCallback(
@@ -68,11 +69,11 @@ final class ListValueResolverTest extends TestCase
 
         /** @var mixed $expectedResult */
         $expectedResult = [
-            'lorem',
-            'ipsum',
-            'dolor',
-            'sit',
-            'amet'
+            'a' => 'lorem',
+            'b' => 'ipsum',
+            'c' => 'dolor',
+            'd' => 'sit',
+            'e' => 'amet'
         ];
 
         /** @var mixed $actualResult */
@@ -130,6 +131,27 @@ final class ListValueResolverTest extends TestCase
         );
 
         $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotRevertValueOnNonListMapping()
+    {
+        /** @var MappingInterface $listMapping */
+        $listMapping = $this->createMock(MappingInterface::class);
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        /** @var mixed $valueFromEntityField */
+        $valueFromEntityField = [];
+
+        $this->assertEmpty($this->valueResolver->revertValue(
+            $listMapping,
+            $context,
+            $valueFromEntityField
+        ));
     }
 
     /**

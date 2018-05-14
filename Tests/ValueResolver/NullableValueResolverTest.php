@@ -111,7 +111,7 @@ final class NullableValueResolverTest extends TestCase
     /**
      * @test
      */
-    public function shouldRevertValue()
+    public function shouldNotResolveValueOnNull()
     {
         /** @var NullableMappingInterface $fieldMapping */
         $fieldMapping = $this->createMock(NullableMappingInterface::class);
@@ -119,8 +119,52 @@ final class NullableValueResolverTest extends TestCase
         /** @var MappingInterface $fieldMapping */
         $innerMapping = $this->createMock(MappingInterface::class);
 
+        /** @var Column $column */
+        $column = $this->createMock(Column::class);
+        $column->method("getName")->willReturn("some_column");
+
         $fieldMapping->method('getInnerMapping')->willReturn($innerMapping);
-        $fieldMapping->method('getDeterminatorColumnName')->willReturn("some_column");
+        $fieldMapping->method('collectDBALColumns')->willReturn([
+            $column
+        ]);
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        /** @var array $dataFromAdditionalColumns */
+        $dataFromAdditionalColumns = [
+            'some_column' => false
+        ];
+
+        /** @var mixed $expectedResult */
+        $expectedResult = 'bar';
+
+        $this->rootValueResolver->expects($this->never())->method('resolveValue');
+
+        $this->assertNull($this->valueResolver->resolveValue(
+            $fieldMapping,
+            $context,
+            $dataFromAdditionalColumns
+        ));
+    }
+
+    /**
+     * @test
+     * @dataProvider dataProviderForShouldRevertValue
+     */
+    public function shouldRevertValue(
+        $expectedResult,
+        array $revertedData,
+        string $columnName
+    ) {
+        /** @var NullableMappingInterface $fieldMapping */
+        $fieldMapping = $this->createMock(NullableMappingInterface::class);
+
+        /** @var MappingInterface $fieldMapping */
+        $innerMapping = $this->createMock(MappingInterface::class);
+
+        $fieldMapping->method('getInnerMapping')->willReturn($innerMapping);
+        $fieldMapping->method('getDeterminatorColumnName')->willReturn($columnName);
 
         /** @var HydrationContextInterface $context */
         $context = $this->createMock(HydrationContextInterface::class);
@@ -128,16 +172,11 @@ final class NullableValueResolverTest extends TestCase
         /** @var mixed $valueFromEntityField */
         $valueFromEntityField = "foo";
 
-        /** @var array $expectedResult */
-        $expectedResult = [
-            'some_column' => true
-        ];
-
         $this->rootValueResolver->expects($this->once())->method('revertValue')->with(
             $this->equalTo($innerMapping),
             $this->equalTo($context),
             $valueFromEntityField
-        )->willReturn([]);
+        )->willReturn($revertedData);
 
         /** @var mixed $actualResult */
         $actualResult = $this->valueResolver->revertValue(
@@ -147,6 +186,55 @@ final class NullableValueResolverTest extends TestCase
         );
 
         $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    public function dataProviderForShouldRevertValue()
+    {
+        return array(
+            [
+                [
+                    'some_column' => true
+                ],
+                [],
+                "some_column"
+            ],
+            [
+                [
+                    'some_column' => 123
+                ],
+                [
+                    'some_column' => 123
+                ],
+                "some_column"
+            ],
+            [
+                [],
+                [],
+                ""
+            ],
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotRevertValueForNonNullableMapping()
+    {
+        /** @var MappingInterface $fieldMapping */
+        $fieldMapping = $this->createMock(MappingInterface::class);
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        /** @var mixed $valueFromEntityField */
+        $valueFromEntityField = "foo";
+
+        /** @var mixed $actualResult */
+        $this->assertEmpty($this->valueResolver->revertValue(
+            $fieldMapping,
+            $context,
+            $valueFromEntityField
+        ));
     }
 
     /**
