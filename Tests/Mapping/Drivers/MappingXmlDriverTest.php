@@ -31,6 +31,7 @@ use Symfony\Component\HttpKernel\KernelInterface;
 use Addiks\RDMBundle\Mapping\NullMapping;
 use Addiks\RDMBundle\Mapping\NullableMapping;
 use Addiks\RDMBundle\Mapping\ListMapping;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
 
 final class MappingXmlDriverTest extends TestCase
 {
@@ -166,6 +167,16 @@ final class MappingXmlDriverTest extends TestCase
                     'foo' => new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
                     'bar' => new ServiceMapping('other_service', false, "in file '{$mappingFilePath}'"),
                     'baz' => new NullMapping("in file '{$mappingFilePath}'"),
+                    'maz' => new ListMapping(
+                        new Column("maz_column", Type::getType('string'), ['notnull' => true]),
+                        new ObjectMapping(
+                            ValueObjectExample::class,
+                            [],
+                            new Column("maz_obj_column", Type::getType('string')),
+                            "in file '{$mappingFilePath}'"
+                        ),
+                        "in file '{$mappingFilePath}'"
+                    ),
                 ],
                 "in file '{$mappingFilePath}'"
             ),
@@ -186,12 +197,30 @@ final class MappingXmlDriverTest extends TestCase
         ]);
 
         $this->fileLocator->method('fileExists')->willReturn(true);
-        $this->fileLocator->method('findMappingFile')->willReturn($mappingFilePath);
+        $this->fileLocator->method('findMappingFile')->willReturn("@foobarbaz");
+
+        $this->kernel->method("locateResource")->willReturn($mappingFilePath);
 
         /** @var EntityMapping $actualMapping */
         $actualMapping = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
 
         $this->assertEquals($expectedMapping, $actualMapping);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldThrowExceptionOnBrokenImport()
+    {
+        $this->expectException(InvalidMappingException::class);
+
+        /** @var string $mappingFilePath */
+        $mappingFilePath = __DIR__ . "/EntityExampleBroken.orm.xml";
+
+        $this->fileLocator->method('fileExists')->willReturn(true);
+        $this->fileLocator->method('findMappingFile')->willReturn($mappingFilePath);
+
+        $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
     }
 
 }

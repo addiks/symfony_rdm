@@ -24,7 +24,7 @@ class EntityExample
     /**
      * @var string
      */
-    public $secondId;
+    private $secondId;
 
     /**
      * @var ServiceExample
@@ -71,13 +71,15 @@ class EntityExample
         ServiceExample $bar = null,
         ServiceExample $baz = null,
         ServiceExample $faz = null,
-        ValueObjectExample $boo = null
+        ValueObjectExample $boo = null,
+        string $secondId = null
     ) {
         $this->foo = $foo;
         $this->bar = $bar;
         $this->baz = $baz;
         $this->faz = $faz;
         $this->boo = $boo;
+        $this->secondId = $secondId;
     }
 
     public static $staticMetadata;

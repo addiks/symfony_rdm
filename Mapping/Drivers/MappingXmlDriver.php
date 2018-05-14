@@ -104,8 +104,16 @@ final class MappingXmlDriver implements MappingDriverInterface
             $mappingFile = $this->kernel->locateResource($mappingFile);
         }
 
-        if ($mappingFile[0] !== DIRECTORY_SEPARATOR) {
+        if ($mappingFile[0] !== DIRECTORY_SEPARATOR && !empty($parentMappingFile)) {
             $mappingFile = dirname($parentMappingFile) . DIRECTORY_SEPARATOR . $mappingFile;
+        }
+
+        if (!file_exists($mappingFile)) {
+            throw new InvalidMappingException(sprintf(
+                "Missing referenced orm file '%s', referenced in file '%s'!",
+                $mappingFile,
+                $parentMappingFile
+            ));
         }
 
         $dom = new DOMDocument();
@@ -582,11 +590,8 @@ final class MappingXmlDriver implements MappingDriverInterface
     private function readList(
         DOMNode $listNode,
         string $mappingFile,
-        string $defaultColumnName
+        string $columnName
     ): ListMappingInterface {
-        /** @var string $columnName */
-        $columnName = $defaultColumnName;
-
         if (!is_null($listNode->attributes->getNamedItem("column"))) {
             $columnName = (string)$listNode->attributes->getNamedItem("column")->nodeValue;
         }

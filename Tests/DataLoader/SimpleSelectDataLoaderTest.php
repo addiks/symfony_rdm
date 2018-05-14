@@ -158,11 +158,13 @@ final class DataSimpleSelectLoaderTest extends TestCase
         /** @var ServiceExample $fazService */
         $fazService = $this->createMock(ServiceExample::class);
 
-        $entity = new EntityExample(null, null, null, $fazService);
-        $entity->id = "some_id";
-        $entity->secondId = "second_id";
+        $entity = new EntityExample(null, null, null, $fazService, null, "second_id");
+        $entity->id = "123";
 
-        $this->expr->method("eq")->willReturn("*eq-return*");
+        $this->expr->expects($this->exactly(2))->method("eq")->willReturn("*eq-return*")->withConsecutive(
+            ['id', '123'],
+            ['secondId', "'second_id'"]
+        );
 
         /** @var array $actualData */
         $actualData = $this->dataLoader->loadDBALDataForEntity($entity, $this->entityManager);

@@ -112,6 +112,14 @@
             <rdm:entry key="baz">
                 <rdm:null />
             </rdm:entry>
+            <rdm:entry key="maz">
+                <rdm:list column="maz_column">
+                    <rdm:object
+                        class="Addiks\RDMBundle\Tests\ValueObjectExample"
+                        column="maz_obj_column"
+                    />
+                </rdm:list>
+            </rdm:entry>
         </rdm:array>
 
         <rdm:nullable field="pqr" column="pqr_column">
@@ -123,6 +131,7 @@
         </rdm:list>
 
         <rdm:import field="vwx" path="EntityExampleImport.orm.xml" />
+        <rdm:import path="EntityExampleImportBroken.orm.xml" />
 
     </entity>
 
