@@ -8,15 +8,27 @@ Symfony-RDM – Helper for using the Rich Domain Model in Symfony
 
 ## What
 
-The goal of this project is to enrich the doctrine2-ORM in ways that allow the doctrine-entities to fulfill all the
-roles that classical entities should fulfill in a rich/fat domain model. This project will try to lift as many technical
-limitations of the current doctrine2-ORM in object-design as reasonable. This is meant to allow you (the developer) to
-put much more of your business-logic into the entities which until now would have to be on other objects and unreachable
-from within an entity (or would at least need some workarounds).
+The goal of this project is to enrich the doctrine2-ORM mapping capabilities so that entities do not have to be
+developed *for* doctrine anymore, but make it possible to map **any** object from anywhere to a database using doctrine,
+even if it was not developed for that purpose. It add's a lot of new ways on how data can be mapped from the database to
+an object (and back).
 
-Currently this project consists of only two features, but it will be extended in the near future:
- - Load services from the symfony-DIC into the fields of doctrine2 entities.
- - Choose which service to inject from a list of services by a value from the database.
+If you look for a deeper meaning or purpose of this project (you don't really have to, but some people just are that
+way), i would say that this project is to enrich the doctrine2-ORM in ways that allow the doctrine-entities to fulfill
+all the roles that classical entities should fulfill in a rich/fat domain model. This is meant to allow you (the
+developer) to put much more of your business-logic into the entities which until now would have to be on other objects
+and unreachable from within an entity (or would at least need some workarounds).
+
+The currently implemented features are the following:
+ - [Load (symfony-) services into entity fields.](Resources/doc/service_mapping.md)
+ - [Have a switch (choice) of which mapping to load into a field.](Resources/doc/choice_mapping.md)
+ - [Load an array with static keys into a field.](Resources/doc/array_mapping.md)
+ - [Load a list with dynamic length containing other mappings.](Resources/doc/list_mapping.md)
+ - [Load any object with it's own inner mappings into a field.](Resources/doc/object_mapping.md) (You can map the same class in different ways.)
+ - [Have any mapping nullable.](Resources/doc/nullable_mapping.md)
+ - [Have a mapping always map to *NULL*.](Resources/doc/null_mapping.md)
+
+The best part is that each of these above can be combined with any other, allowing for extremely dynamic ORM mapping.
 
 This was implemented with symfony 2.8 running on PHP 7.1 in mind because that is simply my use case. But i think it
 should work in all current stable versions (at least up until symfony 3.x, probably even further), i have however not
@@ -25,18 +37,14 @@ this paragraph.
 
 ## How
 
-It hooks into the events of doctrine and hydrates the marked fields with the described services. It also asserts that
-the marked fields actually contain their services. This is an additional security layer to make sure you do not forget
-to inject these services (f.e.: in the entity-constructor). The assertion can be disabled on a field-by-field basis
-using the property "lax=true". Only disable this check if you must and you know what you are doing.
-
-There are multiple ways of defining which services should be in what fields of the services:
-Per annotations, YAML, XML, PHP or Static PHP.
+It hooks into the events of doctrine and hydrates the marked fields with the described values.
+There are multiple ways of defining which mappings should be in what fields of the services:
+Per annotations, YAML, XML, PHP or Static PHP. YAML-Mapping is not fully implemented yet and may be removed soon.
 
 I would suggest you to use the XML or YAML mapping because entities should be framework-agnostic. I personally prefer
 XML over YAML because with XML you at least have a schemata while with yaml you often have to guess what keys are
-allowed, what all the keys mean and who actually uses them. Below you find examples of XML, YAML and Annotation
-configuration because those are the most used formats.
+allowed, what all the keys mean and who actually uses them. Below you find very basic examples of XML, YAML and
+Annotation configuration because those are the most used formats. For more detauls see the linked documentations above.
 
 ### Configuration via XML
 
@@ -70,6 +78,8 @@ configuration because those are the most used formats.
 ```
 
 ### Configuration via Yaml
+
+(Warning: YAML mapping is not fully implemented and may soon be removed completely!)
 
 ```yaml
 # Doctrine.Tests.ORM.Mapping.User.dcm.yml
@@ -245,18 +255,14 @@ class MyEntityFormType extends AbstractType
 
 This project may be extended with more features in the future, here are some ideas i have:
 
-- [Automatic initialization of value-objects in entities.][3]
-- Use aggregates (composed objects) in entities. (embeddables are just not enough)
 - Allow object-decoration (custom proxy-objects) in, on and between entities.
 - Allow to use simple arrays instead of doctrine collection objects [or even custom collections.][4]
 - Inject service-container-parameters into entities (similar to services).
 - Re-use data from one column in multiple fields (maybe even across multiple entities).
 - [Generare non-object values from generator-services (or other routines) to be hydrated into unmapped fields][5]
-- Populate arrays in the entity with values from columns, services, parameters or other stuff.
 - [Populate fields with aggregated data from the database.][6]
 - Allow custom (non-generated) proxy-classes for final entities.
 
-[3]: https://stackoverflow.com/questions/8440879
 [4]: https://stackoverflow.com/questions/3691943
 [5]: https://stackoverflow.com/questions/35414300
 [6]: https://stackoverflow.com/questions/26968809
