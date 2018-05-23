@@ -62,7 +62,16 @@ final class NullableMapping implements NullableMappingInterface
     public function collectDBALColumns(): array
     {
         /** @var array<Column> $dbalColumns */
-        $dbalColumns = $this->innerMapping->collectDBALColumns();
+        $dbalColumns = array();
+
+        foreach ($this->innerMapping->collectDBALColumns() as $dbalColumn) {
+            /** @var Column $dbalColumn */
+
+            $dbalColumn = clone $dbalColumn;
+            $dbalColumn->setNotnull(false);
+
+            $dbalColumns[] = $dbalColumn;
+        }
 
         if ($this->dbalColumn instanceof Column) {
             $dbalColumns[] = $this->dbalColumn;

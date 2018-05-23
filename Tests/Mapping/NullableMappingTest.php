@@ -82,6 +82,10 @@ final class NullableMappingTest extends TestCase
         /** @var Column $innerColumn */
         $innerColumn = $this->createMock(Column::class);
 
+        $innerColumn->expects($this->once())->method("setNotnull")->with(
+            $this->equalTo(false)
+        );
+
         $this->innerMapping->method('collectDBALColumns')->willReturn([$innerColumn]);
 
         /** @var mixed $expectedColumns */
@@ -93,7 +97,7 @@ final class NullableMappingTest extends TestCase
         /** @var mixed $actualColumns */
         $actualColumns = $this->mapping->collectDBALColumns();
 
-        $this->assertSame($expectedColumns, $actualColumns);
+        $this->assertEquals($expectedColumns, $actualColumns);
     }
 
 }
