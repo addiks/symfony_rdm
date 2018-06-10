@@ -18,6 +18,7 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingDriverChain;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingDriverChainTest extends TestCase
 {
@@ -53,8 +54,8 @@ final class MappingDriverChainTest extends TestCase
      */
     public function shouldCollectMappingData()
     {
-        $fieldMappingA = new ServiceMapping("some_service");
-        $fieldMappingB = new ServiceMapping("other_service");
+        $fieldMappingA = new ServiceMapping($this->createMock(ContainerInterface::class), "some_service");
+        $fieldMappingB = new ServiceMapping($this->createMock(ContainerInterface::class), "other_service");
 
         /** @var array<Service> $expectedAnnotations */
         $expectedFieldMappings = [

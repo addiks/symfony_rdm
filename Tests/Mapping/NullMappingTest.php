@@ -12,6 +12,8 @@ namespace Addiks;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\NullMapping;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class NullMappingTest extends TestCase
 {
@@ -40,6 +42,51 @@ final class NullMappingTest extends TestCase
     public function shouldNotCollectAnyColumns()
     {
         $this->assertEmpty($this->mapping->collectDBALColumns());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotResolveValue()
+    {
+        $this->assertNull($this->mapping->resolveValue(
+            $this->createMock(HydrationContextInterface::class),
+            []
+        ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotRevertValue()
+    {
+        $this->assertEmpty($this->mapping->revertValue(
+            $this->createMock(HydrationContextInterface::class),
+            null
+        ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotAssertValue()
+    {
+        $this->assertNull($this->mapping->assertValue(
+            $this->createMock(HydrationContextInterface::class),
+            [],
+            null
+        ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldWakeUpInnerMapping()
+    {
+        /** @var ContainerInterface $container */
+        $container = $this->createMock(ContainerInterface::class);
+
+        $this->assertNull($this->mapping->wakeUpMapping($container));
     }
 
 }

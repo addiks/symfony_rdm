@@ -16,6 +16,8 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class NullMapping implements MappingInterface
 {
@@ -38,6 +40,31 @@ final class NullMapping implements MappingInterface
     public function collectDBALColumns(): array
     {
         return [];
+    }
+
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        return null;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        return array();
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void {
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
     }
 
 }

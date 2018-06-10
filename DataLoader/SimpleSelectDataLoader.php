@@ -25,7 +25,6 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\DBAL\Driver\Statement;
 use PDO;
 use Addiks\RDMBundle\Mapping\MappingInterface;
-use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\Hydration\HydrationContext;
 
 /**
@@ -45,11 +44,6 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
     private $mappingDriver;
 
     /**
-     * @var ValueResolverInterface
-     */
-    private $valueResolver;
-
-    /**
      * @var array<array<scalar>>
      */
     private $originalData = array();
@@ -61,11 +55,9 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
     public function __construct(
         MappingDriverInterface $mappingDriver,
-        ValueResolverInterface $valueResolver,
         int $originalDataLimit = 1000
     ) {
         $this->mappingDriver = $mappingDriver;
-        $this->valueResolver = $valueResolver;
         $this->originalDataLimit = $originalDataLimit;
     }
 
@@ -269,8 +261,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             $valueFromEntityField = $reflectionProperty->getValue($entity);
 
             /** @var array<scalar> $fieldAdditionalData */
-            $fieldAdditionalData = $this->valueResolver->revertValue(
-                $entityFieldMapping,
+            $fieldAdditionalData = $entityFieldMapping->revertValue(
                 $context,
                 $valueFromEntityField
             );

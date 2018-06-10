@@ -15,6 +15,10 @@ use Addiks\RDMBundle\Mapping\ArrayMapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use InvalidArgumentException;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Tests\Hydration\EntityExample;
+use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class ArrayMappingTest extends TestCase
 {
@@ -87,6 +91,131 @@ final class ArrayMappingTest extends TestCase
             'lorem' => $columnA,
             'ipsum' => $columnB
         ], $this->arrayMapping->collectDBALColumns());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldResolveValueToArray()
+    {
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+
+        /** @var mixed $dataFromAdditionalColumns */
+        $dataFromAdditionalColumns = array(
+            'lorem' => 'ipsum',
+            'dolor' => 'sit',
+        );
+
+        /** @var array<mixed> $expectedResult */
+        $expectedResult = [
+            'foo' => 'bar',
+            'bar' => 3.1415
+        ];
+
+        $this->mappingA->expects($this->once())->method('resolveValue')->with(
+            $this->equalTo($context),
+            $this->equalTo($dataFromAdditionalColumns)
+        )->willReturn('bar');
+
+        $this->mappingB->expects($this->once())->method('resolveValue')->with(
+            $this->equalTo($context),
+            $this->equalTo($dataFromAdditionalColumns)
+        )->willReturn(3.1415);
+
+        /** @var mixed $actualResult */
+        $actualResult = $this->arrayMapping->resolveValue($context, $dataFromAdditionalColumns);
+
+        $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldRevertValueFromArray()
+    {
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+
+        /** @var mixed $valueFromEntityField */
+        $valueFromEntityField = array(
+            'foo' => 'bar',
+            'bar' => 3.1415
+        );
+
+        /** @var array<string, string> $expectedResult */
+        $expectedResult = array(
+            'lorem' => 'ipsum',
+            'dolor' => 'sit',
+        );
+
+        $this->mappingA->expects($this->once())->method('revertValue')->with(
+            $this->equalTo($context),
+            $this->equalTo('bar')
+        )->willReturn(['lorem' => 'ipsum']);
+
+        $this->mappingB->expects($this->once())->method('revertValue')->with(
+            $this->equalTo($context),
+            $this->equalTo(3.1415)
+        )->willReturn(['dolor' => 'sit']);
+
+        /** @var mixed $actualResult */
+        $actualResult = $this->arrayMapping->revertValue($context, $valueFromEntityField);
+
+        $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotRevertForNonArray()
+    {
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+
+        $this->mappingA->expects($this->never())->method('revertValue');
+        $this->mappingB->expects($this->never())->method('revertValue');
+
+        /** @var mixed $actualResult */
+        $actualResult = $this->arrayMapping->revertValue($context, "a non-array");
+
+        $this->assertEquals([], $actualResult);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldAssertValue()
+    {
+        $this->expectException(FailedRDMAssertionExceptionInterface::class);
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+
+        $this->arrayMapping->assertValue($context, [], "foo");
+    }
+
+    /**
+     * @test
+     */
+    public function shouldWakeUpInnerMapping()
+    {
+        /** @var ContainerInterface $container */
+        $container = $this->createMock(ContainerInterface::class);
+
+        $this->mappingA->expects($this->once())->method("wakeUpMapping")->with(
+            $this->equalTo($container)
+        );
+
+        $this->mappingB->expects($this->once())->method("wakeUpMapping")->with(
+            $this->equalTo($container)
+        );
+
+        $this->arrayMapping->wakeUpMapping($container);
     }
 
 }

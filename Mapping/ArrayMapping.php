@@ -16,6 +16,9 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class ArrayMapping implements ArrayMappingInterface
 {
@@ -70,4 +73,75 @@ final class ArrayMapping implements ArrayMappingInterface
         return $dbalColumns;
     }
 
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        /** @var array<mixed> $value */
+        $value = array();
+
+        foreach ($this->entryMappings as $key => $entryMapping) {
+            /** @var MappingInterface $entryMapping */
+
+            $value[$key] = $entryMapping->resolveValue(
+                $context,
+                $dataFromAdditionalColumns
+            );
+        }
+
+        return $value;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        /** @var array<string, string> $data */
+        $data = array();
+
+        if (is_array($valueFromEntityField)) {
+            foreach ($this->entryMappings as $key => $entryMapping) {
+                /** @var MappingInterface $entryMapping */
+
+                /** @var mixed $valueFromEntry */
+                $valueFromEntry = null;
+
+                if (isset($valueFromEntityField[$key])) {
+                    $valueFromEntry = $valueFromEntityField[$key];
+                }
+
+                $data = array_merge(
+                    $data,
+                    $entryMapping->revertValue(
+                        $context,
+                        $valueFromEntry
+                    )
+                );
+            }
+        }
+
+        return $data;
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void {
+        if (!is_array($actualValue) && !is_null($actualValue)) {
+            throw FailedRDMAssertionException::expectedArray(
+                $actualValue,
+                $this->origin
+            );
+        }
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
+        foreach ($this->entryMappings as $key => $entryMapping) {
+            /** @var MappingInterface $entryMapping */
+
+            $entryMapping->wakeUpMapping($container);
+        }
+    }
 }

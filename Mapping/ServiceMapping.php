@@ -11,6 +11,11 @@
 namespace Addiks\RDMBundle\Mapping;
 
 use Addiks\RDMBundle\Mapping\ServiceMappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
+use ErrorException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use ReflectionClass;
 
 final class ServiceMapping implements ServiceMappingInterface
 {
@@ -36,14 +41,30 @@ final class ServiceMapping implements ServiceMappingInterface
      */
     private $origin;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function __construct(
+        ContainerInterface $container,
         string $serviceId,
         bool $lax = false,
         string $origin = "unknown"
     ) {
+        $this->container = $container;
         $this->serviceId = $serviceId;
         $this->lax = $lax;
         $this->origin = $origin;
+    }
+
+    public function __sleep(): array
+    {
+        return [
+            'serviceId',
+            'lax',
+            'origin',
+        ];
     }
 
     public function getServiceId(): string
@@ -64,6 +85,59 @@ final class ServiceMapping implements ServiceMappingInterface
     public function collectDBALColumns(): array
     {
         return [];
+    }
+
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        /** @var object $service */
+        $service = null;
+
+        if (!$this->container->has($this->serviceId)) {
+            throw new ErrorException(sprintf(
+                "Referenced non-existent service '%s' %s!",
+                $this->serviceId,
+                $this->origin
+            ));
+        }
+
+        /** @var object $service */
+        $service = $this->container->get($this->serviceId);
+
+        return $service;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        return []; # Nothing to revert to for static services
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualService
+    ): void {
+        if (!$this->lax) {
+            /** @var object $expectedService */
+            $expectedService = $this->resolveValue($context, $dataFromAdditionalColumns);
+
+            if ($expectedService !== $actualService) {
+                throw FailedRDMAssertionException::expectedDifferentService(
+                    $this->serviceId,
+                    new ReflectionClass($context->getEntityClass()),
+                    $expectedService,
+                    $actualService
+                );
+            }
+        }
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
+        $this->container = $container;
     }
 
 }

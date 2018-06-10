@@ -17,9 +17,15 @@ use Addiks\RDMBundle\Mapping\DriverFactories\MappingAnnotationDriverFactory;
 use Addiks\RDMBundle\Mapping\Drivers\MappingAnnotationDriver;
 use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\Common\Annotations\Reader;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingAnnotationDriverFactoryTest extends TestCase
 {
+
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
 
     /**
      * @var MappingAnnotationDriverFactory
@@ -33,9 +39,11 @@ final class MappingAnnotationDriverFactoryTest extends TestCase
 
     public function setUp()
     {
+        $this->container = $this->createMock(ContainerInterface::class);
         $this->annotationReader = $this->createMock(Reader::class);
 
         $this->driverFactory = new MappingAnnotationDriverFactory(
+            $this->container,
             $this->annotationReader
         );
     }

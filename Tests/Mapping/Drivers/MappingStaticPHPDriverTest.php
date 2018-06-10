@@ -18,6 +18,7 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingStaticPHPDriver;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingStaticPHPDriverTest extends TestCase
 {
@@ -38,8 +39,8 @@ final class MappingStaticPHPDriverTest extends TestCase
     public function shouldReadMappingData()
     {
         $expectedMapping = new EntityMapping(EntityExample::class, [
-            'foo' => new ServiceMapping('some_service'),
-            'bar' => new ServiceMapping('other_service')
+            'foo' => new ServiceMapping($this->createMock(ContainerInterface::class), 'some_service'),
+            'bar' => new ServiceMapping($this->createMock(ContainerInterface::class), 'other_service')
         ]);
 
         EntityExample::$staticMetadata = $expectedMapping;

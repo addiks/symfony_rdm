@@ -19,6 +19,7 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingYamlDriver implements MappingDriverInterface
 {
@@ -28,9 +29,16 @@ final class MappingYamlDriver implements MappingDriverInterface
      */
     private $fileLocator;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function __construct(
+        ContainerInterface $container,
         FileLocator $fileLocator
     ) {
+        $this->container = $container;
         $this->fileLocator = $fileLocator;
     }
 
@@ -150,7 +158,7 @@ final class MappingYamlDriver implements MappingDriverInterface
             $lax = (bool)$serviceYaml["lax"];
         }
 
-        return new ServiceMapping($serviceId, $lax, sprintf(
+        return new ServiceMapping($this->container, $serviceId, $lax, sprintf(
             "in file '%s'",
             $mappingFile
         ));

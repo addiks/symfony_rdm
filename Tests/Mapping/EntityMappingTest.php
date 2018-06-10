@@ -16,6 +16,8 @@ use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class EntityMappingTest extends TestCase
 {
@@ -129,6 +131,59 @@ final class EntityMappingTest extends TestCase
     public function shouldStoreReferenceId()
     {
         $this->assertNull($this->entityMapping->getReferencedId());
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotResolveValue()
+    {
+        $this->assertNull($this->entityMapping->resolveValue(
+            $this->createMock(HydrationContextInterface::class),
+            []
+        ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotRevertValue()
+    {
+        $this->assertEmpty($this->entityMapping->revertValue(
+            $this->createMock(HydrationContextInterface::class),
+            null
+        ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotAssertValue()
+    {
+        $this->assertNull($this->entityMapping->assertValue(
+            $this->createMock(HydrationContextInterface::class),
+            [],
+            null
+        ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldWakeUpInnerMapping()
+    {
+        /** @var ContainerInterface $container */
+        $container = $this->createMock(ContainerInterface::class);
+
+        $this->fieldMappingA->expects($this->once())->method("wakeUpMapping")->with(
+            $this->equalTo($container)
+        );
+
+        $this->fieldMappingB->expects($this->once())->method("wakeUpMapping")->with(
+            $this->equalTo($container)
+        );
+
+        $this->entityMapping->wakeUpMapping($container);
     }
 
 }

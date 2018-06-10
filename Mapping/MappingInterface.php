@@ -11,6 +11,8 @@
 namespace Addiks\RDMBundle\Mapping;
 
 use Doctrine\DBAL\Schema\Column;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * A class that implements this interface indicates that it to be used as mapping-information for this RDM bundle.
@@ -34,5 +36,54 @@ interface MappingInterface
      * @return array<Column>
      */
     public function collectDBALColumns(): array;
+
+    /**
+     * Resolves data from the database to a mapped value.
+     *
+     * @param array<scalar>    $dataFromAdditionalColumns
+     *
+     * @return mixed
+     */
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    );
+
+    /**
+     * Reverts a resolved value back to it's originated data.
+     * The data in the returned array will be the same format as
+     * in $dataFromAdditionalColumns from "self::resolveValue()".
+     *
+     * @param mixed            $valueFromEntityField
+     *
+     * @return array<scalar>
+     */
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array;
+
+    /**
+     * Checks if the given value as a valid value for this mapping.
+     *
+     * @param array<mixed>     $dataFromAdditionalColumns
+     * @param mixed            $actualValue
+     *
+     * @throws FailedRDMAssertionExceptionInterface
+     */
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void;
+
+    /**
+     * Mapping objects can be cached. When cached, mapping objects get serialized.
+     * Sometimes part's of mapping objects cannot be serialized.
+     *
+     * This method gets called directly after unserializing a mapping-object when loading it from cache.
+     * It allows the mapping-objects to re-fill themself with other objects that may not be able to get serialized.
+     */
+    public function wakeUpMapping(ContainerInterface $container): void;
 
 }

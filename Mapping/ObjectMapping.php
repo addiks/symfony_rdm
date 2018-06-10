@@ -16,6 +16,15 @@ use Addiks\RDMBundle\Mapping\ObjectMappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
+use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
+use ReflectionClass;
+use ReflectionProperty;
+use ReflectionException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Connection;
 
 final class ObjectMapping implements ObjectMappingInterface
 {
@@ -147,6 +156,203 @@ final class ObjectMapping implements ObjectMappingInterface
     public function getReferencedId(): ?string
     {
         return $this->referencedId;
+    }
+
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        /** @var mixed $object */
+        $object = null;
+
+        $reflectionClass = new ReflectionClass($this->className);
+
+        /** @var object|string $object */
+        $object = $this->className;
+
+        if ($reflectionClass->isInstantiable()) {
+            $object = $reflectionClass->newInstanceWithoutConstructor();
+        }
+
+        $context->pushOnObjectHydrationStack($object);
+
+        if (!empty($this->referencedId)) {
+            $object = $context->getRegisteredValue($this->referencedId);
+
+        } elseif ($this->factory instanceof CallDefinitionInterface) {
+            /** @var array<string, string> $factoryData */
+            $factoryData = $dataFromAdditionalColumns;
+
+            if ($this->column instanceof Column && !array_key_exists("", $factoryData)) {
+                /** @var Type $type */
+                $type = $this->column->getType();
+
+                /** @var string $columnName */
+                $columnName = $this->column->getName();
+
+                if (isset($dataFromAdditionalColumns[$columnName])) {
+                    /** @var Connection $connection */
+                    $connection = $context->getEntityManager()->getConnection();
+
+                    $dataFromAdditionalColumns[$columnName] = $type->convertToPHPValue(
+                        $dataFromAdditionalColumns[$columnName],
+                        $connection->getDatabasePlatform()
+                    );
+
+                    $factoryData[""] = $dataFromAdditionalColumns[$columnName];
+                }
+            }
+
+            $object = $this->factory->execute(
+                $context,
+                $factoryData
+            );
+        }
+
+        // $object may have been replaced during creation, re-assign on top of stack.
+        $context->popFromObjectHydrationStack();
+        $context->pushOnObjectHydrationStack($object);
+
+        if (!empty($this->id) && !$context->hasRegisteredValue($this->id)) {
+            $context->registerValue($this->id, $object);
+        }
+
+        foreach ($this->fieldMappings as $fieldName => $fieldMapping) {
+            /** @var MappingInterface $fieldMapping */
+
+            /** @var mixed $fieldValue */
+            $fieldValue = $fieldMapping->resolveValue(
+                $context,
+                $dataFromAdditionalColumns
+            );
+
+            /** @var ReflectionClass $propertyReflectionClass */
+            $propertyReflectionClass = $reflectionClass;
+
+            while (is_object($propertyReflectionClass) && !$propertyReflectionClass->hasProperty($fieldName)) {
+                $propertyReflectionClass = $propertyReflectionClass->getParentClass();
+            }
+
+            if (!is_object($propertyReflectionClass)) {
+                throw new ReflectionException(sprintf("Property %s does not exist", $fieldName));
+            }
+
+            /** @var ReflectionProperty $reflectionProperty */
+            $reflectionProperty = $propertyReflectionClass->getProperty($fieldName);
+
+            $reflectionProperty->setAccessible(true);
+            $reflectionProperty->setValue($object, $fieldValue);
+        }
+
+        $context->popFromObjectHydrationStack();
+
+        return $object;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        /** @var array<scalar> $data */
+        $data = array();
+
+        $reflectionClass = new ReflectionClass($this->className);
+
+        $context->pushOnObjectHydrationStack($valueFromEntityField);
+
+        foreach ($this->fieldMappings as $fieldName => $fieldMapping) {
+            /** @var MappingInterface $fieldMapping */
+
+            /** @var ReflectionClass $propertyReflectionClass */
+            $propertyReflectionClass = $reflectionClass;
+
+            while (is_object($propertyReflectionClass) && !$propertyReflectionClass->hasProperty($fieldName)) {
+                $propertyReflectionClass = $propertyReflectionClass->getParentClass();
+            }
+
+            if (!is_object($propertyReflectionClass)) {
+                throw new ReflectionException(sprintf("Property %s does not exist", $fieldName));
+            }
+
+            /** @var ReflectionProperty $reflectionProperty */
+            $reflectionProperty = $propertyReflectionClass->getProperty($fieldName);
+
+            $reflectionProperty->setAccessible(true);
+            $valueFromField = null;
+
+            if (is_object($valueFromEntityField)) {
+                $valueFromField = $reflectionProperty->getValue($valueFromEntityField);
+            }
+
+            /** @var array<string, mixed> $fieldData */
+            $fieldData = $fieldMapping->revertValue(
+                $context,
+                $valueFromField
+            );
+
+            if (array_key_exists("", $fieldData)) {
+                $fieldData[$fieldName] = $fieldData[""];
+                unset($fieldData[""]);
+            }
+
+            $data = array_merge($data, $fieldData);
+        }
+
+        if ($this->serializer instanceof CallDefinitionInterface) {
+            /** @var string $columnName */
+            $columnName = '';
+
+            if ($this->column instanceof Column) {
+                $columnName = $this->column->getName();
+            }
+
+            $data[$columnName] = $this->serializer->execute(
+                $context,
+                $data
+            );
+
+            if ($this->column instanceof Column) {
+                /** @var Type $type */
+                $type = $this->column->getType();
+
+                /** @var Connection $connection */
+                $connection = $context->getEntityManager()->getConnection();
+
+                $data[$columnName] = $type->convertToDatabaseValue(
+                    $data[$columnName],
+                    $connection->getDatabasePlatform()
+                );
+            }
+        }
+
+        $context->popFromObjectHydrationStack();
+
+        return $data;
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void {
+        if (!is_null($actualValue) && !$actualValue instanceof $this->className) {
+            throw FailedRDMAssertionException::expectedInstanceOf(
+                $this->className,
+                $context->getEntityClass(),
+                $this->origin
+            );
+        }
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
+        if ($this->factory instanceof CallDefinitionInterface) {
+            $this->factory->wakeUpCall($container);
+        }
+
+        if ($this->serializer instanceof CallDefinitionInterface) {
+            $this->serializer->wakeUpCall($container);
+        }
     }
 
 }

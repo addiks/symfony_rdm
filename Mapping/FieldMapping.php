@@ -14,6 +14,10 @@ namespace Addiks\RDMBundle\Mapping;
 
 use Addiks\RDMBundle\Mapping\FieldMappingInterface;
 use Doctrine\DBAL\Schema\Column;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Connection;
 
 final class FieldMapping implements FieldMappingInterface
 {
@@ -49,6 +53,66 @@ final class FieldMapping implements FieldMappingInterface
     public function collectDBALColumns(): array
     {
         return [$this->dbalColumn];
+    }
+
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        /** @var mixed $value */
+        $value = null;
+
+        /** @var Type $type */
+        $type = $this->dbalColumn->getType();
+
+        /** @var Connection $connection */
+        $connection = $context->getEntityManager()->getConnection();
+
+        if (isset($dataFromAdditionalColumns[$this->dbalColumn->getName()])) {
+            $value = $dataFromAdditionalColumns[$this->dbalColumn->getName()];
+
+            $value = $type->convertToPHPValue(
+                $value,
+                $connection->getDatabasePlatform()
+            );
+        }
+
+        return $value;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        /** @var mixed $data */
+        $data = array();
+
+        /** @var Type $type */
+        $type = $this->dbalColumn->getType();
+
+        /** @var Connection $connection */
+        $connection = $context->getEntityManager()->getConnection();
+
+        /** @var scalar $databaseValue */
+        $databaseValue = $type->convertToDatabaseValue(
+            $valueFromEntityField,
+            $connection->getDatabasePlatform()
+        );
+
+        $data[$this->dbalColumn->getName()] = $databaseValue;
+
+        return $data;
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void {
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
     }
 
 }

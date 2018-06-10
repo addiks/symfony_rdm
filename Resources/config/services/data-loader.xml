@@ -21,7 +21,6 @@
 
         <service id="addiks_rdm.data_loader.simple" class="Addiks\RDMBundle\DataLoader\SimpleSelectDataLoader">
             <argument type="service" id="addiks_rdm.mapping.driver" />
-            <argument type="service" id="addiks_rdm.value_resolver" />
         </service>
 
     </services>

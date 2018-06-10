@@ -16,6 +16,8 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\TextType;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class ChoiceMapping implements ChoiceMappingInterface
 {
@@ -106,6 +108,117 @@ final class ChoiceMapping implements ChoiceMappingInterface
     private function addChoice(string $determinator, MappingInterface $choiceMapping): void
     {
         $this->choiceMappings[$determinator] = $choiceMapping;
+    }
+
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        /** @var mixed $value */
+        $value = null;
+
+        /** @var string $determinatorColumn */
+        $determinatorColumn = $this->determinatorColumn->getName();
+
+        if (array_key_exists($determinatorColumn, $dataFromAdditionalColumns)) {
+            /** @var string|int $determinatorValue */
+            $determinatorValue = $dataFromAdditionalColumns[$determinatorColumn];
+
+            if (!empty($determinatorValue) && !array_key_exists($determinatorValue, $this->choiceMappings)) {
+                throw new InvalidMappingException(sprintf(
+                    "Invalid option-value '%s' for choice-column '%s' on entity %s!",
+                    $determinatorValue,
+                    $determinatorColumn,
+                    $context->getEntityClass()
+                ));
+            }
+
+            if (isset($this->choiceMappings[$determinatorValue])) {
+                $choiceMapping = $this->choiceMappings[$determinatorValue];
+
+                $value = $choiceMapping->resolveValue(
+                    $context,
+                    $dataFromAdditionalColumns
+                );
+            }
+        }
+
+        return $value;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        /** @var array<scalar> $data */
+        $data = array();
+
+        /** @var string $determinatorColumn */
+        $determinatorColumn = $this->determinatorColumn->getName();
+
+        /** @var ?scalar $determinatorValue */
+        $determinatorValue = null;
+
+        foreach ($this->choiceMappings as $choiceDeterminatorValue => $choiceMapping) {
+            /** @var MappingInterface $choiceMapping */
+
+            $choiceValue = $choiceMapping->resolveValue(
+                $context,
+                [] # <= I'm not sure how this parameter should be handled correctly in the future,
+                   #    but with the current supported features it *should* be irrelevant.
+            );
+
+            if ($choiceValue === $valueFromEntityField) {
+                $determinatorValue = $choiceDeterminatorValue;
+                break;
+            }
+        }
+
+        $data[$determinatorColumn] = $determinatorValue;
+
+        return $data;
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void {
+        /** @var string $determinatorColumn */
+        $determinatorColumn = $this->determinatorColumn->getName();
+
+        if (array_key_exists($determinatorColumn, $dataFromAdditionalColumns)) {
+            /** @var string|int $determinatorValue */
+            $determinatorValue = $dataFromAdditionalColumns[$determinatorColumn];
+
+            if (!empty($determinatorValue) && !array_key_exists($determinatorValue, $this->choiceMappings)) {
+                throw new InvalidMappingException(sprintf(
+                    "Invalid option-value '%s' for choice-column '%s' on entity %s!",
+                    $determinatorValue,
+                    $determinatorColumn,
+                    $context->getEntityClass()
+                ));
+            }
+
+            if (isset($this->choiceMappings[$determinatorValue])) {
+                $choiceMapping = $this->choiceMappings[$determinatorValue];
+
+                $choiceMapping->assertValue(
+                    $context,
+                    $dataFromAdditionalColumns,
+                    $actualValue
+                );
+            }
+        }
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
+        foreach ($this->choiceMappings as $choiceMapping) {
+            /** @var MappingInterface $choiceMapping */
+
+            $choiceMapping->wakeUpMapping($container);
+        }
     }
 
 }

@@ -16,17 +16,26 @@ use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingAnnotationDriver;
 use Doctrine\Common\Annotations\Reader;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingAnnotationDriverFactory implements MappingDriverFactoryInterface
 {
+
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
 
     /**
      * @var Reader
      */
     private $annotationReader;
 
-    public function __construct(Reader $annotationReader)
-    {
+    public function __construct(
+        ContainerInterface $container,
+        Reader $annotationReader
+    ) {
+        $this->container = $container;
         $this->annotationReader = $annotationReader;
     }
 
@@ -37,7 +46,10 @@ final class MappingAnnotationDriverFactory implements MappingDriverFactoryInterf
         $rdmMappingDriver = null;
 
         if ($mappingDriver instanceof AnnotationDriver) {
-            $rdmMappingDriver = new MappingAnnotationDriver($this->annotationReader);
+            $rdmMappingDriver = new MappingAnnotationDriver(
+                $this->container,
+                $this->annotationReader
+            );
         }
 
         return $rdmMappingDriver;

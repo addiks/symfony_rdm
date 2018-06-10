@@ -26,6 +26,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class EntityHydratorTest extends TestCase
 {
@@ -34,11 +35,6 @@ final class EntityHydratorTest extends TestCase
      * @var EntityHydrator
      */
     private $hydrator;
-
-    /**
-     * @var ValueResolverInterface
-     */
-    private $valueResolver;
 
     /**
      * @var MappingDriverInterface
@@ -50,14 +46,18 @@ final class EntityHydratorTest extends TestCase
      */
     private $dbalDataLoader;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function setUp()
     {
-        $this->valueResolver = $this->createMock(ValueResolverInterface::class);
         $this->mappingDriver = $this->createMock(MappingDriverInterface::class);
         $this->dbalDataLoader = $this->createMock(DataLoaderInterface::class);
+        $this->container = $this->createMock(ContainerInterface::class);
 
         $this->hydrator = new EntityHydrator(
-            $this->valueResolver,
             $this->mappingDriver,
             $this->dbalDataLoader
         );
@@ -68,9 +68,9 @@ final class EntityHydratorTest extends TestCase
      */
     public function shouldHydrateAnEntityWithServices()
     {
-        $fooMapping = new ServiceMapping("the_foo_service");
-        $barMapping = new ServiceMapping("another_bar_service");
-        $fazMapping = new ServiceMapping("a_private_property_service");
+        $fooMapping = $this->createMock(MappingInterface::class);
+        $barMapping = $this->createMock(MappingInterface::class);
+        $fazMapping = $this->createMock(MappingInterface::class);
 
         $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn(
             new EntityMapping(EntityExample::class, [
@@ -86,22 +86,9 @@ final class EntityHydratorTest extends TestCase
 
         $entity = new EntityExample();
 
-        /** @var array $mappingMap */
-        $mappingMap = array(
-            [$fooMapping, $serviceA],
-            [$barMapping, $serviceB],
-            [$fazMapping, $serviceC],
-        );
-
-        $this->valueResolver->method("resolveValue")->will($this->returnCallback(
-            function ($fieldMapping, $context, $data) use ($mappingMap) {
-                foreach ($mappingMap as [$mapping, $service]) {
-                    if ($mapping === $fieldMapping) {
-                        return $service;
-                    }
-                }
-            }
-        ));
+        $fooMapping->method("resolveValue")->willReturn($serviceA);
+        $barMapping->method("resolveValue")->willReturn($serviceB);
+        $fazMapping->method("resolveValue")->willReturn($serviceC);
 
         $this->hydrator->hydrateEntity($entity, $this->createMock(EntityManagerInterface::class));
 
@@ -113,9 +100,9 @@ final class EntityHydratorTest extends TestCase
     /**
      * @test
      */
-    public function shouldAssertHydrationUsingValueResolvers()
+    public function shouldAssertHydration()
     {
-        $fazMapping = new ServiceMapping("the_faz_service");
+        $fazMapping = $this->createMock(MappingInterface::class);
 
         /** @var ServiceExample $fooService */
         $fazService = $this->createMock(ServiceExample::class);
@@ -128,8 +115,7 @@ final class EntityHydratorTest extends TestCase
             ])
         );
 
-        $this->valueResolver->expects($this->once())->method("assertValue")->with(
-            $this->equalTo($fazMapping),
+        $fazMapping->expects($this->once())->method("assertValue")->with(
             $this->isInstanceOf(HydrationContextInterface::class),
             $this->equalTo([]),
             $this->equalTo($fazService)

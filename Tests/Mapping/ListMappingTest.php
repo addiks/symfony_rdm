@@ -14,6 +14,9 @@ use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\ListMapping;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class ListMappingTest extends TestCase
 {
@@ -73,5 +76,123 @@ final class ListMappingTest extends TestCase
         $this->assertSame([$this->column], $this->mapping->collectDBALColumns());
     }
 
+    /**
+     * @test
+     */
+    public function shouldResolveListValue()
+    {
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        $this->column->method('getName')->willReturn('some_column');
+
+        /** @var array $dataFromAdditionalColumns */
+        $dataFromAdditionalColumns = [
+            'some_column' => '{"a":"LOREM","b":"IPSUM","c":"DOLOR","d":"SIT","e":"AMET"}',
+        ];
+
+        $this->entryMapping->method('resolveValue')->will($this->returnCallback(
+            function ($context, $data) {
+                return strtolower($data['']);
+            }
+        ));
+
+        /** @var mixed $expectedResult */
+        $expectedResult = [
+            'a' => 'lorem',
+            'b' => 'ipsum',
+            'c' => 'dolor',
+            'd' => 'sit',
+            'e' => 'amet'
+        ];
+
+        /** @var mixed $actualResult */
+        $actualResult = $this->mapping->resolveValue(
+            $context,
+            $dataFromAdditionalColumns
+        );
+
+        $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldRevertListValue()
+    {
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        $this->column->method('getName')->willReturn('some_column');
+
+        $this->entryMapping->method('revertValue')->will($this->returnCallback(
+            function ($context, $line) {
+                return ['' => strtoupper($line)];
+            }
+        ));
+
+        /** @var mixed $valueFromEntityField */
+        $valueFromEntityField = [
+            'lorem',
+            'ipsum',
+            'dolor',
+            'sit',
+            'amet'
+        ];
+
+        /** @var mixed $expectedResult */
+        $expectedResult = [
+            'some_column' => '["LOREM","IPSUM","DOLOR","SIT","AMET"]',
+        ];
+
+        /** @var mixed $actualResult */
+        $actualResult = $this->mapping->revertValue(
+            $context,
+            $valueFromEntityField
+        );
+
+        $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldAssertValue()
+    {
+        $this->assertNull($this->mapping->assertValue(
+            $this->createMock(HydrationContextInterface::class),
+            [],
+            null
+        ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldThrowExceptionOnFailedAssertion()
+    {
+        $this->expectException(FailedRDMAssertionException::class);
+
+        $this->mapping->assertValue(
+            $this->createMock(HydrationContextInterface::class),
+            [],
+            "Lorem ipsum!"
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldWakeUpInnerMapping()
+    {
+        /** @var ContainerInterface $container */
+        $container = $this->createMock(ContainerInterface::class);
+
+        $this->entryMapping->expects($this->once())->method("wakeUpMapping")->with(
+            $this->equalTo($container)
+        );
+
+        $this->mapping->wakeUpMapping($container);
+    }
 
 }

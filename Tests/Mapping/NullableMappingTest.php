@@ -14,6 +14,9 @@ use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\NullableMapping;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class NullableMappingTest extends TestCase
 {
@@ -98,6 +101,198 @@ final class NullableMappingTest extends TestCase
         $actualColumns = $this->mapping->collectDBALColumns();
 
         $this->assertEquals($expectedColumns, $actualColumns);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldResolveNullableValue()
+    {
+        $this->dbalColumn->method("getName")->willReturn("some_column");
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        /** @var array $dataFromAdditionalColumns */
+        $dataFromAdditionalColumns = [
+            'some_column' => 'foo'
+        ];
+
+        /** @var mixed $expectedResult */
+        $expectedResult = 'bar';
+
+        $this->innerMapping->expects($this->once())->method('resolveValue')->with(
+            $this->equalTo($context),
+            $dataFromAdditionalColumns
+        )->willReturn($expectedResult);
+
+        /** @var mixed $actualResult */
+        $actualResult = $this->mapping->resolveValue(
+            $context,
+            $dataFromAdditionalColumns
+        );
+
+        $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldThrowExceptionOnMissingColumn()
+    {
+        $this->expectException(InvalidMappingException::class);
+
+        /** @var MappingInterface $fieldMapping */
+        $innerMapping = $this->createMock(MappingInterface::class);
+
+        $mapping = new NullableMapping($innerMapping, null, "some origin");
+
+        $mapping->resolveValue(
+            $this->createMock(HydrationContextInterface::class),
+            []
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldNotResolveValueOnNull()
+    {
+        $this->dbalColumn->method('getName')->willReturn("some_column");
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        /** @var array $dataFromAdditionalColumns */
+        $dataFromAdditionalColumns = [
+            'some_column' => false
+        ];
+
+        /** @var mixed $expectedResult */
+        $expectedResult = 'bar';
+
+        $this->innerMapping->expects($this->never())->method('resolveValue');
+
+        $this->assertNull($this->mapping->resolveValue(
+            $context,
+            $dataFromAdditionalColumns
+        ));
+    }
+
+    /**
+     * @test
+     * @dataProvider dataProviderForShouldRevertValue
+     */
+    public function shouldRevertNullableValue(
+        $expectedResult,
+        array $revertedData,
+        string $columnName
+    ) {
+        $this->dbalColumn->method('getName')->willReturn($columnName);
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        /** @var mixed $valueFromEntityField */
+        $valueFromEntityField = "foo";
+
+        $this->innerMapping->expects($this->once())->method('revertValue')->with(
+            $this->equalTo($context),
+            $valueFromEntityField
+        )->willReturn($revertedData);
+
+        /** @var mixed $actualResult */
+        $actualResult = $this->mapping->revertValue(
+            $context,
+            $valueFromEntityField
+        );
+
+        $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    public function dataProviderForShouldRevertValue()
+    {
+        return array(
+            [
+                [
+                    'some_column' => true
+                ],
+                [],
+                "some_column"
+            ],
+            [
+                [
+                    'some_column' => 123
+                ],
+                [
+                    'some_column' => 123
+                ],
+                "some_column"
+            ],
+            [
+                [],
+                [],
+                ""
+            ],
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function shouldAssertValue()
+    {
+        $this->assertNull($this->mapping->assertValue(
+            $this->createMock(HydrationContextInterface::class),
+            [],
+            null
+        ));
+    }
+
+    /**
+     * @test
+     */
+    public function shouldWakeUpInnerMapping()
+    {
+        /** @var ContainerInterface $container */
+        $container = $this->createMock(ContainerInterface::class);
+
+        $this->innerMapping->expects($this->once())->method("wakeUpMapping")->with(
+            $this->equalTo($container)
+        );
+
+        $this->mapping->wakeUpMapping($container);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldChooseFirstColumnWhenMultipleDefined()
+    {
+        /** @var Column $expectedColumn */
+        $expectedColumn = $this->createMock(Column::class);
+        $expectedColumn->method('getName')->willReturn("expected_column");
+
+        $this->dbalColumn->method('getName')->willReturn("some_column");
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        $this->innerMapping->method('collectDBALColumns')->willReturn([
+            $expectedColumn,
+            $this->dbalColumn
+        ]);
+
+        $this->innerMapping->method('resolveValue')->willReturn("expected_result");
+
+        $mapping = new NullableMapping($this->innerMapping, null, "some origin");
+
+        /** @var mixed $actualResult */
+        $actualResult = $mapping->resolveValue($context, [
+            "expected_column" => 'expected_value',
+        ]);
+
+        $this->assertEquals('expected_result', $actualResult);
     }
 
 }

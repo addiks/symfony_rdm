@@ -15,6 +15,8 @@ use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\ObjectMapping;
 use Webmozart\Assert\Assert;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class EntityMapping implements EntityMappingInterface
 {
@@ -102,6 +104,36 @@ final class EntityMapping implements EntityMappingInterface
     public function getReferencedId(): ?string
     {
         return null;
+    }
+
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        return null;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        return array();
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void {
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
+        foreach ($this->fieldMappings as $fieldMapping) {
+            /** @var MappingInterface $fieldMapping */
+
+            $fieldMapping->wakeUpMapping($container);
+        }
     }
 
 }

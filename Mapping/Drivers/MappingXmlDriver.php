@@ -40,6 +40,7 @@ use Addiks\RDMBundle\Mapping\NullMapping;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Addiks\RDMBundle\Mapping\NullableMapping;
 use Addiks\RDMBundle\Mapping\NullableMappingInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -195,7 +196,12 @@ final class MappingXmlDriver implements MappingDriverInterface
             /** @var string $objectReference */
             $objectReference = (string)$factoryNode->attributes->getNamedItem('object')->nodeValue;
 
-            $factory = new CallDefinition($routineName, $objectReference, $argumentMappings);
+            $factory = new CallDefinition(
+                $this->kernel->getContainer(),
+                $routineName,
+                $objectReference,
+                $argumentMappings
+            );
         }
 
         if ($objectNodeAttributes->getNamedItem("factory") !== null && is_null($factory)) {
@@ -223,6 +229,9 @@ final class MappingXmlDriver implements MappingDriverInterface
             /** @var string $type */
             $type = "string";
 
+            /** @var int $length */
+            $length = 255;
+
             if ($objectNodeAttributes->getNamedItem("nullable")) {
                 $notnull = (strtolower($objectNodeAttributes->getNamedItem("nullable")->nodeValue) !== 'true');
             }
@@ -231,11 +240,16 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $type = (string)$objectNodeAttributes->getNamedItem("column-type")->nodeValue;
             }
 
+            if ($objectNodeAttributes->getNamedItem("column-length")) {
+                $length = (int)$objectNodeAttributes->getNamedItem("column-length")->nodeValue;
+            }
+
             $dbalColumn = new Column(
                 (string)$objectNodeAttributes->getNamedItem("column")->nodeValue,
                 Type::getType($type),
                 [
-                    'notnull' => $notnull
+                    'notnull' => $notnull,
+                    'length' => $length
                 ]
             );
         }
@@ -289,7 +303,13 @@ final class MappingXmlDriver implements MappingDriverInterface
             [$objectReference, $routineName] = explode('->', $callDefinition);
         }
 
-        return new CallDefinition($routineName, $objectReference, [], $isStaticCall);
+        return new CallDefinition(
+            $this->kernel->getContainer(),
+            $routineName,
+            $objectReference,
+            [],
+            $isStaticCall
+        );
     }
 
     private function readChoice(
@@ -543,10 +563,15 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var string $serviceId */
         $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->nodeValue;
 
-        return new ServiceMapping($serviceId, $lax, sprintf(
-            "in file '%s'",
-            $mappingFile
-        ));
+        return new ServiceMapping(
+            $this->kernel->getContainer(),
+            $serviceId,
+            $lax,
+            sprintf(
+                "in file '%s'",
+                $mappingFile
+            )
+        );
     }
 
     private function readArray(DOMNode $arrayNode, string $mappingFile): ArrayMappingInterface

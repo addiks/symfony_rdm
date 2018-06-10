@@ -31,17 +31,26 @@ use Addiks\RDMBundle\Mapping\FieldMapping;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
 use Addiks\RDMBundle\Mapping\Annotation\RDMObject;
 use Addiks\RDMBundle\Mapping\Annotation\RDMArray;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingAnnotationDriver implements MappingDriverInterface
 {
+
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
 
     /**
      * @var Reader
      */
     private $annotationReader;
 
-    public function __construct(Reader $annotationReader)
-    {
+    public function __construct(
+        ContainerInterface $container,
+        Reader $annotationReader
+    ) {
+        $this->container = $container;
         $this->annotationReader = $annotationReader;
     }
 
@@ -96,6 +105,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
 
         if ($annotation instanceof Service) {
             $fieldMapping = new ServiceMapping(
+                $this->container,
                 $annotation->id,
                 $annotation->lax,
                 sprintf(

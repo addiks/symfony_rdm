@@ -12,8 +12,21 @@
 
 namespace Addiks\RDMBundle\Mapping;
 
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
 interface CallDefinitionInterface
 {
+
+    /**
+     * @param array<scalar> $dataFromAdditionalColumns
+     *
+     * @return mixed
+     */
+    public function execute(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    );
 
     public function getObjectReference(): ?string;
 
@@ -25,5 +38,7 @@ interface CallDefinitionInterface
     public function getArgumentMappings(): array;
 
     public function isStaticCall(): bool;
+
+    public function wakeUpCall(ContainerInterface $container): void;
 
 }

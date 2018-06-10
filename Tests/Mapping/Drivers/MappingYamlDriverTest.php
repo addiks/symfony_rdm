@@ -20,6 +20,7 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingYamlDriver;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingYamlDriverTest extends TestCase
 {
@@ -34,11 +35,18 @@ final class MappingYamlDriverTest extends TestCase
      */
     private $fileLocator;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function setUp()
     {
         $this->fileLocator = $this->createMock(FileLocator::class);
+        $this->container = $this->createMock(ContainerInterface::class);
 
         $this->mappingDriver = new MappingYamlDriver(
+            $this->container,
             $this->fileLocator
         );
     }
@@ -52,11 +60,11 @@ final class MappingYamlDriverTest extends TestCase
         $mappingFilePath = __DIR__ . "/EntityExample.orm.yml";
 
         $expectedMapping = new EntityMapping(EntityExample::class, [
-            'foo' => new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
-            'bar' => new ServiceMapping('other_service', false, "in file '{$mappingFilePath}'"),
+            'foo' => new ServiceMapping($this->container, 'some_service', false, "in file '{$mappingFilePath}'"),
+            'bar' => new ServiceMapping($this->container, 'other_service', false, "in file '{$mappingFilePath}'"),
             'baz' => new ChoiceMapping('baz_column', [
-                'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping("ipsum_service", true, "in file '{$mappingFilePath}'"),
+                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),
+                'ipsum' => new ServiceMapping($this->container, "ipsum_service", true, "in file '{$mappingFilePath}'"),
             ], "in file '{$mappingFilePath}'"),
         ]);
 

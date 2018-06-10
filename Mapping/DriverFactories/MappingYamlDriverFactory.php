@@ -16,9 +16,21 @@ use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingYamlDriver;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingYamlDriverFactory implements MappingDriverFactoryInterface
 {
+
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
+    public function __construct(
+        ContainerInterface $container
+    ) {
+        $this->container = $container;
+    }
 
     public function createRDMMappingDriver(
         MappingDriver $mappingDriver
@@ -30,7 +42,7 @@ final class MappingYamlDriverFactory implements MappingDriverFactoryInterface
             /** @var FileLocator $fileLocator */
             $fileLocator = $mappingDriver->getLocator();
 
-            $rdmMappingDriver = new MappingYamlDriver($fileLocator);
+            $rdmMappingDriver = new MappingYamlDriver($this->container, $fileLocator);
         }
 
         return $rdmMappingDriver;

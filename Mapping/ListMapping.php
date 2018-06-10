@@ -15,6 +15,9 @@ namespace Addiks\RDMBundle\Mapping;
 use Addiks\RDMBundle\Mapping\ListMappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Webmozart\Assert\Assert;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class ListMapping implements ListMappingInterface
 {
@@ -65,6 +68,90 @@ final class ListMapping implements ListMappingInterface
         $dbalColumns = [$this->column];
 
         return $dbalColumns;
+    }
+
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        /** @var null|array<mixed> $value */
+        $value = null;
+
+        /** @var string $columnName */
+        $columnName = $this->column->getName();
+
+        if (isset($dataFromAdditionalColumns[$columnName])) {
+            /** @var array<string> $rawValues */
+            $serializedValues = json_decode($dataFromAdditionalColumns[$columnName], true);
+
+            if (is_array($serializedValues)) {
+                $value = array();
+
+                foreach ($serializedValues as $key => $entryData) {
+                    $value[$key] = $this->entryMapping->resolveValue(
+                        $context,
+                        [
+                            '' => $entryData,
+                            $columnName => $entryData
+                        ]
+                    );
+                }
+            }
+        }
+
+        return $value;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        /** @var array<string, string> $data */
+        $data = array();
+
+        /** @var string $columnName */
+        $columnName = $this->column->getName();
+
+        /** @var array<string> $serializedValues */
+        $serializedValues = array();
+
+        foreach ($valueFromEntityField as $key => $valueFromEntry) {
+            /** @var mixed $valueFromEntry */
+
+            $entryData = $this->entryMapping->revertValue(
+                $context,
+                $valueFromEntry
+            );
+
+            if (count($entryData) === 1) {
+                $serializedValues[$key] = array_values($entryData)[0];
+
+            } elseif (isset($entryData[$columnName])) {
+                $serializedValues[$key] = $entryData;
+            }
+        }
+
+        $data[$columnName] = json_encode($serializedValues);
+
+        return $data;
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void {
+        if (!is_array($actualValue) && !is_null($actualValue)) {
+            throw FailedRDMAssertionException::expectedArray(
+                $actualValue,
+                $this->origin
+            );
+        }
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
+        $this->entryMapping->wakeUpMapping($container);
     }
 
 }

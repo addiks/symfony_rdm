@@ -19,6 +19,7 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingPHPDriver;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingPHPDriverTest extends TestCase
 {
@@ -47,8 +48,8 @@ final class MappingPHPDriverTest extends TestCase
     {
         /** @var EntityMapping $expectedAnnotations */
         $expectedAnnotations = new EntityMapping(EntityExample::class, [
-            'foo' => new ServiceMapping('some_service'),
-            'bar' => new ServiceMapping('other_service')
+            'foo' => new ServiceMapping($this->createMock(ContainerInterface::class), 'some_service'),
+            'bar' => new ServiceMapping($this->createMock(ContainerInterface::class), 'other_service')
         ]);
 
         # The mock-file just returns this global-variable.

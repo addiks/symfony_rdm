@@ -17,6 +17,7 @@ use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingYamlDriverFactory;
 use Addiks\RDMBundle\Mapping\Drivers\MappingYamlDriver;
 use Doctrine\ORM\Mapping\Driver\YamlDriver;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingYamlDriverFactoryTest extends TestCase
 {
@@ -26,10 +27,17 @@ final class MappingYamlDriverFactoryTest extends TestCase
      */
     private $driverFactory;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function setUp()
     {
+        $this->container = $this->createMock(ContainerInterface::class);
+
         $this->driverFactory = new MappingYamlDriverFactory(
-            "/some/schema/path.xsd"
+            $this->container
         );
     }
 

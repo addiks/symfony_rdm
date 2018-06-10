@@ -68,6 +68,7 @@
             id="addiks_rdm.mapping.driver_factory.annotation"
             class="Addiks\RDMBundle\Mapping\DriverFactories\MappingAnnotationDriverFactory"
         >
+            <argument type="service" id="service_container" />
             <argument type="service" id="annotation_reader" />
         </service>
 
@@ -82,7 +83,9 @@
         <service
             id="addiks_rdm.mapping.driver_factory.yaml"
             class="Addiks\RDMBundle\Mapping\DriverFactories\MappingYamlDriverFactory"
-        />
+        >
+            <argument type="service" id="service_container" />
+        </service>
 
         <service
             id="addiks_rdm.mapping.driver_factory.php"

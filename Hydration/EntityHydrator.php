@@ -17,18 +17,12 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
-use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Addiks\RDMBundle\Hydration\HydrationContext;
 
 final class EntityHydrator implements EntityHydratorInterface
 {
-
-    /**
-     * @var ValueResolverInterface
-     */
-    private $valueResolver;
 
     /**
      * @var MappingDriverInterface
@@ -41,12 +35,10 @@ final class EntityHydrator implements EntityHydratorInterface
     private $dbalDataLoader;
 
     public function __construct(
-        ValueResolverInterface $valueResolver,
         MappingDriverInterface $mappingDriver,
         DataLoaderInterface $dbalDataLoader
     ) {
         $this->mappingDriver = $mappingDriver;
-        $this->valueResolver = $valueResolver;
         $this->dbalDataLoader = $dbalDataLoader;
     }
 
@@ -83,8 +75,7 @@ final class EntityHydrator implements EntityHydratorInterface
                     /** @var MappingInterface $fieldMapping */
 
                     /** @var mixed $value */
-                    $value = $this->valueResolver->resolveValue(
-                        $fieldMapping,
+                    $value = $fieldMapping->resolveValue(
                         $context,
                         $dataFromAdditionalColumns
                     );
@@ -138,8 +129,7 @@ final class EntityHydrator implements EntityHydratorInterface
                     /** @var object $actualValue */
                     $actualValue = $propertyReflection->getValue($entity);
 
-                    $this->valueResolver->assertValue(
-                        $fieldMapping,
+                    $fieldMapping->assertValue(
                         $context,
                         $dataFromAdditionalColumns,
                         $actualValue

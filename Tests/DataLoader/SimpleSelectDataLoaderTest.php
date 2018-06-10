@@ -26,6 +26,9 @@ use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Doctrine\ORM\UnitOfWork;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
+use Addiks\RDMBundle\Mapping\MappingInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Doctrine\DBAL\Schema\Column;
 
 final class DataSimpleSelectLoaderTest extends TestCase
 {
@@ -81,7 +84,7 @@ final class DataSimpleSelectLoaderTest extends TestCase
     private $unitOfWork;
 
     /**
-     * @var EntityMapping
+     * @var EntityMappingInterface
      */
     private $entityMapping;
 
@@ -93,17 +96,16 @@ final class DataSimpleSelectLoaderTest extends TestCase
     public function setUp()
     {
         $this->mappingDriver = $this->createMock(MappingDriverInterface::class);
-        $this->valueResolver = $this->createMock(ValueResolverInterface::class);
         $this->connection = $this->createMock(Connection::class);
         $this->queryBuilder = $this->createMock(QueryBuilder::class);
         $this->expr = $this->createMock(Expr::class);
         $this->statement = $this->createMock(Statement::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->unitOfWork = $this->createMock(UnitOfWork::class);
+        $this->entityMapping = $this->createMock(EntityMappingInterface::class);
 
         $this->dataLoader = new SimpleSelectDataLoader(
             $this->mappingDriver,
-            $this->valueResolver,
             1
         );
 
@@ -116,10 +118,8 @@ final class DataSimpleSelectLoaderTest extends TestCase
             ]
         ];
 
-        $this->mappings['foo'] = new ChoiceMapping('foo_column', []);
-        $this->mappings['bar'] = new ChoiceMapping('bar_column', []);
-
-        $this->entityMapping = new EntityMapping(EntityExample::class, $this->mappings);
+        $this->mappings['foo'] = $this->createMock(MappingInterface::class);
+        $this->mappings['bar'] = $this->createMock(MappingInterface::class);
 
         $this->mappingDriver->method("loadRDMMetadataForClass")->willReturn($this->entityMapping);
         $this->entityManager->method("getClassMetadata")->willReturn($this->classMetaData);
@@ -166,6 +166,19 @@ final class DataSimpleSelectLoaderTest extends TestCase
             ['secondId', "'second_id'"]
         );
 
+        /** @var Column $columnA */
+        $columnA = $this->createMock(Column::class);
+        $columnA->method('getName')->willReturn("id");
+
+        /** @var Column $columnA */
+        $columnB = $this->createMock(Column::class);
+        $columnB->method('getName')->willReturn("secondId");
+
+        $this->entityMapping->method('collectDBALColumns')->willReturn([
+            $columnA,
+            $columnB
+        ]);
+
         /** @var array $actualData */
         $actualData = $this->dataLoader->loadDBALDataForEntity($entity, $this->entityManager);
 
@@ -202,9 +215,12 @@ final class DataSimpleSelectLoaderTest extends TestCase
      */
     public function storesDataInDatabase()
     {
-        $this->mappings['faz'] = new ChoiceMapping('faz_column', []);
+        $this->mappings['faz'] = $this->createMock(MappingInterface::class);
 
         $this->setUp();
+
+        $this->entityMapping->method('getEntityClassName')->willReturn(EntityExample::class);
+        $this->entityMapping->method('getFieldMappings')->willReturn($this->mappings);
 
         $this->classMetaData->identifier = ["id", "faz"];
         $this->classMetaData->fieldMappings = [
@@ -220,22 +236,9 @@ final class DataSimpleSelectLoaderTest extends TestCase
         $entity->foo = "some_ipsum_service";
         $entity->bar = "some_dolor_service";
 
-        /** @var array $map */
-        $map = array(
-            [$this->mappings['foo'], ["foo_column" => "ipsum"]],
-            [$this->mappings['bar'], ["bar_column" => "dolor"]],
-            [$this->mappings['faz'], ["faz_column" => "sit"]],
-        );
-
-        $this->valueResolver->method("revertValue")->will($this->returnCallback(
-            function ($fieldMapping, $context, $value) use ($map) {
-                foreach ($map as [$mapping, $data]) {
-                    if ($mapping === $fieldMapping) {
-                        return $data;
-                    }
-                }
-            }
-        ));
+        $this->mappings['foo']->method("revertValue")->willReturn(["foo_column" => "ipsum"]);
+        $this->mappings['bar']->method("revertValue")->willReturn(["bar_column" => "dolor"]);
+        $this->mappings['faz']->method("revertValue")->willReturn(["faz_column" => "sit"]);
 
         $this->connection->expects($this->once())->method("update")->with(
             $this->equalTo("some_table"),
@@ -263,17 +266,23 @@ final class DataSimpleSelectLoaderTest extends TestCase
         $entity->foo = "some_ipsum_service";
         $entity->bar = "some_dolor_service";
 
+        $this->entityMapping->method('getEntityClassName')->willReturn(EntityExample::class);
+        $this->entityMapping->method('getFieldMappings')->willReturn($this->mappings);
+
+        $this->mappings['foo']->method("revertValue")->willReturn(["foo_column" => "ipsum"]);
+        $this->mappings['bar']->method("revertValue")->willReturn(["bar_column" => "dolor"]);
+
         /** @var array $map */
         $map = array(
             "some_ipsum_service" => ["foo_column" => "ipsum"],
             "some_dolor_service" => ["bar_column" => "dolor"],
         );
 
-        $this->valueResolver->method("revertValue")->will($this->returnCallback(
-            function ($fieldMapping, $context, $value) use ($map) {
-                return $map[$value];
-            }
-        ));
+#        $this->valueResolver->method("revertValue")->will($this->returnCallback(
+#            function ($fieldMapping, $context, $value) use ($map) {
+#                return $map[$value];
+#            }
+#        ));
 
 #        $this->valueResolver->method("revertValue")->will($this->returnValueMap([
 #            [$this->mappings['foo'], $entity, "some_ipsum_service", ["foo_column" => "ipsum"]],

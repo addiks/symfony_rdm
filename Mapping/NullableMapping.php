@@ -15,6 +15,9 @@ namespace Addiks\RDMBundle\Mapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\NullableMappingInterface;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class NullableMapping implements NullableMappingInterface
 {
@@ -90,6 +93,77 @@ final class NullableMapping implements NullableMappingInterface
         }
 
         return $columnName;
+    }
+
+    public function resolveValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns
+    ) {
+        /** @var mixed|null $value */
+        $value = null;
+
+        /** @var string|null $columnName */
+        $columnName = $this->getDeterminatorColumnName();
+
+        if (empty($columnName)) {
+            /** @var array<Column> $columns */
+            $columns = $this->collectDBALColumns();
+
+            if (empty($columns)) {
+                throw new InvalidMappingException(sprintf(
+                    "Nullable mapping needs at least one column (or subcolumn) in %s!",
+                    $this->origin
+                ));
+            }
+
+            $columnName = array_values($columns)[0]->getName();
+        }
+
+        if (array_key_exists($columnName, $dataFromAdditionalColumns)
+        && $dataFromAdditionalColumns[$columnName]) {
+            $value = $this->innerMapping->resolveValue(
+                $context,
+                $dataFromAdditionalColumns
+            );
+        }
+
+        return $value;
+    }
+
+    public function revertValue(
+        HydrationContextInterface $context,
+        $valueFromEntityField
+    ): array {
+        /** @var array<scalar> $data */
+        $data = array();
+
+        if (!is_null($valueFromEntityField)) {
+            /** @var string|null $columnName */
+            $columnName = $this->getDeterminatorColumnName();
+
+            $data = $this->innerMapping->revertValue(
+                $context,
+                $valueFromEntityField
+            );
+
+            if (!empty($columnName) && !array_key_exists($columnName, $data)) {
+                $data[$columnName] = true;
+            }
+        }
+
+        return $data;
+    }
+
+    public function assertValue(
+        HydrationContextInterface $context,
+        array $dataFromAdditionalColumns,
+        $actualValue
+    ): void {
+    }
+
+    public function wakeUpMapping(ContainerInterface $container): void
+    {
+        $this->innerMapping->wakeUpMapping($container);
     }
 
 }

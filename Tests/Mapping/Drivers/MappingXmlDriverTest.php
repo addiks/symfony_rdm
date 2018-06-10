@@ -32,6 +32,7 @@ use Addiks\RDMBundle\Mapping\NullMapping;
 use Addiks\RDMBundle\Mapping\NullableMapping;
 use Addiks\RDMBundle\Mapping\ListMapping;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingXmlDriverTest extends TestCase
 {
@@ -51,10 +52,18 @@ final class MappingXmlDriverTest extends TestCase
      */
     private $kernel;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function setUp()
     {
         $this->fileLocator = $this->createMock(FileLocator::class);
         $this->kernel = $this->createMock(KernelInterface::class);
+        $this->container = $this->createMock(ContainerInterface::class);
+
+        $this->kernel->method("getContainer")->willReturn($this->container);
 
         $this->mappingDriver = new MappingXmlDriver(
             $this->fileLocator,
@@ -75,26 +84,26 @@ final class MappingXmlDriverTest extends TestCase
         $mappingImportFilePath = __DIR__ . "/EntityExampleImport.orm.xml";
 
         $expectedMapping = new EntityMapping(EntityExample::class, [
-            'foo' => new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
-            'bar' => new ServiceMapping('other_service', false, "in file '{$mappingFilePath}'"),
+            'foo' => new ServiceMapping($this->container, 'some_service', false, "in file '{$mappingFilePath}'"),
+            'bar' => new ServiceMapping($this->container, 'other_service', false, "in file '{$mappingFilePath}'"),
             'baz' => new ChoiceMapping('baz_column', [
-                'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping("ipsum_service", true,  "in file '{$mappingFilePath}'"),
+                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),
+                'ipsum' => new ServiceMapping($this->container, "ipsum_service", true,  "in file '{$mappingFilePath}'"),
             ], "in file '{$mappingFilePath}'"),
             'faz' => new ChoiceMapping(new Column("faz_column", Type::getType('string'), ['notnull' => true]), [
-                'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping("ipsum_service", false, "in file '{$mappingFilePath}'"),
+                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),
+                'ipsum' => new ServiceMapping($this->container, "ipsum_service", false, "in file '{$mappingFilePath}'"),
             ], "in file '{$mappingFilePath}'"),
             'far' => new ChoiceMapping(new Column("far_column", Type::getType('string'), ['notnull' => false]), [
-                'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping("ipsum_service", false, "in file '{$mappingFilePath}'"),
+                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),
+                'ipsum' => new ServiceMapping($this->container, "ipsum_service", false, "in file '{$mappingFilePath}'"),
                 'dolor' => new ObjectMapping(
                     ValueObjectExample::class,
                     [],
                     null,
                     "in file '{$mappingFilePath}'",
-                    new CallDefinition("createFromJson", "self", [], true),
-                    new CallDefinition("serializeJson")
+                    new CallDefinition($this->container, "createFromJson", "self", [], true),
+                    new CallDefinition($this->container, "serializeJson")
                 ),
             ], "in file '{$mappingFilePath}'"),
             'boo' => new ObjectMapping(ValueObjectExample::class, [
@@ -116,8 +125,8 @@ final class MappingXmlDriverTest extends TestCase
                 [],
                 null,
                 "in file '{$mappingFilePath}'",
-                new CallDefinition("createFromJson", "self", [], true),
-                new CallDefinition("serializeJson")
+                new CallDefinition($this->container, "createFromJson", "self", [], true),
+                new CallDefinition($this->container, "serializeJson")
             ),
             'def' => new ObjectMapping(
                 ValueObjectExample::class,
@@ -133,7 +142,7 @@ final class MappingXmlDriverTest extends TestCase
                 ],
                 null,
                 "in file '{$mappingFilePath}'",
-                new CallDefinition("createValueObject", "@value_object.factory", [
+                new CallDefinition($this->container, "createValueObject", "@value_object.factory", [
                     new FieldMapping(
                         new Column("def", Type::getType('integer'), ['notnull' => false]),
                         "in file '{$mappingFilePath}'"
@@ -145,10 +154,20 @@ final class MappingXmlDriverTest extends TestCase
                 [],
                 null,
                 "in file '{$mappingFilePath}'",
-                new CallDefinition("createValueObject", "@value_object.factory", [
+                new CallDefinition($this->container, "createValueObject", "@value_object.factory", [
                     new ChoiceMapping('baz_column', [
-                        'lorem' => new ServiceMapping("lorem_service", false, "in file '{$mappingFilePath}'"),
-                        'ipsum' => new ServiceMapping("ipsum_service", true,  "in file '{$mappingFilePath}'"),
+                        'lorem' => new ServiceMapping(
+                            $this->container,
+                            "lorem_service",
+                            false,
+                            "in file '{$mappingFilePath}'"
+                        ),
+                        'ipsum' => new ServiceMapping(
+                            $this->container,
+                            "ipsum_service",
+                            true,
+                            "in file '{$mappingFilePath}'"
+                        ),
                     ], "in file '{$mappingFilePath}'")
                 ])
             ),
@@ -164,15 +183,25 @@ final class MappingXmlDriverTest extends TestCase
             ),
             'mno' => new ArrayMapping(
                 [
-                    'foo' => new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
-                    'bar' => new ServiceMapping('other_service', false, "in file '{$mappingFilePath}'"),
+                    'foo' => new ServiceMapping(
+                        $this->container,
+                        'some_service',
+                        false,
+                        "in file '{$mappingFilePath}'"
+                    ),
+                    'bar' => new ServiceMapping(
+                        $this->container,
+                        'other_service',
+                        false,
+                        "in file '{$mappingFilePath}'"
+                    ),
                     'baz' => new NullMapping("in file '{$mappingFilePath}'"),
                     'maz' => new ListMapping(
                         new Column("maz_column", Type::getType('string'), ['notnull' => true]),
                         new ObjectMapping(
                             ValueObjectExample::class,
                             [],
-                            new Column("maz_obj_column", Type::getType('string')),
+                            new Column("maz_obj_column", Type::getType('string'), ['length' => 255]),
                             "in file '{$mappingFilePath}'"
                         ),
                         "in file '{$mappingFilePath}'"
@@ -181,7 +210,7 @@ final class MappingXmlDriverTest extends TestCase
                 "in file '{$mappingFilePath}'"
             ),
             'pqr' => new NullableMapping(
-                new ServiceMapping('some_service', false, "in file '{$mappingFilePath}'"),
+                new ServiceMapping($this->container, 'some_service', false, "in file '{$mappingFilePath}'"),
                 new Column("pqr_column", Type::getType('boolean'), ['notnull' => false]),
                 "in file '{$mappingFilePath}'"
             ),
@@ -191,9 +220,23 @@ final class MappingXmlDriverTest extends TestCase
                 "in file '{$mappingFilePath}'"
             ),
             'vwx' => new ObjectMapping(ValueObjectExample::class, [
-                'foo' => new ServiceMapping('some_service', false, "in file '{$mappingImportFilePath}'"),
-                'bar' => new ServiceMapping('other_service', false, "in file '{$mappingImportFilePath}'"),
-            ], new Column("vwx_column", Type::getType('integer'), ['notnull' => true]), "in file '{$mappingImportFilePath}'")
+                'foo' => new ServiceMapping(
+                    $this->container,
+                    'some_service',
+                    false,
+                    "in file '{$mappingImportFilePath}'"
+                ),
+                'bar' => new ServiceMapping(
+                    $this->container,
+                    'other_service',
+                    false,
+                    "in file '{$mappingImportFilePath}'"
+                ),
+            ], new Column(
+                "vwx_column",
+                Type::getType('integer'),
+                ['notnull' => true, 'length' => 255]
+            ), "in file '{$mappingImportFilePath}'")
         ]);
 
         $this->fileLocator->method('fileExists')->willReturn(true);
