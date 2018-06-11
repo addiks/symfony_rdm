@@ -23,7 +23,6 @@ use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use Doctrine\DBAL\Schema\Column as DBALColumn;
 use Doctrine\DBAL\Types\Type;
 use Addiks\RDMBundle\Mapping\MappingInterface;
-use Addiks\RDMBundle\Mapping\Annotation\Obj;
 use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Addiks\RDMBundle\Mapping\ObjectMapping;
 use Doctrine\ORM\Mapping\Column as ORMColumn;

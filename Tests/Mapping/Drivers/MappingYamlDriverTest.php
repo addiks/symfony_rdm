@@ -12,8 +12,6 @@ namespace Addiks\RDMBundle\Tests\Mapping\Drivers;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
-use ReflectionProperty;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\Drivers\MappingYamlDriver;

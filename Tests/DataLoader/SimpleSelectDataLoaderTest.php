@@ -12,7 +12,6 @@ namespace Addiks\RDMBundle\Tests\DataLoader;
 
 use Addiks\RDMBundle\DataLoader\SimpleSelectDataLoader;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
-use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use Addiks\RDMBundle\ValueResolver\ValueResolverInterface;
@@ -23,7 +22,6 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\DBAL\Driver\Statement;
 use PHPUnit\Framework\TestCase;
-use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Doctrine\ORM\UnitOfWork;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Mapping\MappingInterface;

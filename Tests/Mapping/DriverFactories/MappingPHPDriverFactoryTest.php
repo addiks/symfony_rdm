@@ -11,8 +11,6 @@
 namespace Addiks\RDMBundle\Tests\Mapping\DriverFactories;
 
 use PHPUnit\Framework\TestCase;
-use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingPHPDriverFactory;
 use Doctrine\ORM\Mapping\Driver\PHPDriver;
 use Addiks\RDMBundle\Mapping\Drivers\MappingPHPDriver;

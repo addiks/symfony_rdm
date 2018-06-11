@@ -12,8 +12,6 @@ namespace Addiks\RDMBundle\Tests\Mapping\Drivers;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
-use ReflectionProperty;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\Drivers\MappingXmlDriver;
@@ -88,7 +86,7 @@ final class MappingXmlDriverTest extends TestCase
             'bar' => new ServiceMapping($this->container, 'other_service', false, "in file '{$mappingFilePath}'"),
             'baz' => new ChoiceMapping('baz_column', [
                 'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping($this->container, "ipsum_service", true,  "in file '{$mappingFilePath}'"),
+                'ipsum' => new ServiceMapping($this->container, "ipsum_service", true, "in file '{$mappingFilePath}'"),
             ], "in file '{$mappingFilePath}'"),
             'faz' => new ChoiceMapping(new Column("faz_column", Type::getType('string'), ['notnull' => true]), [
                 'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),

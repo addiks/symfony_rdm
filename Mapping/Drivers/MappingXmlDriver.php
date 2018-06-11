@@ -35,7 +35,6 @@ use Addiks\RDMBundle\Mapping\NullableMapping;
 use Addiks\RDMBundle\Mapping\MappingProxy;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {

@@ -38,7 +38,7 @@ final class ChoiceMappingTest extends TestCase
     private $optionMappingB;
 
     public function setUp(
-        $column = null
+        string $column = null
     ) {
         if (is_null($column)) {
             $column = new Column("some_column_name", Type::getType('string'), [

@@ -44,7 +44,6 @@ use Addiks\RDMBundle\Mapping\Annotation\Choice;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Mapping\Annotation\Service;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
-use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\UnitOfWork;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Statement;

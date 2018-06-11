@@ -14,7 +14,6 @@ use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Doctrine\DBAL\Schema\Column;
-use InvalidArgumentException;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;

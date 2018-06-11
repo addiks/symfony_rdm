@@ -11,8 +11,6 @@
 namespace Addiks\RDMBundle\Tests\Mapping\DriverFactories;
 
 use PHPUnit\Framework\TestCase;
-use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingYamlDriverFactory;
 use Addiks\RDMBundle\Mapping\Drivers\MappingYamlDriver;

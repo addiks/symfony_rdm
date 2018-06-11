@@ -157,10 +157,10 @@ final class CallDefinition implements CallDefinitionInterface
                 $callee = $context->getEntity();
 
             } elseif (in_array($objectReference, ['self', 'this'])) {
-                $callee = $hydrationStack[count($hydrationStack)-1];
+                $callee = $hydrationStack[count($hydrationStack) - 1];
 
             } elseif (in_array($objectReference, ['parent'])) {
-                $callee = $hydrationStack[count($hydrationStack)-2];
+                $callee = $hydrationStack[count($hydrationStack) - 2];
 
             } elseif ($objectReference[0] === '@') {
                 /** @var string $serviceId */

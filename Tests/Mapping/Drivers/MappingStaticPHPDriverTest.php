@@ -12,9 +12,6 @@ namespace Addiks\RDMBundle\Tests\Mapping\Drivers;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
-use Addiks\RDMBundle\Mapping\Annotation\Service;
-use ReflectionProperty;
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingStaticPHPDriver;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
