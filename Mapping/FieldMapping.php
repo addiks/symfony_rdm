@@ -12,14 +12,14 @@
 
 namespace Addiks\RDMBundle\Mapping;
 
-use Addiks\RDMBundle\Mapping\FieldMappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Connection;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
-final class FieldMapping implements FieldMappingInterface
+final class FieldMapping implements MappingInterface
 {
 
     /**

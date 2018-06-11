@@ -13,13 +13,12 @@
 namespace Addiks\RDMBundle\Mapping;
 
 use Addiks\RDMBundle\Mapping\MappingInterface;
-use Doctrine\DBAL\Schema\Column;
-use Addiks\RDMBundle\Mapping\NullableMappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Doctrine\DBAL\Schema\Column;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-final class NullableMapping implements NullableMappingInterface
+final class NullableMapping implements MappingInterface
 {
 
     /**

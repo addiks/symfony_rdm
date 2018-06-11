@@ -12,7 +12,6 @@
 
 namespace Addiks\RDMBundle\Mapping;
 
-use Addiks\RDMBundle\Mapping\ObjectMappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
@@ -26,7 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Connection;
 
-final class ObjectMapping implements ObjectMappingInterface
+final class ObjectMapping implements MappingInterface
 {
 
     /**

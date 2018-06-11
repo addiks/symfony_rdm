@@ -10,14 +10,14 @@
 
 namespace Addiks\RDMBundle\Mapping;
 
-use Addiks\RDMBundle\Mapping\ServiceMappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
 use ErrorException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use ReflectionClass;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
-final class ServiceMapping implements ServiceMappingInterface
+final class ServiceMapping implements MappingInterface
 {
 
     /**

@@ -13,35 +13,29 @@ namespace Addiks\RDMBundle\Mapping\Drivers;
 use DOMDocument;
 use DOMXPath;
 use DOMNode;
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use DOMAttr;
+use DOMNamedNodeMap;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
-use DOMAttr;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types\Type;
 use Addiks\RDMBundle\Mapping\ObjectMapping;
-use Addiks\RDMBundle\Mapping\ObjectMappingInterface;
-use Addiks\RDMBundle\Mapping\ChoiceMappingInterface;
-use Addiks\RDMBundle\Mapping\ServiceMappingInterface;
-use DOMNamedNodeMap;
 use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
 use Addiks\RDMBundle\Mapping\CallDefinition;
 use Addiks\RDMBundle\Mapping\FieldMapping;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
-use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
 use Addiks\RDMBundle\Mapping\ListMapping;
-use Addiks\RDMBundle\Mapping\ListMappingInterface;
-use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Addiks\RDMBundle\Mapping\NullMapping;
-use Symfony\Component\HttpKernel\KernelInterface;
 use Addiks\RDMBundle\Mapping\NullableMapping;
-use Addiks\RDMBundle\Mapping\NullableMappingInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Addiks\RDMBundle\Mapping\MappingProxy;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -162,7 +156,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         return $xpath;
     }
 
-    private function readObject(DOMNode $objectNode, string $mappingFile): ObjectMappingInterface
+    private function readObject(DOMNode $objectNode, string $mappingFile): ObjectMapping
     {
         /** @var DOMNamedNodeMap $attributes */
         $objectNodeAttributes = $objectNode->attributes;
@@ -317,7 +311,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         DOMNode $choiceNode,
         string $mappingFile,
         string $defaultColumnName
-    ): ChoiceMappingInterface {
+    ): ChoiceMapping {
         /** @var string|Column $columnName */
         $column = $defaultColumnName;
 
@@ -419,7 +413,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         foreach ($xpath->query('./rdm:object', $parentNode) as $objectNode) {
             /** @var DOMNode $objectNode */
 
-            /** @var ObjectMappingInterface $objectMapping */
+            /** @var ObjectMapping $objectMapping */
             $objectMapping = $this->readObject($objectNode, $mappingFile);
 
             if (!is_null($objectNode->attributes->getNamedItem("field"))) {
@@ -452,7 +446,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         foreach ($xpath->query('./rdm:array', $parentNode) as $arrayNode) {
             /** @var DOMNode $arrayNode */
 
-            /** @var ArrayMappingInterface $arrayMapping */
+            /** @var ArrayMapping $arrayMapping */
             $arrayMapping = $this->readArray($arrayNode, $mappingFile);
 
             if (!is_null($arrayNode->attributes->getNamedItem("field"))) {
@@ -479,7 +473,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $defaultColumnName = (string)$listNode->attributes->getNamedItem("field")->nodeValue;
             }
 
-            /** @var ArrayMappingInterface $listMapping */
+            /** @var ListMapping $listMapping */
             $listMapping = $this->readList($listNode, $mappingFile, $defaultColumnName);
 
             if (!is_null($listNode->attributes->getNamedItem("field"))) {
@@ -564,7 +558,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         return $fieldMappings;
     }
 
-    private function readService(DOMNode $serviceNode, string $mappingFile): ServiceMappingInterface
+    private function readService(DOMNode $serviceNode, string $mappingFile): ServiceMapping
     {
         /** @var bool $lax */
         $lax = false;
@@ -587,7 +581,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         );
     }
 
-    private function readArray(DOMNode $arrayNode, string $mappingFile): ArrayMappingInterface
+    private function readArray(DOMNode $arrayNode, string $mappingFile): ArrayMapping
     {
         /** @var array<MappingInterface> $entryMappings */
         $entryMappings = $this->readFieldMappings($arrayNode, $mappingFile);
@@ -629,7 +623,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         DOMNode $listNode,
         string $mappingFile,
         string $columnName
-    ): ListMappingInterface {
+    ): ListMapping {
         if (!is_null($listNode->attributes->getNamedItem("column"))) {
             $columnName = (string)$listNode->attributes->getNamedItem("column")->nodeValue;
         }
@@ -652,7 +646,7 @@ final class MappingXmlDriver implements MappingDriverInterface
     private function readNullable(
         DOMNode $nullableNode,
         string $mappingFile
-    ): NullableMappingInterface {
+    ): NullableMapping {
         /** @var array<MappingInterface> $innerMappings */
         $innerMappings = $this->readFieldMappings($nullableNode, $mappingFile);
 

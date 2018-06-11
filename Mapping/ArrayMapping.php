@@ -15,12 +15,11 @@ namespace Addiks\RDMBundle\Mapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
 use Doctrine\DBAL\Schema\Column;
-use Addiks\RDMBundle\Mapping\ArrayMappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-final class ArrayMapping implements ArrayMappingInterface
+final class ArrayMapping implements MappingInterface
 {
 
     /**

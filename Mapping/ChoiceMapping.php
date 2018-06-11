@@ -10,7 +10,6 @@
 
 namespace Addiks\RDMBundle\Mapping;
 
-use Addiks\RDMBundle\Mapping\ChoiceMappingInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
@@ -19,7 +18,7 @@ use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-final class ChoiceMapping implements ChoiceMappingInterface
+final class ChoiceMapping implements MappingInterface
 {
 
     /**

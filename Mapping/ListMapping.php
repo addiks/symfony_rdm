@@ -12,14 +12,14 @@
 
 namespace Addiks\RDMBundle\Mapping;
 
-use Addiks\RDMBundle\Mapping\ListMappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Webmozart\Assert\Assert;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Addiks\RDMBundle\Mapping\MappingInterface;
 
-final class ListMapping implements ListMappingInterface
+final class ListMapping implements MappingInterface
 {
 
     /**

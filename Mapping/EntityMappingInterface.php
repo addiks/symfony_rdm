@@ -11,11 +11,15 @@
 namespace Addiks\RDMBundle\Mapping;
 
 use Addiks\RDMBundle\Mapping\MappingInterface;
-use Addiks\RDMBundle\Mapping\ObjectMappingInterface;
 
-interface EntityMappingInterface extends ObjectMappingInterface
+interface EntityMappingInterface extends MappingInterface
 {
 
     public function getEntityClassName(): string;
+
+    /**
+     * @return array<MappingInterface>
+     */
+    public function getFieldMappings(): array;
 
 }
