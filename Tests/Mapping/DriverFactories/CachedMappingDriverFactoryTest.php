@@ -17,6 +17,7 @@ use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
 use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\Drivers\CachedMappingDriver;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class CachedMappingDriverFactoryTest extends TestCase
 {
@@ -36,12 +37,19 @@ final class CachedMappingDriverFactoryTest extends TestCase
      */
     private $cacheItemPool;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function setUp()
     {
         $this->innerMappingDriverFactory = $this->createMock(MappingDriverFactoryInterface::class);
         $this->cacheItemPool = $this->createMock(CacheItemPoolInterface::class);
+        $this->container = $this->createMock(ContainerInterface::class);
 
         $this->driverFactory = new CachedMappingDriverFactory(
+            $this->container,
             $this->innerMappingDriverFactory,
             $this->cacheItemPool
         );

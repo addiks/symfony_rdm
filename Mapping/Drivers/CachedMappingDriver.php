@@ -15,6 +15,8 @@ use Psr\Cache\CacheItemInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Webmozart\Assert\Assert;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class CachedMappingDriver implements MappingDriverInterface
 {
@@ -32,6 +34,11 @@ final class CachedMappingDriver implements MappingDriverInterface
     private $cacheItemPool;
 
     /**
+     * @var ContainerInterface
+     */
+    private $container;
+
+    /**
      * @var array<string, MappingInterface>
      */
     private $internalCachedMappings = array();
@@ -43,10 +50,12 @@ final class CachedMappingDriver implements MappingDriverInterface
 
     public function __construct(
         MappingDriverInterface $innerMappingDriver,
+        ContainerInterface $container,
         CacheItemPoolInterface $cacheItemPool,
         int $internalCachedMappingLimit = 100
     ) {
         $this->innerMappingDriver = $innerMappingDriver;
+        $this->container = $container;
         $this->cacheItemPool = $cacheItemPool;
         $this->internalCachedMappingLimit = $internalCachedMappingLimit;
     }
@@ -65,6 +74,10 @@ final class CachedMappingDriver implements MappingDriverInterface
 
             if ($cacheItem->isHit()) {
                 $mapping = unserialize($cacheItem->get());
+
+                Assert::isInstanceOf($mapping, MappingInterface::class);
+
+                $mapping->wakeUpMapping($this->container);
 
             } else {
                 $mapping = $this->innerMappingDriver->loadRDMMetadataForClass($className);

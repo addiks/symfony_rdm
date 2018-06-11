@@ -41,6 +41,7 @@ use Symfony\Component\HttpKernel\KernelInterface;
 use Addiks\RDMBundle\Mapping\NullableMapping;
 use Addiks\RDMBundle\Mapping\NullableMappingInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Addiks\RDMBundle\Mapping\MappingProxy;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -536,8 +537,20 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $forcedFieldName = (string)$importNode->attributes->getNamedItem("field")->nodeValue;
             }
 
+            /** @var string $columnPrefix */
+            $columnPrefix = "";
+
+            if (!is_null($importNode->attributes->getNamedItem("column-prefix"))) {
+                $columnPrefix = (string)$importNode->attributes->getNamedItem("column-prefix")->nodeValue;
+            }
+
             foreach ($this->readFieldMappingsFromFile($path, $mappingFile) as $fieldName => $fieldMapping) {
                 /** @var MappingInterface $fieldMapping */
+
+                $fieldMappingProxy = new MappingProxy(
+                    $fieldMapping,
+                    $columnPrefix
+                );
 
                 if (!empty($forcedFieldName)) {
                     $fieldMappings[$forcedFieldName] = $fieldMapping;

@@ -15,6 +15,7 @@ use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Addiks\RDMBundle\Mapping\Drivers\CachedMappingDriver;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class CachedMappingDriverFactory implements MappingDriverFactoryInterface
 {
@@ -29,10 +30,17 @@ final class CachedMappingDriverFactory implements MappingDriverFactoryInterface
      */
     private $cacheItemPool;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function __construct(
+        ContainerInterface $container,
         MappingDriverFactoryInterface $innerMappingDriverFactory,
         CacheItemPoolInterface $cacheItemPool
     ) {
+        $this->container = $container;
         $this->innerMappingDriverFactory = $innerMappingDriverFactory;
         $this->cacheItemPool = $cacheItemPool;
     }
@@ -49,6 +57,7 @@ final class CachedMappingDriverFactory implements MappingDriverFactoryInterface
         if ($innerRdmMappingDriver instanceof MappingDriverInterface) {
             $rdmMappingDriver = new CachedMappingDriver(
                 $innerRdmMappingDriver,
+                $this->container,
                 $this->cacheItemPool
             );
         }

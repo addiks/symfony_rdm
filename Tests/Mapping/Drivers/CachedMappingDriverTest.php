@@ -19,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Tests\ValueObjectExample;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class CachedMappingDriverTest extends TestCase
 {
@@ -38,13 +39,20 @@ final class CachedMappingDriverTest extends TestCase
      */
     private $cacheItemPool;
 
+    /**
+     * @var ContainerInterface
+     */
+    private $container;
+
     public function setUp()
     {
         $this->innerMappingDriver = $this->createMock(MappingDriverInterface::class);
         $this->cacheItemPool = $this->createMock(CacheItemPoolInterface::class);
+        $this->container = $this->createMock(ContainerInterface::class);
 
         $this->mappingDriver = new CachedMappingDriver(
             $this->innerMappingDriver,
+            $this->container,
             $this->cacheItemPool,
             2
         );

@@ -142,6 +142,7 @@
 
     <xs:complexType name="import">
         <xs:attribute name="field" type="xs:string" />
+        <xs:attribute name="column-prefix" type="xs:string" />
         <xs:attribute name="path"  type="xs:string" use="required" />
     </xs:complexType>
 

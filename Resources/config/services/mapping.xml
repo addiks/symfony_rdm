@@ -28,6 +28,7 @@
             id="addiks_rdm.mapping.driver_factory.cached"
             class="Addiks\RDMBundle\Mapping\DriverFactories\CachedMappingDriverFactory"
         >
+            <argument type="service" id="service_container" />
             <argument type="service">
                 <service class="Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryLazyLoadProxy">
                     <argument type="service" id="service_container" />
