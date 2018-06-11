@@ -256,6 +256,8 @@ final class ObjectMapping implements ObjectMappingInterface
         /** @var array<scalar> $data */
         $data = array();
 
+        $this->assertValue($context, [], $valueFromEntityField);
+
         $reflectionClass = new ReflectionClass($this->className);
 
         $context->pushOnObjectHydrationStack($valueFromEntityField);
@@ -271,7 +273,12 @@ final class ObjectMapping implements ObjectMappingInterface
             }
 
             if (!is_object($propertyReflectionClass)) {
-                throw new ReflectionException(sprintf("Property %s does not exist", $fieldName));
+                throw new ReflectionException(sprintf(
+                    "Property %s does not exist in class %s. (Defined %s)",
+                    $fieldName,
+                    get_class($valueFromEntityField),
+                    $this->origin
+                ));
             }
 
             /** @var ReflectionProperty $reflectionProperty */
@@ -306,10 +313,14 @@ final class ObjectMapping implements ObjectMappingInterface
                 $columnName = $this->column->getName();
             }
 
+            $data[''] = $valueFromEntityField;
+
             $data[$columnName] = $this->serializer->execute(
                 $context,
                 $data
             );
+
+            unset($data['']);
 
             if ($this->column instanceof Column) {
                 /** @var Type $type */

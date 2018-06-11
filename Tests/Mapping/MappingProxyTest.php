@@ -16,6 +16,7 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\DBAL\Types\Type;
 
 final class MappingProxyTest extends TestCase
 {
@@ -53,14 +54,28 @@ final class MappingProxyTest extends TestCase
     /**
      * @test
      */
-    public function shouldForwardCollectedColumns()
+    public function shouldPrefixCollectedColumns()
     {
+        /** @var Column $column */
+        $column = $this->createMock(Column::class);
+        $column->method("getName")->willReturn("some_name");
+        $column->method("getType")->willReturn(Type::getType("string"));
+        $column->method("toArray")->willReturn([
+            'notnull' => true,
+            'length' => 32
+        ]);
+
         /** @var array<Column> $columns */
-        $columns = [$this->createMock(Column::class)];
+        $columns = [$column];
 
         $this->innerMapping->method("collectDBALColumns")->willReturn($columns);
 
-        $this->assertEquals($columns, $this->proxy->collectDBALColumns());
+        $this->assertEquals([
+            new Column("prefix_some_name", Type::getType("string"), [
+                'notnull' => true,
+                'length' => 32
+            ])
+        ], $this->proxy->collectDBALColumns());
     }
 
     /**

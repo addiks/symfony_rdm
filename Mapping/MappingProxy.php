@@ -15,6 +15,7 @@ namespace Addiks\RDMBundle\Mapping;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\DBAL\Schema\Column;
 
 final class MappingProxy implements MappingInterface
 {
@@ -44,7 +45,23 @@ final class MappingProxy implements MappingInterface
 
     public function collectDBALColumns(): array
     {
-        return $this->innerMapping->collectDBALColumns();
+        /** @var array<Column> $dbalColumns */
+        $dbalColumns = $this->innerMapping->collectDBALColumns();
+
+        /** @var array<Column> $prefixedColumns */
+        $prefixedColumns = array();
+
+        foreach ($dbalColumns as $key => $column) {
+            /** @var Column $column */
+
+            $prefixedColumns[$key] = new Column(
+                sprintf("%s%s", $this->columnPrefix, $column->getName()),
+                $column->getType(),
+                $column->toArray()
+            );
+        }
+
+        return $prefixedColumns;
     }
 
     public function resolveValue(

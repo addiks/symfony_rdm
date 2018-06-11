@@ -15,7 +15,8 @@ Using import-mapping you can import any mapping from another mapping-file.
 >
     <entity name="Foo\Bar\SomeEntity" table="some_entity">
         …
-        <rdm:import field="lorem" path="foo.orm.xml" />
+        <rdm:import field="lorem" path="foo.orm.xml" column-prefix="upper_" />
+        <rdm:import field="lorem" path="foo.orm.xml" column-prefix="lower_" />
         <rdm:import field="ipsum" path="@SomeBundle/bar.orm.xml" />
         …
     </entity>
