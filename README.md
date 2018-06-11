@@ -44,8 +44,7 @@ Per annotations, YAML, XML, PHP or Static PHP. YAML-Mapping is not fully impleme
 
 I would suggest you to use the XML or YAML mapping because entities should be framework-agnostic. I personally prefer
 XML over YAML because with XML you at least have a schemata while with yaml you often have to guess what keys are
-allowed, what all the keys mean and who actually uses them. Below you find very basic examples of XML, YAML and
-Annotation configuration because those are the most used formats. For more detauls see the linked documentations above.
+allowed, what all the keys mean and who actually uses them. For more detauls see the linked documentations above.
 
 ## Setup
 
