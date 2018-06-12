@@ -75,7 +75,10 @@ final class CachedMappingDriver implements MappingDriverInterface
             if ($cacheItem->isHit()) {
                 $mapping = unserialize($cacheItem->get());
 
-                Assert::isInstanceOf($mapping, MappingInterface::class);
+                if (!is_null($mapping)) {
+                    Assert::isInstanceOf($mapping, MappingInterface::class);
+                    $mapping->wakeUpMapping($this->container);
+                }
 
                 $mapping->wakeUpMapping($this->container);
 
