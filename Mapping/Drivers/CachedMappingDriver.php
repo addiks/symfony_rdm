@@ -80,8 +80,6 @@ final class CachedMappingDriver implements MappingDriverInterface
                     $mapping->wakeUpMapping($this->container);
                 }
 
-                $mapping->wakeUpMapping($this->container);
-
             } else {
                 $mapping = $this->innerMappingDriver->loadRDMMetadataForClass($className);
 
