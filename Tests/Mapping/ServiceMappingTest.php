@@ -189,6 +189,30 @@ final class ServiceMappingTest extends TestCase
     /**
      * @test
      */
+    public function shouldNotAssertIfAlwaysLaxModeIsActive()
+    {
+        $this->setUp(false);
+
+        $this->container->expects($this->never())->method('has');
+        $this->container->expects($this->never())->method('get');
+
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+        $context->method('getEntityClass')->willReturn(EntityExample::class);
+
+        /** @var mixed $service */
+        $service = new ServiceExample("lorem", 123);
+
+        ServiceMapping::setAlwaysLax(true);
+
+        $this->serviceMapping->assertValue($context, [], $service);
+
+        ServiceMapping::setAlwaysLax(false);
+    }
+
+    /**
+     * @test
+     */
     public function shouldWakeUpInnerMapping()
     {
         /** @var ContainerInterface $container */

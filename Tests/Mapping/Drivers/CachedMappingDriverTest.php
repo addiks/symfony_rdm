@@ -20,6 +20,10 @@ use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Tests\ValueObjectExample;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Addiks\RDMBundle\Mapping\ServiceMapping;
+use Addiks\RDMBundle\Hydration\HydrationContext;
+use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 
 final class CachedMappingDriverTest extends TestCase
 {
@@ -70,16 +74,29 @@ final class CachedMappingDriverTest extends TestCase
             ['addiks_rdm_mapping__Addiks_RDMBundle_Tests_Hydration_EntityExample', $cacheItem]
         ]));
 
-        /** @var EntityMapping $expectedAnnotations */
-        $expectedAnnotations = new EntityMapping(EntityExample::class, []);
+        $serviceMapping = new ServiceMapping(
+            $this->createMock(ContainerInterface::class),
+            "some_service"
+        );
+
+        $expectedMapping = new EntityMapping(EntityExample::class, [
+            'foo' => $serviceMapping
+        ]);
 
         $cacheItem->method('isHit')->willReturn(true);
-        $cacheItem->method('get')->willReturn(serialize($expectedAnnotations));
+        $cacheItem->method('get')->willReturn(serialize($expectedMapping));
 
-        /** @var array<mixed> $actualAnnotations */
-        $actualAnnotations = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
+        $this->container->expects($this->once())->method("has")->with($this->equalTo("some_service"))->willReturn(true);
 
-        $this->assertEquals($expectedAnnotations, $actualAnnotations);
+        /** @var EntityMapping $actualMapping */
+        $actualMapping = $this->mappingDriver->loadRDMMetadataForClass(EntityExample::class);
+
+        $actualMapping->getFieldMappings()['foo']->resolveValue(
+            $this->createMock(HydrationContextInterface::class),
+            []
+        );
+
+        $this->assertEquals($expectedMapping, $actualMapping);
     }
 
     /**

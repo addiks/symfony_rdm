@@ -46,6 +46,20 @@ final class ServiceMapping implements MappingInterface
      */
     private $container;
 
+    /**
+     * Global flag to completely disable service-object checks for the current runtime.
+     * This is needed for test-runs with software like behat, because there services from multiple
+     * different executions (from different service-containers) can get mixed up.
+     *
+     * @var bool
+     */
+    private static $alwaysLax = false;
+
+    public static function setAlwaysLax(bool $alwaysLax): void
+    {
+        self::$alwaysLax = $alwaysLax;
+    }
+
     public function __construct(
         ContainerInterface $container,
         string $serviceId,
@@ -120,7 +134,7 @@ final class ServiceMapping implements MappingInterface
         array $dataFromAdditionalColumns,
         $actualService
     ): void {
-        if (!$this->lax) {
+        if (!$this->lax && !self::$alwaysLax) {
             /** @var object $expectedService */
             $expectedService = $this->resolveValue($context, $dataFromAdditionalColumns);
 
