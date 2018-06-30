@@ -312,14 +312,10 @@ final class ObjectMapping implements MappingInterface
                 $columnName = $this->column->getName();
             }
 
-            $data[''] = $valueFromEntityField;
-
             $data[$columnName] = $this->serializer->execute(
                 $context,
-                $data
+                array_merge($data, ['' => $valueFromEntityField])
             );
-
-            unset($data['']);
 
             if ($this->column instanceof Column) {
                 /** @var Type $type */
@@ -348,7 +344,7 @@ final class ObjectMapping implements MappingInterface
         if (!is_null($actualValue) && !$actualValue instanceof $this->className) {
             throw FailedRDMAssertionException::expectedInstanceOf(
                 $this->className,
-                $context->getEntityClass(),
+                is_object($actualValue) ?get_class($actualValue) :gettype($actualValue),
                 $this->origin
             );
         }
