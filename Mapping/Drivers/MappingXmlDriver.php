@@ -630,10 +630,17 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var array<MappingInterface> $entryMappings */
         $entryMappings = $this->readFieldMappings($listNode, $mappingFile);
 
+        /** @var array<string, mixed> $columnOptions */
+        $columnOptions = array();
+
+        if (!is_null($listNode->attributes->getNamedItem("column-length"))) {
+            $columnOptions['length'] = (int)(string)$listNode->attributes->getNamedItem("column-length")->nodeValue;
+        }
+
         $column = new Column(
             $columnName,
             Type::getType("string"),
-            []
+            $columnOptions
         );
 
         return new ListMapping($column, array_values($entryMappings)[0], sprintf(
