@@ -136,10 +136,10 @@ final class NullableMapping implements MappingInterface
         /** @var array<scalar> $data */
         $data = array();
 
-        if (!is_null($valueFromEntityField)) {
-            /** @var string|null $columnName */
-            $columnName = $this->getDeterminatorColumnName();
+        /** @var string|null $columnName */
+        $columnName = $this->getDeterminatorColumnName();
 
+        if (!is_null($valueFromEntityField)) {
             $data = $this->innerMapping->revertValue(
                 $context,
                 $valueFromEntityField
@@ -148,6 +148,9 @@ final class NullableMapping implements MappingInterface
             if (!empty($columnName) && !array_key_exists($columnName, $data)) {
                 $data[$columnName] = true;
             }
+
+        } elseif (!empty($columnName)) {
+            $data[$columnName] = false;
         }
 
         return $data;
