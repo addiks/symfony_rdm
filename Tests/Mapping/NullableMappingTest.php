@@ -17,6 +17,7 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use PHPUnit\Framework\MockObject\Matcher\InvokedCount;
 
 final class NullableMappingTest extends TestCase
 {
@@ -186,17 +187,16 @@ final class NullableMappingTest extends TestCase
     public function shouldRevertNullableValue(
         $expectedResult,
         array $revertedData,
-        string $columnName
+        string $columnName,
+        $valueFromEntityField,
+        InvokedCount $innerRevertCount
     ) {
         $this->dbalColumn->method('getName')->willReturn($columnName);
 
         /** @var HydrationContextInterface $context */
         $context = $this->createMock(HydrationContextInterface::class);
 
-        /** @var mixed $valueFromEntityField */
-        $valueFromEntityField = "foo";
-
-        $this->innerMapping->expects($this->once())->method('revertValue')->with(
+        $this->innerMapping->expects($innerRevertCount)->method('revertValue')->with(
             $this->equalTo($context),
             $valueFromEntityField
         )->willReturn($revertedData);
@@ -218,7 +218,18 @@ final class NullableMappingTest extends TestCase
                     'some_column' => true
                 ],
                 [],
-                "some_column"
+                "some_column",
+                "foo",
+                $this->once()
+            ],
+            [
+                [
+                    'some_column' => false
+                ],
+                [],
+                "some_column",
+                null,
+                $this->never()
             ],
             [
                 [
@@ -227,12 +238,16 @@ final class NullableMappingTest extends TestCase
                 [
                     'some_column' => 123
                 ],
-                "some_column"
+                "some_column",
+                "foo",
+                $this->once()
             ],
             [
                 [],
                 [],
-                ""
+                "",
+                "foo",
+                $this->once()
             ],
         );
     }
