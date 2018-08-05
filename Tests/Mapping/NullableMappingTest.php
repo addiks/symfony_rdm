@@ -224,7 +224,7 @@ final class NullableMappingTest extends TestCase
             ],
             [
                 [
-                    'some_column' => false
+                    'some_column' => '0'
                 ],
                 [],
                 "some_column",
