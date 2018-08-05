@@ -146,11 +146,11 @@ final class NullableMapping implements MappingInterface
             );
 
             if (!empty($columnName) && !array_key_exists($columnName, $data)) {
-                $data[$columnName] = true;
+                $data[$columnName] = "1";
             }
 
         } elseif (!empty($columnName)) {
-            $data[$columnName] = false;
+            $data[$columnName] = "0";
         }
 
         return $data;
