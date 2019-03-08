@@ -16,6 +16,7 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingXmlDriver;
 use Doctrine\ORM\Mapping\Driver\XmlDriver;
 use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class MappingXMLDriverFactoryTest extends TestCase
 {
@@ -27,8 +28,15 @@ final class MappingXMLDriverFactoryTest extends TestCase
 
     public function setUp()
     {
+        /** @var ContainerInterface $serviceContainer */
+        $serviceContainer = $this->createMock(ContainerInterface::class);
+
+        /** @var KernelInterface $kernel */
+        $kernel = $this->createMock(KernelInterface::class);
+        $kernel->method('getContainer')->willReturn($serviceContainer);
+
         $this->driverFactory = new MappingXMLDriverFactory(
-            $this->createMock(KernelInterface::class),
+            $kernel,
             "/some/schema/path.xsd"
         );
     }

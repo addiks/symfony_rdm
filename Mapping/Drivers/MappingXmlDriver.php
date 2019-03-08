@@ -35,6 +35,8 @@ use Addiks\RDMBundle\Mapping\NullableMapping;
 use Addiks\RDMBundle\Mapping\MappingProxy;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use ErrorException;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -53,6 +55,11 @@ final class MappingXmlDriver implements MappingDriverInterface
     private $kernel;
 
     /**
+     * @var ContainerInterface
+     */
+    private $serviceContainer;
+
+    /**
      * @var string
      */
     private $schemaFilePath;
@@ -62,9 +69,17 @@ final class MappingXmlDriver implements MappingDriverInterface
         KernelInterface $kernel,
         string $schemaFilePath
     ) {
+        /** @var ContainerInterface|null $serviceContainer */
+        $serviceContainer = $kernel->getContainer();
+
+        if (is_null($serviceContainer)) {
+            throw new ErrorException("Kernel does not have a container!");
+        }
+
         $this->doctrineFileLocator = $doctrineFileLocator;
         $this->kernel = $kernel;
         $this->schemaFilePath = $schemaFilePath;
+        $this->serviceContainer = $serviceContainer;
     }
 
     public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
@@ -191,7 +206,7 @@ final class MappingXmlDriver implements MappingDriverInterface
             $objectReference = (string)$factoryNode->attributes->getNamedItem('object')->nodeValue;
 
             $factory = new CallDefinition(
-                $this->kernel->getContainer(),
+                $this->serviceContainer,
                 $routineName,
                 $objectReference,
                 $argumentMappings
@@ -306,7 +321,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         }
 
         return new CallDefinition(
-            $this->kernel->getContainer(),
+            $this->serviceContainer,
             $routineName,
             $objectReference,
             [],
@@ -578,7 +593,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         $serviceId = (string)$serviceNode->attributes->getNamedItem("id")->nodeValue;
 
         return new ServiceMapping(
-            $this->kernel->getContainer(),
+            $this->serviceContainer,
             $serviceId,
             $lax,
             sprintf(
