@@ -226,6 +226,9 @@ final class MappingXmlDriver implements MappingDriverInterface
             /** @var int $length */
             $length = 255;
 
+            /** @var string|null $default */
+            $default = null;
+
             if ($objectNodeAttributes->getNamedItem("nullable")) {
                 $notnull = (strtolower($objectNodeAttributes->getNamedItem("nullable")->nodeValue) !== 'true');
             }
@@ -238,12 +241,17 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $length = (int)$objectNodeAttributes->getNamedItem("column-length")->nodeValue;
             }
 
+            if ($objectNodeAttributes->getNamedItem("column-default")) {
+                $default = (string)$objectNodeAttributes->getNamedItem("column-default")->nodeValue;
+            }
+
             $dbalColumn = new Column(
                 (string)$objectNodeAttributes->getNamedItem("column")->nodeValue,
                 Type::getType($type),
                 [
                     'notnull' => $notnull,
-                    'length' => $length
+                    'length' => $length,
+                    'default' => $default
                 ]
             );
         }

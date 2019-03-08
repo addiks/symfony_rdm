@@ -117,6 +117,7 @@
                     <rdm:object
                         class="Addiks\RDMBundle\Tests\ValueObjectExample"
                         column="maz_obj_column"
+                        column-default="#DEFAULT#"
                     />
                 </rdm:list>
             </rdm:entry>

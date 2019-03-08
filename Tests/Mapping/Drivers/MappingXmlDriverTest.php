@@ -199,7 +199,10 @@ final class MappingXmlDriverTest extends TestCase
                         new ObjectMapping(
                             ValueObjectExample::class,
                             [],
-                            new Column("maz_obj_column", Type::getType('string'), ['length' => 255]),
+                            new Column("maz_obj_column", Type::getType('string'), [
+                                'length' => 255,
+                                'default' => '#DEFAULT#'
+                            ]),
                             "in file '{$mappingFilePath}'"
                         ),
                         "in file '{$mappingFilePath}'"
