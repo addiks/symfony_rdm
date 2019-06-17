@@ -6,7 +6,11 @@
 >
     <services>
 
-        <service id="addiks_rdm.data_loader" class="Addiks\RDMBundle\DataLoader\DataLoaderInterface">
+        <service
+            id="addiks_rdm.data_loader"
+            class="Addiks\RDMBundle\DataLoader\DataLoaderInterface"
+            public="true"
+        >
             <factory service="addiks_rdm.data_loader.factory" method="createDataLoader" />
         </service>
 
@@ -19,7 +23,11 @@
             <argument>addiks_rdm.data_loader.simple</argument>
         </service>
 
-        <service id="addiks_rdm.data_loader.simple" class="Addiks\RDMBundle\DataLoader\SimpleSelectDataLoader">
+        <service
+            id="addiks_rdm.data_loader.simple"
+            class="Addiks\RDMBundle\DataLoader\SimpleSelectDataLoader"
+            public="true"
+        >
             <argument type="service" id="addiks_rdm.mapping.driver" />
         </service>
 

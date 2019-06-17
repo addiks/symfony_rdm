@@ -49,7 +49,7 @@ final class ServiceFormType implements FormTypeInterface
                     $serviceId = null;
 
                     if (isset($options['choices'])) {
-                        foreach (array_keys($options['choices']) as $serviceIdCandidate) {
+                        foreach (array_values($options['choices']) as $serviceIdCandidate) {
                             /** @var object $serviceCandidate */
                             $serviceCandidate = $container->get($serviceIdCandidate);
 
