@@ -61,9 +61,9 @@ final class ServiceFormTypeTest extends TestCase
 
         $this->formType->buildForm($builder, [
             'choices' => [
-                'some_service_a' => 'a',
-                'some_service_b' => 'b',
-                'some_service_c' => 'c',
+                'a' => 'some_service_a',
+                'b' => 'some_service_b',
+                'c' => 'some_service_c',
             ]
         ]);
 
