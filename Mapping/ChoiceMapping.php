@@ -16,6 +16,7 @@ use Doctrine\DBAL\Types\Type;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Exception;
 
 final class ChoiceMapping implements MappingInterface
 {
@@ -160,15 +161,23 @@ final class ChoiceMapping implements MappingInterface
         foreach ($this->choiceMappings as $choiceDeterminatorValue => $choiceMapping) {
             /** @var MappingInterface $choiceMapping */
 
-            $choiceValue = $choiceMapping->resolveValue(
-                $context,
-                [] # <= I'm not sure how this parameter should be handled correctly in the future,
-                   #    but with the current supported features it *should* be irrelevant.
-            );
+            try {
+                /** @var array<scalar> $choiceData */
+                $choiceData = $choiceMapping->revertValue($context, $valueFromEntityField);
 
-            if ($choiceValue === $valueFromEntityField) {
-                $determinatorValue = $choiceDeterminatorValue;
-                break;
+                $choiceValue = $choiceMapping->resolveValue(
+                    $context,
+                    $choiceData
+                );
+
+                if ($choiceValue === $valueFromEntityField) {
+                    $determinatorValue = $choiceDeterminatorValue;
+                    $data = $choiceData;
+                    break;
+                }
+
+            } catch (Exception $exception) {
+                # This mapping did not match, continue with the next
             }
         }
 

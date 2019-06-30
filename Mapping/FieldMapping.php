@@ -18,6 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Connection;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use Webmozart\Assert\Assert;
 
 final class FieldMapping implements MappingInterface
 {
@@ -93,11 +94,15 @@ final class FieldMapping implements MappingInterface
         /** @var Connection $connection */
         $connection = $context->getEntityManager()->getConnection();
 
-        /** @var scalar $databaseValue */
+        /** @var scalar|null $databaseValue */
         $databaseValue = $type->convertToDatabaseValue(
             $valueFromEntityField,
             $connection->getDatabasePlatform()
         );
+
+        if (!is_null($databaseValue)) {
+            Assert::scalar($databaseValue);
+        }
 
         $data[$this->dbalColumn->getName()] = $databaseValue;
 
