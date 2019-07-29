@@ -19,6 +19,7 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Connection;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 final class FieldMapping implements MappingInterface
 {
@@ -69,13 +70,21 @@ final class FieldMapping implements MappingInterface
         /** @var Connection $connection */
         $connection = $context->getEntityManager()->getConnection();
 
-        if (isset($dataFromAdditionalColumns[$this->dbalColumn->getName()])) {
-            $value = $dataFromAdditionalColumns[$this->dbalColumn->getName()];
+        /** @var AbstractPlatform $platform */
+        $platform = $connection->getDatabasePlatform();
 
-            $value = $type->convertToPHPValue(
-                $value,
-                $connection->getDatabasePlatform()
-            );
+        /** @var string $columnName */
+        $columnName = $this->dbalColumn->getName();
+
+        if (isset($dataFromAdditionalColumns[$columnName])) {
+            $value = $dataFromAdditionalColumns[$columnName];
+            $value = $type->convertToPHPValue($value, $platform);
+
+        } elseif (isset($dataFromAdditionalColumns[''])) {
+            if (isset($dataFromAdditionalColumns[''][$columnName])) {
+                $value = $dataFromAdditionalColumns[''][$columnName];
+                $value = $type->convertToPHPValue($value, $platform);
+            }
         }
 
         return $value;

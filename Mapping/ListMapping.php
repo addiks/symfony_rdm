@@ -115,19 +115,21 @@ final class ListMapping implements MappingInterface
         /** @var array<string> $serializedValues */
         $serializedValues = array();
 
-        foreach ($valueFromEntityField as $key => $valueFromEntry) {
-            /** @var mixed $valueFromEntry */
+        if (is_iterable($valueFromEntityField)) {
+            foreach ($valueFromEntityField as $key => $valueFromEntry) {
+                /** @var mixed $valueFromEntry */
 
-            $entryData = $this->entryMapping->revertValue(
-                $context,
-                $valueFromEntry
-            );
+                $entryData = $this->entryMapping->revertValue(
+                    $context,
+                    $valueFromEntry
+                );
 
-            if (count($entryData) === 1) {
-                $serializedValues[$key] = array_values($entryData)[0];
+                if (count($entryData) === 1) {
+                    $serializedValues[$key] = array_values($entryData)[0];
 
-            } elseif (isset($entryData[$columnName])) {
-                $serializedValues[$key] = $entryData;
+                } elseif (!empty($entryData)) {
+                    $serializedValues[$key] = $entryData;
+                }
             }
         }
 

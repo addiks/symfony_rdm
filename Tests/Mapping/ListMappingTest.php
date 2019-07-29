@@ -137,12 +137,49 @@ final class ListMappingTest extends TestCase
             'ipsum',
             'dolor',
             'sit',
-            'amet'
+            'amet',
         ];
 
         /** @var mixed $expectedResult */
         $expectedResult = [
             'some_column' => '["LOREM","IPSUM","DOLOR","SIT","AMET"]',
+        ];
+
+        /** @var mixed $actualResult */
+        $actualResult = $this->mapping->revertValue(
+            $context,
+            $valueFromEntityField
+        );
+
+        $this->assertEquals($expectedResult, $actualResult);
+    }
+
+    /**
+     * @test
+     */
+    public function shouldRevertMultidimensionalListValue()
+    {
+        /** @var HydrationContextInterface $context */
+        $context = $this->createMock(HydrationContextInterface::class);
+
+        $this->column->method('getName')->willReturn('some_column');
+
+        $this->entryMapping->method('revertValue')->will($this->returnCallback(
+            function ($context, $data) {
+                return $data;
+            }
+        ));
+
+        /** @var mixed $valueFromEntityField */
+        $valueFromEntityField = [
+            ['a' => 123, 'b' => true],
+            ['a' => 456, 'b' => false],
+            []
+        ];
+
+        /** @var mixed $expectedResult */
+        $expectedResult = [
+            'some_column' => '[{"a":123,"b":true},{"a":456,"b":false}]',
         ];
 
         /** @var mixed $actualResult */
