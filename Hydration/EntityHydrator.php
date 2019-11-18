@@ -20,6 +20,7 @@ use Addiks\RDMBundle\Hydration\EntityHydratorInterface;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Addiks\RDMBundle\Hydration\HydrationContext;
+use Webmozart\Assert\Assert;
 
 final class EntityHydrator implements EntityHydratorInterface
 {
@@ -51,7 +52,6 @@ final class EntityHydrator implements EntityHydratorInterface
             $className = ClassUtils::getRealClass($className);
         }
 
-        /** @var mixed $classReflection */
         $classReflection = new ReflectionClass($className);
 
         /** @var ?EntityMappingInterface $mapping */
@@ -80,8 +80,21 @@ final class EntityHydrator implements EntityHydratorInterface
                         $dataFromAdditionalColumns
                     );
 
+                    /** @var ReflectionClass $concreteClassReflection */
+                    $concreteClassReflection = $classReflection;
+
+                    while (!$concreteClassReflection->hasProperty($fieldName)) {
+                        $concreteClassReflection = $concreteClassReflection->getParentClass();
+
+                        Assert::notNull($concreteClassReflection, sprintf(
+                            "Property '%s' does not exist on object of class '%s'!",
+                            $fieldName,
+                            $className
+                        ));
+                    }
+
                     /** @var ReflectionProperty $propertyReflection */
-                    $propertyReflection = $classReflection->getProperty($fieldName);
+                    $propertyReflection = $concreteClassReflection->getProperty($fieldName);
 
                     $propertyReflection->setAccessible(true);
                     $propertyReflection->setValue($entity, $value);
@@ -121,8 +134,21 @@ final class EntityHydrator implements EntityHydratorInterface
                 foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
                     /** @var MappingInterface $fieldMapping */
 
+                    /** @var ReflectionClass $concreteClassReflection */
+                    $concreteClassReflection = $classReflection;
+
+                    while (!$concreteClassReflection->hasProperty($fieldName)) {
+                        $concreteClassReflection = $concreteClassReflection->getParentClass();
+
+                        Assert::notNull($concreteClassReflection, sprintf(
+                            "Property '%s' does not exist on object of class '%s'!",
+                            $fieldName,
+                            $className
+                        ));
+                    }
+
                     /** @var ReflectionProperty $propertyReflection */
-                    $propertyReflection = $classReflection->getProperty($fieldName);
+                    $propertyReflection = $concreteClassReflection->getProperty($fieldName);
 
                     $propertyReflection->setAccessible(true);
 

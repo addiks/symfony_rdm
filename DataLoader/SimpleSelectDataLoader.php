@@ -26,6 +26,8 @@ use Doctrine\DBAL\Driver\Statement;
 use PDO;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContext;
+use Webmozart\Assert\Assert;
+use ErrorException;
 
 /**
  * A very simple loader that just executes one simple select statement for every entity to load the data for.
@@ -244,7 +246,6 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         /** @var array<scalar> */
         $additionalData = array();
 
-        /** @var mixed $reflectionClass */
         $reflectionClass = new ReflectionClass($entityMapping->getEntityClassName());
 
         $context = new HydrationContext($entity, $entityManager);
@@ -252,8 +253,23 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         foreach ($entityMapping->getFieldMappings() as $fieldName => $entityFieldMapping) {
             /** @var MappingInterface $entityFieldMapping */
 
+            /** @var ReflectionClass $concreteReflectionClass */
+            $concreteReflectionClass = $reflectionClass;
+
+            while (is_object($concreteReflectionClass) && !$concreteReflectionClass->hasProperty($fieldName)) {
+                $concreteReflectionClass = $concreteReflectionClass->getParentClass();
+            }
+
+            if (!is_object($concreteReflectionClass)) {
+                throw new ErrorException(sprintf(
+                    "Property '%s' does not exist on object of class '%s'!",
+                    $fieldName,
+                    $entityMapping->getEntityClassName()
+                ));
+            }
+
             /** @var ReflectionProperty $reflectionProperty */
-            $reflectionProperty = $reflectionClass->getProperty($fieldName);
+            $reflectionProperty = $concreteReflectionClass->getProperty($fieldName);
 
             $reflectionProperty->setAccessible(true);
 

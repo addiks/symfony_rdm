@@ -233,7 +233,12 @@ final class ObjectMapping implements MappingInterface
             }
 
             if (!is_object($propertyReflectionClass)) {
-                throw new ReflectionException(sprintf("Property %s does not exist", $fieldName));
+                throw new ReflectionException(sprintf(
+                    "Property '%s' does not exist on class '%s' as defined at '%s'",
+                    $fieldName,
+                    $reflectionClass->getName(),
+                    $reflectionClass->getFileName()
+                ));
             }
 
             /** @var ReflectionProperty $reflectionProperty */
