@@ -21,6 +21,9 @@ use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Addiks\RDMBundle\Hydration\HydrationContext;
 use Webmozart\Assert\Assert;
+use Exception;
+use Throwable;
+use Doctrine\ORM\Mapping\MappingException;
 
 final class EntityHydrator implements EntityHydratorInterface
 {
@@ -61,44 +64,61 @@ final class EntityHydrator implements EntityHydratorInterface
         $dataFromAdditionalColumns = array();
 
         if ($mapping instanceof EntityMappingInterface) {
-            if (!empty($mapping->collectDBALColumns())) {
-                $dataFromAdditionalColumns = $this->dbalDataLoader->loadDBALDataForEntity(
-                    $entity,
-                    $entityManager
-                );
-            }
+            /** @var string $processDescription */
+            $processDescription = sprintf("of entity '%s'", $className);
 
-            if ($mapping instanceof EntityMappingInterface) {
-                $context = new HydrationContext($entity, $entityManager);
-
-                foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
-                    /** @var MappingInterface $fieldMapping */
-
-                    /** @var mixed $value */
-                    $value = $fieldMapping->resolveValue(
-                        $context,
-                        $dataFromAdditionalColumns
+            try {
+                if (!empty($mapping->collectDBALColumns())) {
+                    $dataFromAdditionalColumns = $this->dbalDataLoader->loadDBALDataForEntity(
+                        $entity,
+                        $entityManager
                     );
+                }
 
-                    /** @var ReflectionClass $concreteClassReflection */
-                    $concreteClassReflection = $classReflection;
+                if ($mapping instanceof EntityMappingInterface) {
+                    $context = new HydrationContext($entity, $entityManager);
 
-                    while (!$concreteClassReflection->hasProperty($fieldName)) {
-                        $concreteClassReflection = $concreteClassReflection->getParentClass();
+                    foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
+                        /** @var MappingInterface $fieldMapping */
 
-                        Assert::notNull($concreteClassReflection, sprintf(
-                            "Property '%s' does not exist on object of class '%s'!",
+                        $processDescription = sprintf(
+                            "of field '%s' of entity '%s'",
                             $fieldName,
                             $className
-                        ));
+                        );
+
+                        /** @var mixed $value */
+                        $value = $fieldMapping->resolveValue(
+                            $context,
+                            $dataFromAdditionalColumns
+                        );
+
+                        /** @var ReflectionClass $concreteClassReflection */
+                        $concreteClassReflection = $classReflection;
+
+                        while (!$concreteClassReflection->hasProperty($fieldName)) {
+                            $concreteClassReflection = $concreteClassReflection->getParentClass();
+
+                            Assert::object($concreteClassReflection, sprintf(
+                                "Property '%s' does not exist on object of class '%s'!",
+                                $fieldName,
+                                $className
+                            ));
+                        }
+
+                        /** @var ReflectionProperty $propertyReflection */
+                        $propertyReflection = $concreteClassReflection->getProperty($fieldName);
+
+                        $propertyReflection->setAccessible(true);
+                        $propertyReflection->setValue($entity, $value);
                     }
-
-                    /** @var ReflectionProperty $propertyReflection */
-                    $propertyReflection = $concreteClassReflection->getProperty($fieldName);
-
-                    $propertyReflection->setAccessible(true);
-                    $propertyReflection->setValue($entity, $value);
                 }
+
+            } catch (Throwable $exception) {
+                throw new MappingException(sprintf(
+                    "Exception during hydration %s!",
+                    $processDescription
+                ), 0, $exception);
             }
         }
     }

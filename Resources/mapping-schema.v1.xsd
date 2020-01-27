@@ -73,8 +73,11 @@
         <xs:attribute name="field" type="xs:string" />
         <xs:attribute name="factory" type="xs:string" />
         <xs:attribute name="serialize" type="xs:string" />
+        <xs:attribute name="nullable" type="xs:boolean" />
         <xs:attribute name="column" type="xs:string" />
+        <xs:attribute name="column-type" type="xs:string" />
         <xs:attribute name="column-length" type="xs:integer" />
+        <xs:attribute name="column-default" type="xs:string" />
     </xs:complexType>
 
     <xs:complexType name="list">

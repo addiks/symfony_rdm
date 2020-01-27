@@ -681,8 +681,9 @@ final class MappingXmlDriver implements MappingDriverInterface
 
         if (count($innerMappings) !== 1) {
             throw new InvalidMappingException(sprintf(
-                "A nullable mapping can only contain one inner mapping in '%s'!",
-                $mappingFile
+                "A nullable mapping must contain exactly one inner mapping in '%s' at line %d!",
+                $mappingFile,
+                $nullableNode->getLineNo()
             ));
         }
 
@@ -706,8 +707,9 @@ final class MappingXmlDriver implements MappingDriverInterface
         }
 
         return new NullableMapping($innerMapping, $column, sprintf(
-            "in file '%s'",
-            $mappingFile
+            "in file '%s' at line %d",
+            $mappingFile,
+            $nullableNode->getLineNo()
         ));
     }
 
