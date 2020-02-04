@@ -213,7 +213,7 @@ final class MappingXmlDriverTest extends TestCase
             'pqr' => new NullableMapping(
                 new ServiceMapping($this->container, 'some_service', false, "in file '{$mappingFilePath}'"),
                 new Column("pqr_column", Type::getType('boolean'), ['notnull' => false]),
-                "in file '{$mappingFilePath}'"
+                "in file '{$mappingFilePath}' at line 126"
             ),
             'stu' => new ListMapping(
                 new Column("stu_column", Type::getType('string'), ['notnull' => true]),
