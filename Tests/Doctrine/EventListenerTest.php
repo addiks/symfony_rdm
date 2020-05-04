@@ -21,6 +21,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Proxy\Proxy;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\UnitOfWork;
+use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 
 final class EventListenerTest extends TestCase
 {
@@ -99,6 +100,10 @@ final class EventListenerTest extends TestCase
      */
     public function shouldRemoveEntityProxiesOnlyWhenInitialized()
     {
+        $this->mappingDriver->method('loadRDMMetadataForClass')->willReturn(
+            $this->createMock(EntityMappingInterface::class)
+        );
+
         /** @var Proxy $proxiedEntity */
         $proxiedEntity = $this->createMock(Proxy::class);
 
