@@ -47,6 +47,11 @@ final class EventListener
      */
     private $dbalDataLoader;
 
+    /**
+     * @var array<string, bool>
+     */
+    private $hasRdmMappingForClass = array();
+
     public function __construct(
         EntityHydratorInterface $entityHydrator,
         MappingDriverInterface $mappingDriver,
@@ -90,6 +95,10 @@ final class EventListener
         $unitOfWork = $entityManager->getUnitOfWork();
 
         foreach ($unitOfWork->getIdentityMap() as $className => $entities) {
+            if (!$this->hasRdmMappingForClass($className)) {
+                continue;
+            }
+
             foreach ($entities as $entity) {
                 /** @var object $entity */
 
@@ -153,6 +162,17 @@ final class EventListener
                 }
             }
         }
+    }
+
+    private function hasRdmMappingForClass(string $className): bool
+    {
+        if (!isset($this->hasRdmMappingForClass[$className])) {
+            $this->hasRdmMappingForClass[$className] = is_object(
+                $this->mappingDriver->loadRDMMetadataForClass($className)
+            );
+        }
+
+        return $this->hasRdmMappingForClass[$className];
     }
 
     /**
