@@ -169,29 +169,33 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             $className = ClassUtils::getRealClass($className);
         }
 
-        /** @var null|EntityMappingInterface $entityMapping */
-        $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
+        do {
+            /** @var null|EntityMappingInterface $entityMapping */
+            $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
-        if ($entityMapping instanceof EntityMappingInterface) {
-            /** @var array<scalar> */
-            $additionalData = $this->collectAdditionalDataForEntity($entity, $entityMapping, $entityManager);
+            if ($entityMapping instanceof EntityMappingInterface) {
+                /** @var array<scalar> */
+                $additionalData = $this->collectAdditionalDataForEntity($entity, $entityMapping, $entityManager);
 
-            if ($this->hasDataChanged($entity, $additionalData)) {
-                /** @var ClassMetadata $classMetaData */
-                $classMetaData = $entityManager->getClassMetadata($className);
+                if ($this->hasDataChanged($entity, $additionalData)) {
+                    /** @var ClassMetadata $classMetaData */
+                    $classMetaData = $entityManager->getClassMetadata($className);
 
-                /** @var array<scalar> $identifier */
-                $identifier = $this->collectIdentifierForEntity($entity, $entityMapping, $classMetaData);
+                    /** @var array<scalar> $identifier */
+                    $identifier = $this->collectIdentifierForEntity($entity, $entityMapping, $classMetaData);
 
-                /** @var string $tableName */
-                $tableName = $classMetaData->getTableName();
+                    /** @var string $tableName */
+                    $tableName = $classMetaData->getTableName();
 
-                /** @var Connection $connection */
-                $connection = $entityManager->getConnection();
+                    /** @var Connection $connection */
+                    $connection = $entityManager->getConnection();
 
-                $connection->update($tableName, $additionalData, $identifier);
+                    $connection->update($tableName, $additionalData, $identifier);
+                }
             }
-        }
+
+            $className = current(class_parents($className));
+        } while (class_exists($className));
     }
 
     /**
@@ -241,7 +245,8 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
     private function collectAdditionalDataForEntity(
         $entity,
         EntityMappingInterface $entityMapping,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager#,
+        #string $className = null
     ): array {
         /** @var array<scalar> */
         $additionalData = array();
