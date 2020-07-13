@@ -246,6 +246,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         foreach ($additionalData as $key => $value) {
             if (!array_key_exists($key, $originalData) || $originalData[$key] != $value) {
                 $hasDataChanged = true;
+                break;
             }
         }
 

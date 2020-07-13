@@ -117,6 +117,7 @@ final class IntegrationTest extends TestCase
 
         $this->entityManager->method('getConfiguration')->willReturn($this->doctrineConfiguration);
         $this->entityManager->method('getEventManager')->willReturn($this->createMock(EventManager::class));
+        $this->entityManager->method('getMetadataFactory')->willReturn($this->createMock(ClassMetadataFactory::class));
 
         $this->cacheItemPool->method('getItem')->willReturn($this->createMock(CacheItemInterface::class));
 

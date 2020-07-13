@@ -27,6 +27,8 @@ use Addiks\RDMBundle\Tests\Hydration\ServiceExample;
 use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\ORM\Mapping\ClassMetadataFactory;
+use Doctrine\DBAL\Types\Type;
 
 final class DataSimpleSelectLoaderTest extends TestCase
 {
@@ -123,6 +125,7 @@ final class DataSimpleSelectLoaderTest extends TestCase
         $this->entityManager->method("getClassMetadata")->willReturn($this->classMetaData);
         $this->entityManager->method("getConnection")->willReturn($this->connection);
         $this->entityManager->method("getUnitOfWork")->willReturn($this->unitOfWork);
+        $this->entityManager->method('getMetadataFactory')->willReturn($this->createMock(ClassMetadataFactory::class));
         $this->connection->method('createQueryBuilder')->willReturn($this->queryBuilder);
         $this->queryBuilder->method('expr')->willReturn($this->expr);
         $this->queryBuilder->method('execute')->willReturn($this->statement);
@@ -266,6 +269,10 @@ final class DataSimpleSelectLoaderTest extends TestCase
 
         $this->entityMapping->method('getEntityClassName')->willReturn(EntityExample::class);
         $this->entityMapping->method('getFieldMappings')->willReturn($this->mappings);
+        $this->entityMapping->method('collectDBALColumns')->willReturn([
+            new Column("foo_column", Type::getType('string')),
+            new Column("bar_column", Type::getType('string')),
+        ]);
 
         $this->mappings['foo']->method("revertValue")->willReturn(["foo_column" => "ipsum"]);
         $this->mappings['bar']->method("revertValue")->willReturn(["bar_column" => "dolor"]);
