@@ -71,90 +71,103 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         /** @var string $className */
         $className = get_class($entity);
 
-        if (class_exists(ClassUtils::class)) {
-            $className = ClassUtils::getRealClass($className);
-        }
+        /** @var string $entityObjectHash */
+        $entityObjectHash = spl_object_hash($entity);
+
+        $this->originalData[$entityObjectHash] = [];
 
         /** @var array<string> $additionalData */
         $additionalData = array();
 
-        /** @var ClassMetadata $classMetaData */
-        $classMetaData = $entityManager->getClassMetadata($className);
-
-        /** @var ?EntityMappingInterface $entityMapping */
-        $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
-
-        if ($entityMapping instanceof EntityMappingInterface) {
-            /** @var array<Column> $additionalColumns */
-            $additionalColumns = $entityMapping->collectDBALColumns();
-
-            /** @var Connection $connection */
-            $connection = $entityManager->getConnection();
-
-            /** @var QueryBuilder $queryBuilder */
-            $queryBuilder = $connection->createQueryBuilder();
-
-            /** @var Expr $expr */
-            $expr = $queryBuilder->expr();
-
-            foreach ($additionalColumns as $column) {
-                /** @var Column $column */
-
-                $queryBuilder->addSelect($column->getName());
+        do {
+            if (class_exists(ClassUtils::class)) {
+                $className = ClassUtils::getRealClass($className);
             }
 
-            $reflectionClass = new ReflectionClass($className);
+            if (!$entityManager->getMetadataFactory()->isTransient($className)) {
+                /** @var ClassMetadata $classMetaData */
+                $classMetaData = $entityManager->getClassMetadata($className);
 
-            /** @var bool $hasId */
-            $hasId = false;
+                /** @var ?EntityMappingInterface $entityMapping */
+                $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
-            foreach ($classMetaData->identifier as $idFieldName) {
-                /** @var string $idFieldName */
+                if ($entityMapping instanceof EntityMappingInterface) {
+                    /** @var array<Column> $additionalColumns */
+                    $additionalColumns = $entityMapping->collectDBALColumns();
 
-                /** @var array $idColumn */
-                $idColumn = $classMetaData->fieldMappings[$idFieldName];
+                    if (!empty($additionalColumns)) {
+                        /** @var Connection $connection */
+                        $connection = $entityManager->getConnection();
 
-                /** @var ReflectionProperty $reflectionProperty */
-                $reflectionProperty = $reflectionClass->getProperty($idFieldName);
+                        /** @var QueryBuilder $queryBuilder */
+                        $queryBuilder = $connection->createQueryBuilder();
 
-                $reflectionProperty->setAccessible(true);
+                        /** @var Expr $expr */
+                        $expr = $queryBuilder->expr();
 
-                $idValue = $reflectionProperty->getValue($entity);
+                        foreach ($additionalColumns as $column) {
+                            /** @var Column $column */
 
-                if (!empty($idValue)) {
-                    $hasId = true;
-                    if (!is_numeric($idValue) || empty($idValue)) {
-                        $idValue = "'{$idValue}'";
+                            $queryBuilder->addSelect($column->getName());
+                        }
+
+                        $reflectionClass = new ReflectionClass($className);
+
+                        /** @var bool $hasId */
+                        $hasId = false;
+
+                        foreach ($classMetaData->identifier as $idFieldName) {
+                            /** @var string $idFieldName */
+
+                            /** @var array $idColumn */
+                            $idColumn = $classMetaData->fieldMappings[$idFieldName];
+
+                            /** @var ReflectionProperty $reflectionProperty */
+                            $reflectionProperty = $reflectionClass->getProperty($idFieldName);
+
+                            $reflectionProperty->setAccessible(true);
+
+                            $idValue = $reflectionProperty->getValue($entity);
+
+                            if (!empty($idValue)) {
+                                $hasId = true;
+                                if (!is_numeric($idValue) || empty($idValue)) {
+                                    $idValue = "'{$idValue}'";
+                                }
+                                $queryBuilder->andWhere($expr->eq($idColumn['columnName'], $idValue));
+                            }
+                        }
+
+                        if ($hasId) {
+                            $queryBuilder->from($classMetaData->getTableName());
+                            $queryBuilder->setMaxResults(1);
+
+                            /** @var Statement $statement */
+                            $statement = $queryBuilder->execute();
+
+                            $additionalData = $statement->fetch(PDO::FETCH_ASSOC);
+
+                            if (!is_array($additionalData)) {
+                                $additionalData = array();
+                            }
+
+                            $this->originalData[$entityObjectHash] = array_merge(
+                                $this->originalData[$entityObjectHash],
+                                $additionalData
+                            );
+
+                            if (count($this->originalData) > $this->originalDataLimit) {
+                                array_shift($this->originalData);
+                            }
+                        }
                     }
-                    $queryBuilder->andWhere($expr->eq($idColumn['columnName'], $idValue));
                 }
             }
 
-            if ($hasId) {
-                $queryBuilder->from($classMetaData->getTableName());
-                $queryBuilder->setMaxResults(1);
+            $className = current(class_parents($className));
+        } while (class_exists($className));
 
-                /** @var Statement $statement */
-                $statement = $queryBuilder->execute();
-
-                $additionalData = $statement->fetch(PDO::FETCH_ASSOC);
-
-                if (!is_array($additionalData)) {
-                    $additionalData = array();
-                }
-
-                /** @var string $entityObjectHash */
-                $entityObjectHash = spl_object_hash($entity);
-
-                $this->originalData[$entityObjectHash] = $additionalData;
-
-                if (count($this->originalData) > $this->originalDataLimit) {
-                    array_shift($this->originalData);
-                }
-            }
-        }
-
-        return $additionalData;
+        return $this->originalData[$entityObjectHash] ?? [];
     }
 
     /**

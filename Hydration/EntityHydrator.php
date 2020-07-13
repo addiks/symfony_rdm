@@ -48,50 +48,108 @@ final class EntityHydrator implements EntityHydratorInterface
 
     public function hydrateEntity($entity, EntityManagerInterface $entityManager): void
     {
+        /** @var array<string> $dataFromAdditionalColumns */
+        $dataFromAdditionalColumns = $this->dbalDataLoader->loadDBALDataForEntity(
+            $entity,
+            $entityManager
+        );
+
         /** @var string $className */
         $className = get_class($entity);
 
-        if (class_exists(ClassUtils::class)) {
-            $className = ClassUtils::getRealClass($className);
-        }
+        do {
+            if (class_exists(ClassUtils::class)) {
+                $className = ClassUtils::getRealClass($className);
+            }
 
-        $classReflection = new ReflectionClass($className);
+            $classReflection = new ReflectionClass($className);
 
-        /** @var ?EntityMappingInterface $mapping */
-        $mapping = $this->mappingDriver->loadRDMMetadataForClass($className);
+            /** @var ?EntityMappingInterface $mapping */
+            $mapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
-        /** @var array<string> $dataFromAdditionalColumns */
-        $dataFromAdditionalColumns = array();
+            if ($mapping instanceof EntityMappingInterface) {
+                /** @var string $processDescription */
+                $processDescription = sprintf("of entity '%s'", $className);
 
-        if ($mapping instanceof EntityMappingInterface) {
-            /** @var string $processDescription */
-            $processDescription = sprintf("of entity '%s'", $className);
+                try {
+                    if ($mapping instanceof EntityMappingInterface) {
+                        $context = new HydrationContext($entity, $entityManager);
 
-            try {
-                if (!empty($mapping->collectDBALColumns())) {
-                    $dataFromAdditionalColumns = $this->dbalDataLoader->loadDBALDataForEntity(
-                        $entity,
-                        $entityManager
-                    );
+                        foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
+                            /** @var MappingInterface $fieldMapping */
+
+                            $processDescription = sprintf(
+                                "of field '%s' of entity '%s'",
+                                $fieldName,
+                                $className
+                            );
+
+                            /** @var mixed $value */
+                            $value = $fieldMapping->resolveValue(
+                                $context,
+                                $dataFromAdditionalColumns
+                            );
+
+                            /** @var ReflectionClass $concreteClassReflection */
+                            $concreteClassReflection = $classReflection;
+
+                            while (!$concreteClassReflection->hasProperty($fieldName)) {
+                                $concreteClassReflection = $concreteClassReflection->getParentClass();
+
+                                Assert::object($concreteClassReflection, sprintf(
+                                    "Property '%s' does not exist on object of class '%s'!",
+                                    $fieldName,
+                                    $className
+                                ));
+                            }
+
+                            /** @var ReflectionProperty $propertyReflection */
+                            $propertyReflection = $concreteClassReflection->getProperty($fieldName);
+
+                            $propertyReflection->setAccessible(true);
+                            $propertyReflection->setValue($entity, $value);
+                        }
+                    }
+
+                } catch (Throwable $exception) {
+                    throw new MappingException(sprintf(
+                        "Exception during hydration %s!",
+                        $processDescription
+                    ), 0, $exception);
                 }
+            }
 
+            $className = current(class_parents($className));
+        } while (class_exists($className));
+    }
+
+    public function assertHydrationOnEntity($entity, EntityManagerInterface $entityManager): void
+    {
+        /** @var array<string> $dataFromAdditionalColumns */
+        $dataFromAdditionalColumns = $this->dbalDataLoader->loadDBALDataForEntity(
+            $entity,
+            $entityManager
+        );
+
+        /** @var string $className */
+        $className = get_class($entity);
+
+        do {
+            if (class_exists(ClassUtils::class)) {
+                $className = ClassUtils::getRealClass($className);
+            }
+
+            $classReflection = new ReflectionClass($className);
+
+            /** @var ?EntityMappingInterface $mapping */
+            $mapping = $this->mappingDriver->loadRDMMetadataForClass($className);
+
+            if ($mapping instanceof EntityMappingInterface) {
                 if ($mapping instanceof EntityMappingInterface) {
                     $context = new HydrationContext($entity, $entityManager);
 
                     foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
                         /** @var MappingInterface $fieldMapping */
-
-                        $processDescription = sprintf(
-                            "of field '%s' of entity '%s'",
-                            $fieldName,
-                            $className
-                        );
-
-                        /** @var mixed $value */
-                        $value = $fieldMapping->resolveValue(
-                            $context,
-                            $dataFromAdditionalColumns
-                        );
 
                         /** @var ReflectionClass $concreteClassReflection */
                         $concreteClassReflection = $classReflection;
@@ -99,7 +157,7 @@ final class EntityHydrator implements EntityHydratorInterface
                         while (!$concreteClassReflection->hasProperty($fieldName)) {
                             $concreteClassReflection = $concreteClassReflection->getParentClass();
 
-                            Assert::object($concreteClassReflection, sprintf(
+                            Assert::notNull($concreteClassReflection, sprintf(
                                 "Property '%s' does not exist on object of class '%s'!",
                                 $fieldName,
                                 $className
@@ -110,79 +168,21 @@ final class EntityHydrator implements EntityHydratorInterface
                         $propertyReflection = $concreteClassReflection->getProperty($fieldName);
 
                         $propertyReflection->setAccessible(true);
-                        $propertyReflection->setValue($entity, $value);
+
+                        /** @var object $actualValue */
+                        $actualValue = $propertyReflection->getValue($entity);
+
+                        $fieldMapping->assertValue(
+                            $context,
+                            $dataFromAdditionalColumns,
+                            $actualValue
+                        );
                     }
                 }
-
-            } catch (Throwable $exception) {
-                throw new MappingException(sprintf(
-                    "Exception during hydration %s!",
-                    $processDescription
-                ), 0, $exception);
-            }
-        }
-    }
-
-    public function assertHydrationOnEntity($entity, EntityManagerInterface $entityManager): void
-    {
-        /** @var string $className */
-        $className = get_class($entity);
-
-        if (class_exists(ClassUtils::class)) {
-            $className = ClassUtils::getRealClass($className);
-        }
-
-        $classReflection = new ReflectionClass($className);
-
-        /** @var ?EntityMappingInterface $mapping */
-        $mapping = $this->mappingDriver->loadRDMMetadataForClass($className);
-
-        /** @var array<string> $dataFromAdditionalColumns */
-        $dataFromAdditionalColumns = array();
-
-        if ($mapping instanceof EntityMappingInterface) {
-            if (!empty($mapping->collectDBALColumns())) {
-                $dataFromAdditionalColumns = $this->dbalDataLoader->loadDBALDataForEntity(
-                    $entity,
-                    $entityManager
-                );
             }
 
-            if ($mapping instanceof EntityMappingInterface) {
-                $context = new HydrationContext($entity, $entityManager);
-
-                foreach ($mapping->getFieldMappings() as $fieldName => $fieldMapping) {
-                    /** @var MappingInterface $fieldMapping */
-
-                    /** @var ReflectionClass $concreteClassReflection */
-                    $concreteClassReflection = $classReflection;
-
-                    while (!$concreteClassReflection->hasProperty($fieldName)) {
-                        $concreteClassReflection = $concreteClassReflection->getParentClass();
-
-                        Assert::notNull($concreteClassReflection, sprintf(
-                            "Property '%s' does not exist on object of class '%s'!",
-                            $fieldName,
-                            $className
-                        ));
-                    }
-
-                    /** @var ReflectionProperty $propertyReflection */
-                    $propertyReflection = $concreteClassReflection->getProperty($fieldName);
-
-                    $propertyReflection->setAccessible(true);
-
-                    /** @var object $actualValue */
-                    $actualValue = $propertyReflection->getValue($entity);
-
-                    $fieldMapping->assertValue(
-                        $context,
-                        $dataFromAdditionalColumns,
-                        $actualValue
-                    );
-                }
-            }
-        }
+            $className = current(class_parents($className));
+        } while (class_exists($className));
     }
 
 }

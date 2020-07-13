@@ -167,9 +167,16 @@ final class EventListener
     private function hasRdmMappingForClass(string $className): bool
     {
         if (!isset($this->hasRdmMappingForClass[$className])) {
-            $this->hasRdmMappingForClass[$className] = is_object(
-                $this->mappingDriver->loadRDMMetadataForClass($className)
-            );
+            /** @var string $currentClassName */
+            $currentClassName = $className;
+
+            do {
+                $this->hasRdmMappingForClass[$className] = is_object(
+                    $this->mappingDriver->loadRDMMetadataForClass($currentClassName)
+                );
+
+                $currentClassName = current(class_parents($currentClassName));
+            } while (class_exists($currentClassName) && !$this->hasRdmMappingForClass[$className]);
         }
 
         return $this->hasRdmMappingForClass[$className];
