@@ -50,8 +50,12 @@ final class ServiceFormType implements FormTypeInterface
 
                     if (isset($options['choices'])) {
                         foreach (array_values($options['choices']) as $serviceIdCandidate) {
-                            /** @var object $serviceCandidate */
-                            $serviceCandidate = $container->get($serviceIdCandidate);
+                            /** @var object|null $serviceCandidate */
+                            $serviceCandidate = null;
+
+                            if (!empty($serviceIdCandidate)) {
+                                $serviceCandidate = $container->get($serviceIdCandidate);
+                            }
 
                             if ($serviceCandidate === $service) {
                                 $serviceId = $serviceIdCandidate;
