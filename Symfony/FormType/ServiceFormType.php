@@ -111,7 +111,7 @@ final class ServiceFormType implements FormTypeInterface
 
     public function getBlockPrefix(): string
     {
-        return '';
+        return 'service';
     }
 
     public function getParent(): string
