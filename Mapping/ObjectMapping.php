@@ -280,7 +280,7 @@ final class ObjectMapping implements MappingInterface
                 throw new ReflectionException(sprintf(
                     "Property %s does not exist in class %s. (Defined %s)",
                     $fieldName,
-                    get_class($valueFromEntityField),
+                    $this->className,
                     $this->origin
                 ));
             }
