@@ -105,9 +105,9 @@ final class ServiceFormTypeTest extends TestCase
     /**
      * @test
      */
-    public function shouldHaveEmptyBlockPrefix()
+    public function shouldHaveServiceBlockPrefix()
     {
-        $this->assertEquals("", $this->formType->getBlockPrefix());
+        $this->assertEquals('service', $this->formType->getBlockPrefix());
     }
 
     /**
