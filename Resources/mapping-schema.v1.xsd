@@ -134,6 +134,7 @@
     <xs:complexType name="nullable">
         <xs:attribute name="field" type="xs:string" />
         <xs:attribute name="column" type="xs:string" />
+        <xs:attribute name="strict" type="xs:boolean" />
         <xs:choice minOccurs="1" maxOccurs="1">
             <xs:element name="import" type="rdm:import" />
             <xs:element name="service" type="rdm:service" />

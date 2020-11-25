@@ -706,11 +706,18 @@ final class MappingXmlDriver implements MappingDriverInterface
             );
         }
 
+        $strict = false;
+
+        if (!is_null($nullableNode->attributes->getNamedItem("strict"))) {
+            $strict = $nullableNode->attributes->getNamedItem("strict")->nodeValue === "true" ? true : false;
+        }
+
         return new NullableMapping($innerMapping, $column, sprintf(
             "in file '%s' at line %d",
             $mappingFile,
             $nullableNode->getLineNo()
-        ));
+        ),
+            $strict);
     }
 
     private function readDoctrineField(DOMNode $fieldNode): Column
