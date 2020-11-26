@@ -36,14 +36,19 @@ final class NullableMapping implements MappingInterface
      */
     private $origin;
 
+    /** @var bool */
+    private $strict;
+
     public function __construct(
         MappingInterface $innerMapping,
         Column $dbalColumn = null,
-        string $origin = "undefined"
+        string $origin = "undefined",
+        bool $strict = false
     ) {
         $this->innerMapping = $innerMapping;
         $this->dbalColumn = $dbalColumn;
         $this->origin = $origin;
+        $this->strict = $strict;
     }
 
     public function getDBALColumn(): ?Column
@@ -119,7 +124,7 @@ final class NullableMapping implements MappingInterface
         }
 
         if (array_key_exists($columnName, $dataFromAdditionalColumns)
-        && $dataFromAdditionalColumns[$columnName]) {
+        && ($this->strict ? !is_null($dataFromAdditionalColumns[$columnName]) : $dataFromAdditionalColumns[$columnName])) {
             $value = $this->innerMapping->resolveValue(
                 $context,
                 $dataFromAdditionalColumns
