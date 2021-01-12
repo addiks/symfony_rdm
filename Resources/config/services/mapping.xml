@@ -13,6 +13,7 @@
         <service
             id="addiks_rdm.mapping.driver"
             class="Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface"
+            public="true"
         >
             <factory service="addiks_rdm.mapping.driver_factory" method="createRDMMappingDriver" />
             <argument type="service">
