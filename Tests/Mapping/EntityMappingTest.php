@@ -43,8 +43,8 @@ final class EntityMappingTest extends TestCase
         $this->fieldMappingB = $this->createMock(MappingInterface::class);
 
         $this->entityMapping = new EntityMapping(EntityExample::class, [
-            $this->fieldMappingA,
-            $this->fieldMappingB,
+            'fieldA' => $this->fieldMappingA,
+            'fieldB' => $this->fieldMappingB,
         ]);
     }
 
@@ -79,8 +79,8 @@ final class EntityMappingTest extends TestCase
     public function shouldStoreFieldMappings()
     {
         $this->assertEquals([
-            $this->fieldMappingA,
-            $this->fieldMappingB,
+            'fieldA' => $this->fieldMappingA,
+            'fieldB' => $this->fieldMappingB,
         ], $this->entityMapping->getFieldMappings());
     }
 
@@ -138,10 +138,16 @@ final class EntityMappingTest extends TestCase
      */
     public function shouldNotResolveValue()
     {
-        $this->assertNull($this->entityMapping->resolveValue(
-            $this->createMock(HydrationContextInterface::class),
-            []
-        ));
+        $this->assertEquals(
+            [
+                'fieldA' => null,
+                'fieldB' => null
+            ],
+            $this->entityMapping->resolveValue(
+                $this->createMock(HydrationContextInterface::class),
+                []
+            )
+        );
     }
 
     /**

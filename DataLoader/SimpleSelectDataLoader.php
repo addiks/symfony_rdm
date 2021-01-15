@@ -50,17 +50,10 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
      */
     private $originalData = array();
 
-    /**
-     * @var int
-     */
-    private $originalDataLimit;
-
     public function __construct(
-        MappingDriverInterface $mappingDriver,
-        int $originalDataLimit = 1000
+        MappingDriverInterface $mappingDriver
     ) {
         $this->mappingDriver = $mappingDriver;
-        $this->originalDataLimit = $originalDataLimit;
     }
 
     /**
@@ -155,10 +148,6 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
                                 $this->originalData[$entityObjectHash],
                                 $additionalData
                             );
-
-                            if (count($this->originalData) > $this->originalDataLimit) {
-                                array_shift($this->originalData);
-                            }
                         }
                     }
                 }
@@ -187,8 +176,10 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
             $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
             if ($entityMapping instanceof EntityMappingInterface) {
+                $context = new HydrationContext($entity, $entityManager);
+
                 /** @var array<scalar> */
-                $additionalData = $this->collectAdditionalDataForEntity($entity, $entityMapping, $entityManager);
+                $additionalData = $entityMapping->revertValue($context, $entity);
 
                 if ($this->hasDataChanged($entity, $additionalData)) {
                     /** @var ClassMetadata $classMetaData */
@@ -222,7 +213,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
     public function prepareOnMetadataLoad(EntityManagerInterface $entityManager, ClassMetadata $classMetadata): void
     {
-        # This data-loader does not need any preperation
+        # This data-loader does not need any preparation
     }
 
     /**
@@ -251,60 +242,6 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         }
 
         return $hasDataChanged;
-    }
-
-    /**
-     * @param object $entity
-     */
-    private function collectAdditionalDataForEntity(
-        $entity,
-        EntityMappingInterface $entityMapping,
-        EntityManagerInterface $entityManager#,
-        #string $className = null
-    ): array {
-        /** @var array<scalar> */
-        $additionalData = array();
-
-        $reflectionClass = new ReflectionClass($entityMapping->getEntityClassName());
-
-        $context = new HydrationContext($entity, $entityManager);
-
-        foreach ($entityMapping->getFieldMappings() as $fieldName => $entityFieldMapping) {
-            /** @var MappingInterface $entityFieldMapping */
-
-            /** @var ReflectionClass $concreteReflectionClass */
-            $concreteReflectionClass = $reflectionClass;
-
-            while (is_object($concreteReflectionClass) && !$concreteReflectionClass->hasProperty($fieldName)) {
-                $concreteReflectionClass = $concreteReflectionClass->getParentClass();
-            }
-
-            if (!is_object($concreteReflectionClass)) {
-                throw new ErrorException(sprintf(
-                    "Property '%s' does not exist on object of class '%s'!",
-                    $fieldName,
-                    $entityMapping->getEntityClassName()
-                ));
-            }
-
-            /** @var ReflectionProperty $reflectionProperty */
-            $reflectionProperty = $concreteReflectionClass->getProperty($fieldName);
-
-            $reflectionProperty->setAccessible(true);
-
-            /** @var mixed $valueFromEntityField */
-            $valueFromEntityField = $reflectionProperty->getValue($entity);
-
-            /** @var array<scalar> $fieldAdditionalData */
-            $fieldAdditionalData = $entityFieldMapping->revertValue(
-                $context,
-                $valueFromEntityField
-            );
-
-            $additionalData = array_merge($additionalData, $fieldAdditionalData);
-        }
-
-        return $additionalData;
     }
 
     /**

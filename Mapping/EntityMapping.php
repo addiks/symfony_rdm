@@ -17,6 +17,12 @@ use Addiks\RDMBundle\Mapping\ObjectMapping;
 use Webmozart\Assert\Assert;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use ReflectionClass;
+use Addiks\RDMBundle\Hydration\HydrationContext;
+use ErrorException;
+use ReflectionProperty;
+use ReflectionObject;
 
 final class EntityMapping implements EntityMappingInterface
 {
@@ -110,14 +116,62 @@ final class EntityMapping implements EntityMappingInterface
         HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
-        return null;
+        /** @var array<string, mixed> $entityData */
+        $entityData = array();
+
+        /** @var MappingInterface $fieldMapping */
+        foreach ($this->fieldMappings as $fieldName => $fieldMapping) {
+            $entityData[$fieldName] = $fieldMapping->resolveValue($context, $dataFromAdditionalColumns);
+        }
+
+        return $entityData;
     }
 
     public function revertValue(
         HydrationContextInterface $context,
-        $valueFromEntityField
+        $entity
     ): array {
-        return array();
+        /** @var array<string, mixed> $additionalData */
+        $additionalData = array();
+
+        if (is_object($entity)) {
+            $reflectionObject = new ReflectionObject($entity);
+
+            $reflectionClass = new ReflectionClass($this->className);
+
+            /** @var MappingInterface $fieldMapping */
+            foreach ($this->fieldMappings as $fieldName => $fieldMapping) {
+
+                /** @var ReflectionClass $concreteReflectionClass */
+                $concreteReflectionClass = $reflectionClass;
+
+                while (is_object($concreteReflectionClass) && !$concreteReflectionClass->hasProperty($fieldName)) {
+                    $concreteReflectionClass = $concreteReflectionClass->getParentClass();
+                }
+
+                if (!is_object($concreteReflectionClass)) {
+                    throw new ErrorException(sprintf(
+                        "Property '%s' does not exist on object of class '%s'!",
+                        $fieldName,
+                        $this->className
+                    ));
+                }
+
+                /** @var ReflectionProperty $reflectionProperty */
+                $reflectionProperty = $concreteReflectionClass->getProperty($fieldName);
+                $reflectionProperty->setAccessible(true);
+
+                /** @var mixed $valueFromEntityField */
+                $valueFromEntityField = $reflectionProperty->getValue($entity);
+
+                $additionalData = array_merge(
+                    $additionalData,
+                    $fieldMapping->revertValue($context, $valueFromEntityField)
+                );
+            }
+        }
+
+        return $additionalData;
     }
 
     public function assertValue(

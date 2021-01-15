@@ -30,7 +30,7 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
 use Doctrine\DBAL\Types\Type;
 
-final class DataSimpleSelectLoaderTest extends TestCase
+final class SimpleSelectLoaderTest extends TestCase
 {
 
     /**
