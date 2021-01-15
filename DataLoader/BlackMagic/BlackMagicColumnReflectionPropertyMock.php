@@ -59,7 +59,7 @@ final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
 
     public function getDeclaringClass(): ReflectionClass
     {
-        $this->classMetadata->reflClass;
+        return $this->classMetadata->reflClass;
     }
 
     public function getName(): string

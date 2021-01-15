@@ -28,7 +28,7 @@ final class EntityMapping implements EntityMappingInterface
 {
 
     /**
-     * @var string
+     * @var class-string
      */
     private $className;
 
@@ -37,6 +37,7 @@ final class EntityMapping implements EntityMappingInterface
      */
     private $fieldMappings = array();
 
+    /** @param class-string $className */
     public function __construct(string $className, array $fieldMappings)
     {
         $this->className = $className;
@@ -129,10 +130,13 @@ final class EntityMapping implements EntityMappingInterface
 
     public function revertValue(
         HydrationContextInterface $context,
-        $entity
+        $valueFromEntityField
     ): array {
         /** @var array<string, mixed> $additionalData */
         $additionalData = array();
+
+        /** @var object|null $entity */
+        $entity = $valueFromEntityField;
 
         if (is_object($entity)) {
             $reflectionObject = new ReflectionObject($entity);

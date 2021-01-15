@@ -15,6 +15,7 @@ use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 interface MappingDriverInterface
 {
 
+    /** @param class-string $className */
     public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface;
 
 }

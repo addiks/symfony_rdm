@@ -42,6 +42,7 @@ final class MappingYamlDriver implements MappingDriverInterface
         $this->fileLocator = $fileLocator;
     }
 
+    /** @param class-string $className */
     public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
         /** @var ?EntityMappingInterface $mapping */

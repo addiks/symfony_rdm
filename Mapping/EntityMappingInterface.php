@@ -15,6 +15,7 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 interface EntityMappingInterface extends MappingInterface
 {
 
+    /** @return class-string */
     public function getEntityClassName(): string;
 
     /**

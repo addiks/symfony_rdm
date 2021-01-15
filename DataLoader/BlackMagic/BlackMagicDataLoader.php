@@ -72,7 +72,7 @@ class BlackMagicDataLoader implements DataLoaderInterface
         /** @var array<string, string> $dbalData */
         $dbalData = array();
 
-        /** @var string $className */
+        /** @var class-string $className */
         $className = get_class($entity);
 
         if (class_exists(ClassUtils::class)) {
@@ -82,7 +82,7 @@ class BlackMagicDataLoader implements DataLoaderInterface
         /** @var ClassMetadata $classMetaData */
         $classMetaData = $entityManager->getClassMetadata($className);
 
-        /** @var ?EntityMappingInterface $entityMapping */
+        /** @var EntityMappingInterface|null $entityMapping */
         $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
         if ($entityMapping instanceof EntityMappingInterface) {

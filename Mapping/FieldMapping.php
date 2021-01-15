@@ -94,7 +94,7 @@ final class FieldMapping implements MappingInterface
         HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
-        /** @var mixed $data */
+        /** @var array<string, mixed> $data */
         $data = array();
 
         /** @var Type $type */

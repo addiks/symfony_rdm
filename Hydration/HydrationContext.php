@@ -68,6 +68,7 @@ final class HydrationContext implements HydrationContextInterface
         return $this->entity;
     }
 
+    /** @return class-string */
     public function getEntityClass(): string
     {
         return $this->entityClass;

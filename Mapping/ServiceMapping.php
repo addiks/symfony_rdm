@@ -132,18 +132,18 @@ final class ServiceMapping implements MappingInterface
     public function assertValue(
         HydrationContextInterface $context,
         array $dataFromAdditionalColumns,
-        $actualService
+        $actualValue
     ): void {
         if (!$this->lax && !self::$alwaysLax) {
             /** @var object $expectedService */
             $expectedService = $this->resolveValue($context, $dataFromAdditionalColumns);
 
-            if ($expectedService !== $actualService) {
+            if ($expectedService !== $actualValue) {
                 throw FailedRDMAssertionException::expectedDifferentService(
                     $this->serviceId,
                     new ReflectionClass($context->getEntityClass()),
                     $expectedService,
-                    $actualService
+                    $actualValue
                 );
             }
         }

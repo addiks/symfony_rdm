@@ -13,6 +13,7 @@ namespace Addiks\RDMBundle\Mapping;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Addiks\RDMBundle\Exception\FailedRDMAssertionExceptionInterface;
 
 /**
  * A class that implements this interface indicates that it to be used as mapping-information for this RDM bundle.

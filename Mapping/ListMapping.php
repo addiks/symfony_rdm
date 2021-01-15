@@ -81,6 +81,8 @@ final class ListMapping implements MappingInterface
         $columnName = $this->column->getName();
 
         if (isset($dataFromAdditionalColumns[$columnName])) {
+            Assert::string($dataFromAdditionalColumns[$columnName]);
+
             /** @var array<string> $rawValues */
             $serializedValues = json_decode($dataFromAdditionalColumns[$columnName], true);
 

@@ -28,6 +28,8 @@ interface HydrationContextInterface
     /**
      * Get's the _effective_ absolute class of the entity.
      * (Resolves doctrine-proxy-classes.)
+     *
+     * @return class-string
      */
     public function getEntityClass(): string;
 

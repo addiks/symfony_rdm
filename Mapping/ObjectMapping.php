@@ -29,7 +29,7 @@ final class ObjectMapping implements MappingInterface
 {
 
     /**
-     * @var string
+     * @var class-string
      */
     private $className;
 
@@ -68,6 +68,7 @@ final class ObjectMapping implements MappingInterface
      */
     private $referencedId;
 
+    /** @param class-string $className */
     public function __construct(
         string $className,
         array $fieldMappings,
@@ -87,8 +88,6 @@ final class ObjectMapping implements MappingInterface
         $this->referencedId = $referencedId;
 
         foreach ($fieldMappings as $fieldName => $fieldMapping) {
-            /** @var MappingInterface $fieldMapping */
-
             Assert::isInstanceOf($fieldMapping, MappingInterface::class);
             Assert::false(is_numeric($fieldName));
 
@@ -166,7 +165,7 @@ final class ObjectMapping implements MappingInterface
 
         $reflectionClass = new ReflectionClass($this->className);
 
-        /** @var object|string $object */
+        /** @var object|class-string $object */
         $object = $this->className;
 
         if ($reflectionClass->isInstantiable()) {
