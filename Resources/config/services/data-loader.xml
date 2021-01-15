@@ -18,6 +18,7 @@
             <argument type="service" id="service_container" />
             <argument type="collection">
                 <argument key="slow-and-stable">addiks_rdm.data_loader.simple</argument>
+                <argument key="fast-and-unstable">addiks_rdm.data_loader.black_magic</argument>
             </argument>
             <argument>addiks_rdm.data_loader.stability</argument>
             <argument>addiks_rdm.data_loader.simple</argument>
@@ -26,6 +27,14 @@
         <service
             id="addiks_rdm.data_loader.simple"
             class="Addiks\RDMBundle\DataLoader\SimpleSelectDataLoader"
+            public="true"
+        >
+            <argument type="service" id="addiks_rdm.mapping.driver" />
+        </service>
+
+        <service
+            id="addiks_rdm.data_loader.black_magic"
+            class="Addiks\RDMBundle\DataLoader\BlackMagic\BlackMagicDataLoader"
             public="true"
         >
             <argument type="service" id="addiks_rdm.mapping.driver" />
