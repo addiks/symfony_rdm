@@ -93,7 +93,7 @@ final class SimpleSelectLoaderTest extends TestCase
      */
     private $mappings = array();
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mappingDriver = $this->createMock(MappingDriverInterface::class);
         $this->connection = $this->createMock(Connection::class);
@@ -220,9 +220,6 @@ final class SimpleSelectLoaderTest extends TestCase
 
         $this->setUp();
 
-        $this->entityMapping->method('getEntityClassName')->willReturn(EntityExample::class);
-        $this->entityMapping->method('getFieldMappings')->willReturn($this->mappings);
-
         $this->classMetaData->identifier = ["id", "faz"];
         $this->classMetaData->fieldMappings = [
             "id"  => ['columnName' => 'id'],
@@ -240,6 +237,14 @@ final class SimpleSelectLoaderTest extends TestCase
         $this->mappings['foo']->method("revertValue")->willReturn(["foo_column" => "ipsum"]);
         $this->mappings['bar']->method("revertValue")->willReturn(["bar_column" => "dolor"]);
         $this->mappings['faz']->method("revertValue")->willReturn(["faz_column" => "sit"]);
+
+        $this->entityMapping->method('getEntityClassName')->willReturn(EntityExample::class);
+        $this->entityMapping->method('getFieldMappings')->willReturn($this->mappings);
+        $this->entityMapping->method('revertValue')->willReturn([
+            'foo_column' => 'ipsum',
+            'bar_column' => 'dolor',
+            'faz_column' => 'sit'
+        ]);
 
         $this->connection->expects($this->once())->method("update")->with(
             $this->equalTo("some_table"),

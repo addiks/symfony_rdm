@@ -32,7 +32,7 @@ final class MappingDriverChainFactoryTest extends TestCase
      */
     private $rootMetadataDriverFactory;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->rootMetadataDriverFactory = $this->createMock(MappingDriverFactoryInterface::class);
 

@@ -25,7 +25,7 @@ final class MappingStaticPHPDriverTest extends TestCase
      */
     private $mappingDriver;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mappingDriver = new MappingStaticPHPDriver();
     }

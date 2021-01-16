@@ -8,4 +8,4 @@ install:
 script:
 - vendor/bin/phpunit
 - vendor/bin/psalm
-- vendor/bin/infection -s -vv --min-msi=100
+- vendor/bin/infection -s -vv --initial-tests-php-options="-d xdebug.mode=coverage" --min-msi=100

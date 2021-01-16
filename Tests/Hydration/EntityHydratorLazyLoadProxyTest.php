@@ -35,7 +35,7 @@ final class EntityHydratorLazyLoadProxyTest extends TestCase
      */
     private $innerHydrator;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->innerHydrator = $this->createMock(EntityHydratorInterface::class);
 

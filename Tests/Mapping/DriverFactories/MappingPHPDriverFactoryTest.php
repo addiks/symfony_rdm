@@ -24,7 +24,7 @@ final class MappingPHPDriverFactoryTest extends TestCase
      */
     private $driverFactory;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->driverFactory = new MappingPHPDriverFactory();
     }

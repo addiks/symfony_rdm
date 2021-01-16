@@ -39,7 +39,7 @@ final class ChoiceMappingTest extends TestCase
 
     public function setUp(
         string $column = null
-    ) {
+    ): void {
         if (is_null($column)) {
             $column = new Column("some_column_name", Type::getType('string'), [
                 'notnull' => false,

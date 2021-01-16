@@ -82,7 +82,6 @@ final class CachedMappingDriver implements MappingDriverInterface
 
             } else {
                 $mapping = $this->innerMappingDriver->loadRDMMetadataForClass($className);
-                Assert::isInstanceOf($mapping, EntityMappingInterface::class);
 
                 $cacheItem->set(serialize($mapping));
                 $this->cacheItemPool->saveDeferred($cacheItem);

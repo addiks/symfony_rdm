@@ -46,7 +46,7 @@ final class EventListenerTest extends TestCase
      */
     private $dbalDataLoader;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->entityServiceHydrator = $this->createMock(EntityHydratorInterface::class);
         $this->mappingDriver = $this->createMock(MappingDriverInterface::class);

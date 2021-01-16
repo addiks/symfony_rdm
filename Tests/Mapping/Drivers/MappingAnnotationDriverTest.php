@@ -50,7 +50,7 @@ final class MappingAnnotationDriverTest extends TestCase
      */
     private $annotationReader;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->container = $this->createMock(ContainerInterface::class);
         $this->annotationReader = $this->createMock(Reader::class);

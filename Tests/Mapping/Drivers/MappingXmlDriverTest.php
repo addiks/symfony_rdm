@@ -55,7 +55,7 @@ final class MappingXmlDriverTest extends TestCase
      */
     private $container;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->fileLocator = $this->createMock(FileLocator::class);
         $this->kernel = $this->createMock(KernelInterface::class);

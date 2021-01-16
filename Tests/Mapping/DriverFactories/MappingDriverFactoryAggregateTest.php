@@ -39,7 +39,7 @@ final class MappingDriverFactoryAggregateTest extends TestCase
      */
     private $innerMappingDriverFactoryC;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->innerMappingDriverFactoryA = $this->createMock(MappingDriverFactoryInterface::class);
         $this->innerMappingDriverFactoryB = $this->createMock(MappingDriverFactoryInterface::class);

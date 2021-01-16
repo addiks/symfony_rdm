@@ -42,7 +42,7 @@ final class CachedMappingDriverFactoryTest extends TestCase
      */
     private $container;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->innerMappingDriverFactory = $this->createMock(MappingDriverFactoryInterface::class);
         $this->cacheItemPool = $this->createMock(CacheItemPoolInterface::class);

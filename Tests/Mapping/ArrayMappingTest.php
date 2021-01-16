@@ -8,7 +8,7 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks;
+namespace Addiks\RDMBundle\Tests\Mapping;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\ArrayMapping;
@@ -37,7 +37,7 @@ final class ArrayMappingTest extends TestCase
      */
     private $mappingB;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mappingA = $this->createMock(MappingInterface::class);
         $this->mappingB = $this->createMock(MappingInterface::class);

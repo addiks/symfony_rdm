@@ -36,7 +36,7 @@ final class ListMappingTest extends TestCase
      */
     private $entryMapping;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->column = $this->createMock(Column::class);
         $this->entryMapping = $this->createMock(MappingInterface::class);

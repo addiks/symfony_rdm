@@ -8,7 +8,7 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks;
+namespace Addiks\RDMBundle\Tests\Hydration;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Hydration\HydrationContext;
@@ -36,7 +36,7 @@ final class HydrationContextTest extends TestCase
      */
     private $entityManager;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->entity = $this->createMock(EntityExample::class);
         $this->entityManager = $this->createMock(EntityManagerInterface::class);

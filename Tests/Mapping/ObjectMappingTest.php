@@ -67,7 +67,7 @@ final class ObjectMappingTest extends TestCase
         string $id = "some_id",
         string $referenceId = "some_reference",
         string $firstMappingName = "lorem"
-    ) {
+    ): void {
         $this->factory = $this->createMock(CallDefinitionInterface::class);
         $this->serializer = $this->createMock(CallDefinitionInterface::class);
         $this->fieldMappingA = $this->createMock(MappingInterface::class);

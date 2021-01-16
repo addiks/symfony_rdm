@@ -51,7 +51,7 @@ final class EntityHydratorTest extends TestCase
      */
     private $container;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mappingDriver = $this->createMock(MappingDriverInterface::class);
         $this->dbalDataLoader = $this->createMock(DataLoaderInterface::class);

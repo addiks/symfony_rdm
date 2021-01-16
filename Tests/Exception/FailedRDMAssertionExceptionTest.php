@@ -8,7 +8,7 @@
  * @author Gerrit Addiks <gerrit@addiks.de>
  */
 
-namespace Addiks;
+namespace Addiks\RDMBundle\Tests\Exception;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Exception\FailedRDMAssertionException;
@@ -25,7 +25,7 @@ final class FailedRDMAssertionExceptionTest extends TestCase
      */
     private $exception;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->exception = new FailedRDMAssertionException("Some Message!", "some_type", [
             'lorem' => 'ipsum',

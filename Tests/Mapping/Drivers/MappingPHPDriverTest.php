@@ -32,7 +32,7 @@ final class MappingPHPDriverTest extends TestCase
      */
     private $fileLocator;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->fileLocator = $this->createMock(FileLocator::class);
 

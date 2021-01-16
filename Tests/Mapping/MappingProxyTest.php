@@ -31,7 +31,7 @@ final class MappingProxyTest extends TestCase
      */
     private $innerMapping;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->innerMapping = $this->createMock(MappingInterface::class);
 

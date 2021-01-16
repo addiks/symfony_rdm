@@ -35,7 +35,7 @@ final class ServiceFormTypeTest extends TestCase
      */
     private $dependency;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->container = $this->createMock(ContainerInterface::class);
 

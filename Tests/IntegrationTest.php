@@ -105,7 +105,7 @@ final class IntegrationTest extends TestCase
      */
     private $loader;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->container = new ContainerBuilder();
         $this->entityManager = $this->createMock(EntityManagerInterface::class);

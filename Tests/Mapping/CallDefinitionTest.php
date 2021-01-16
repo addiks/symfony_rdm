@@ -49,7 +49,7 @@ final class CallDefinitionTest extends TestCase
         string $objectReference = "someObjectReference",
         bool $isStaticCall = true,
         bool $useArgumentMappingB = true
-    ) {
+    ): void {
         $this->container = $this->createMock(ContainerInterface::class);
         $this->argumentMappingA = $this->createMock(MappingInterface::class);
         $this->argumentMappingB = $this->createMock(MappingInterface::class);

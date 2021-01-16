@@ -17,7 +17,7 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use PHPUnit\Framework\MockObject\Matcher\InvokedCount;
+use PHPUnit\Framework\MockObject\Rule\InvokedCount;
 
 final class NullableMappingTest extends TestCase
 {
@@ -37,7 +37,7 @@ final class NullableMappingTest extends TestCase
      */
     private $dbalColumn;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->innerMapping = $this->createMock(MappingInterface::class);
         $this->dbalColumn = $this->createMock(Column::class);

@@ -33,7 +33,7 @@ final class FieldMappingTest extends TestCase
      */
     private $dbalColumn;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->dbalColumn = $this->createMock(Column::class);
 

@@ -36,7 +36,7 @@ final class DataLoaderLazyLoadProxyTest extends TestCase
      */
     private $container;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->container = $this->createMock(ContainerInterface::class);
         $this->innerDataLoader = $this->createMock(DataLoaderInterface::class);

@@ -37,7 +37,7 @@ final class EntityMappingTest extends TestCase
      */
     private $fieldMappingB;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->fieldMappingA = $this->createMock(MappingInterface::class);
         $this->fieldMappingB = $this->createMock(MappingInterface::class);

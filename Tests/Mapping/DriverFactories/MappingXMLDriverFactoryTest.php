@@ -26,7 +26,7 @@ final class MappingXMLDriverFactoryTest extends TestCase
      */
     private $driverFactory;
 
-    public function setUp()
+    public function setUp(): void
     {
         /** @var ContainerInterface $serviceContainer */
         $serviceContainer = $this->createMock(ContainerInterface::class);

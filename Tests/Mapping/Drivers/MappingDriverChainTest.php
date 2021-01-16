@@ -38,7 +38,7 @@ final class MappingDriverChainTest extends TestCase
      */
     private $innerDriverB;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->innerDriverA = $this->createMock(MappingDriverInterface::class);
         $this->innerDriverB = $this->createMock(MappingDriverInterface::class);

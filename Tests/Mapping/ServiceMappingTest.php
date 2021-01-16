@@ -39,7 +39,7 @@ final class ServiceMappingTest extends TestCase
     public function setUp(
         bool $isLax = true,
         string $serviceId = "some_service_id"
-    ) {
+    ): void {
         $this->container = $this->createMock(ContainerInterface::class);
 
         $this->serviceMapping = new ServiceMapping(

@@ -23,7 +23,7 @@ final class NullMappingTest extends TestCase
      */
     private $mapping;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->mapping = new NullMapping("some origin");
     }

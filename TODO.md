@@ -19,3 +19,4 @@
  - Compact doc-comments
  - Apply 7.4 upgrades
     - object doctypes to object typehints
+    - member types
