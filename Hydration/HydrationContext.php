@@ -27,7 +27,7 @@ final class HydrationContext implements HydrationContextInterface
     private $entity;
 
     /**
-     * @var string
+     * @var class-string
      */
     private $entityClass;
 
@@ -59,7 +59,9 @@ final class HydrationContext implements HydrationContextInterface
         $this->entityManager = $entityManager;
 
         if (class_exists(ClassUtils::class)) {
-            $this->entityClass = ClassUtils::getRealClass($this->entityClass);
+            $entityClass = ClassUtils::getRealClass($this->entityClass);
+            Assert::classExists($entityClass);
+            $this->entityClass = $entityClass;
         }
     }
 

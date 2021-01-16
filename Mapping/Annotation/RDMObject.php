@@ -23,7 +23,7 @@ class RDMObject
 {
 
     /**
-     * @var string|null
+     * @var class-string|null
      */
     public $class;
 

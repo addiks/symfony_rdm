@@ -11,6 +11,7 @@
 namespace Addiks\RDMBundle\Hydration;
 
 use Doctrine\ORM\EntityManagerInterface;
+use ErrorException;
 
 /**
  * Hydrates doctrine2-entities and checks for correct hydration.

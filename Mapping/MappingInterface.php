@@ -41,7 +41,7 @@ interface MappingInterface
     /**
      * Resolves data from the database to a mapped value.
      *
-     * @param array<scalar>    $dataFromAdditionalColumns
+     * @param array<scalar|array>    $dataFromAdditionalColumns
      *
      * @return mixed
      */
@@ -57,7 +57,7 @@ interface MappingInterface
      *
      * @param mixed            $valueFromEntityField
      *
-     * @return array<scalar>
+     * @return array<string, scalar|null>
      */
     public function revertValue(
         HydrationContextInterface $context,

@@ -39,7 +39,7 @@ final class CachedMappingDriver implements MappingDriverInterface
     private $container;
 
     /**
-     * @var array<string, MappingInterface>
+     * @var array<string, EntityMappingInterface|null>
      */
     private $internalCachedMappings = array();
 
@@ -63,7 +63,7 @@ final class CachedMappingDriver implements MappingDriverInterface
     public function loadRDMMetadataForClass(string $className): ?EntityMappingInterface
     {
         if (!array_key_exists($className, $this->internalCachedMappings)) {
-            /** @var ?EntityMappingInterface $mapping */
+            /** @var EntityMappingInterface|null $mapping */
             $mapping = null;
 
             /** @var CacheItemInterface $cacheItem */
@@ -76,12 +76,13 @@ final class CachedMappingDriver implements MappingDriverInterface
                 $mapping = unserialize($cacheItem->get());
 
                 if (!is_null($mapping)) {
-                    Assert::isInstanceOf($mapping, MappingInterface::class);
+                    Assert::isInstanceOf($mapping, EntityMappingInterface::class);
                     $mapping->wakeUpMapping($this->container);
                 }
 
             } else {
                 $mapping = $this->innerMappingDriver->loadRDMMetadataForClass($className);
+                Assert::isInstanceOf($mapping, EntityMappingInterface::class);
 
                 $cacheItem->set(serialize($mapping));
                 $this->cacheItemPool->saveDeferred($cacheItem);

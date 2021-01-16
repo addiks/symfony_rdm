@@ -160,19 +160,13 @@ final class ObjectMapping implements MappingInterface
         HydrationContextInterface $context,
         array $dataFromAdditionalColumns
     ) {
-        /** @var mixed $object */
+        /** @var object|null $object */
         $object = null;
 
+        # During creation of an object, the class-name is on the top of that creation stack
+        $context->pushOnObjectHydrationStack($this->className);
+
         $reflectionClass = new ReflectionClass($this->className);
-
-        /** @var object|class-string $object */
-        $object = $this->className;
-
-        if ($reflectionClass->isInstantiable()) {
-            $object = $reflectionClass->newInstanceWithoutConstructor();
-        }
-
-        $context->pushOnObjectHydrationStack($object);
 
         if (!empty($this->referencedId)) {
             $object = $context->getRegisteredValue($this->referencedId);
@@ -205,9 +199,16 @@ final class ObjectMapping implements MappingInterface
                 $context,
                 $factoryData
             );
+
+        } else {
+            if ($reflectionClass->isInstantiable()) {
+                $object = $reflectionClass->newInstanceWithoutConstructor();
+            }
         }
 
-        // $object may have been replaced during creation, re-assign on top of stack.
+        Assert::object($object);
+
+        // Replace the class-name with the created object on top of the hydration stack
         $context->popFromObjectHydrationStack();
         $context->pushOnObjectHydrationStack($object);
 

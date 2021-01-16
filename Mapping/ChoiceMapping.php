@@ -17,6 +17,7 @@ use Addiks\RDMBundle\Exception\InvalidMappingException;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Exception;
+use Webmozart\Assert\Assert;
 
 final class ChoiceMapping implements MappingInterface
 {
@@ -45,8 +46,9 @@ final class ChoiceMapping implements MappingInterface
         string $originDescription = ""
     ) {
         if (!$determinatorColumn instanceof Column) {
+            Assert::string($determinatorColumn);
             $determinatorColumn = new Column(
-                (string)$determinatorColumn,
+                $determinatorColumn,
                 Type::getType('string'),
                 [
                     'notnull' => false,
@@ -149,7 +151,7 @@ final class ChoiceMapping implements MappingInterface
         HydrationContextInterface $context,
         $valueFromEntityField
     ): array {
-        /** @var array<scalar> $data */
+        /** @var array<string, scalar|null> $data */
         $data = array();
 
         /** @var string $determinatorColumn */

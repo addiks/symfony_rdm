@@ -21,6 +21,7 @@ use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use ReflectionException;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\DataLoader\BlackMagic\BlackMagicColumnReflectionPropertyMock;
+use Webmozart\Assert\Assert;
 
 final class BlackMagicReflectionServiceDecorator implements ReflectionService
 {
@@ -69,17 +70,19 @@ final class BlackMagicReflectionServiceDecorator implements ReflectionService
         return $this->innerReflectionService->getClass($class);
     }
 
-    public function getAccessibleProperty($className, $propertyName)
+    public function getAccessibleProperty($class, $property)
     {
         /** @var ReflectionProperty|null $propertyReflection */
         $propertyReflection = null;
 
         try {
-            $propertyReflection = $this->innerReflectionService->getAccessibleProperty($className, $propertyName);
+            $propertyReflection = $this->innerReflectionService->getAccessibleProperty($class, $property);
 
         } catch (ReflectionException $exception) {
+            Assert::classExists($class);
+
             /** @var EntityMappingInterface|null $entityMapping */
-            $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
+            $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($class);
 
             if ($entityMapping instanceof EntityMappingInterface) {
                 /** @var array<Column> $columns */
@@ -90,10 +93,10 @@ final class BlackMagicReflectionServiceDecorator implements ReflectionService
                     /** @var string $fieldName */
                     $fieldName = $this->dataLoader->columnToFieldName($column);
 
-                    if ($propertyName === $fieldName) {
+                    if ($property === $fieldName) {
                         $propertyReflection = new BlackMagicColumnReflectionPropertyMock(
                             $this->entityManager,
-                            $this->entityManager->getClassMetadata($className),
+                            $this->entityManager->getClassMetadata($class),
                             $column,
                             $fieldName,
                             $this->dataLoader

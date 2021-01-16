@@ -136,7 +136,7 @@ final class CallDefinition implements CallDefinitionInterface
     /**
      * (This return type should be nullable, but there seems to be a bug in current version psalm preventing it.)
      *
-     * @return object|string
+     * @return object|string|null
      */
     private function resolveCallee(
         string $objectReference,

@@ -77,6 +77,7 @@ class BlackMagicDataLoader implements DataLoaderInterface
 
         if (class_exists(ClassUtils::class)) {
             $className = ClassUtils::getRealClass($className);
+            Assert::classExists($className);
         }
 
         /** @var ClassMetadata $classMetaData */
@@ -145,8 +146,11 @@ class BlackMagicDataLoader implements DataLoaderInterface
             }
         }
 
+        /** @var class-string $className */
+        $className = $classMetadata->getName();
+
         /** @var EntityMappingInterface|null $entityMapping */
-        $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($classMetadata->getName());
+        $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($className);
 
         if ($entityMapping instanceof EntityMappingInterface) {
             /** @var array<Column> $dbalColumns */
@@ -188,11 +192,13 @@ class BlackMagicDataLoader implements DataLoaderInterface
                     $classMetadata->fieldMappings[$fieldName] = $mapping;
                 }
 
-                if (!isset($classMetadata->fieldNames[$columnName])) {
+                /** @psalm-suppress DeprecatedProperty */
+                if (isset ($classMetadata->fieldNames) && !isset($classMetadata->fieldNames[$columnName])) {
                     $classMetadata->fieldNames[$columnName] = $fieldName;
                 }
 
-                if (!isset($classMetadata->columnNames[$fieldName])) {
+                /** @psalm-suppress DeprecatedProperty */
+                if (isset ($classMetadata->columnNames) && !isset($classMetadata->columnNames[$fieldName])) {
                     $classMetadata->columnNames[$fieldName] = $columnName;
                 }
             }
@@ -227,11 +233,12 @@ class BlackMagicDataLoader implements DataLoaderInterface
                 $dbalColumns = $this->dbalColumnsCached;
 
             } else {
-                /** @var string $className */
+                /** @var class-string $className */
                 $className = get_class($entity);
 
                 if (class_exists(ClassUtils::class)) {
                     $className = ClassUtils::getRealClass($className);
+                    Assert::classExists($className);
                 }
 
                 /** @var EntityMappingInterface|null $entityMapping */

@@ -54,12 +54,13 @@ final class EntityHydrator implements EntityHydratorInterface
             $entityManager
         );
 
-        /** @var string $className */
+        /** @var class-string $className */
         $className = get_class($entity);
 
         do {
             if (class_exists(ClassUtils::class)) {
                 $className = ClassUtils::getRealClass($className);
+                Assert::classExists($className);
             }
 
             $classReflection = new ReflectionClass($className);
@@ -131,12 +132,13 @@ final class EntityHydrator implements EntityHydratorInterface
             $entityManager
         );
 
-        /** @var string $className */
+        /** @var class-string $className */
         $className = get_class($entity);
 
         do {
             if (class_exists(ClassUtils::class)) {
                 $className = ClassUtils::getRealClass($className);
+                Assert::classExists($className);
             }
 
             $classReflection = new ReflectionClass($className);
@@ -157,7 +159,7 @@ final class EntityHydrator implements EntityHydratorInterface
                         while (!$concreteClassReflection->hasProperty($fieldName)) {
                             $concreteClassReflection = $concreteClassReflection->getParentClass();
 
-                            Assert::notNull($concreteClassReflection, sprintf(
+                            Assert::notFalse($concreteClassReflection, sprintf(
                                 "Property '%s' does not exist on object of class '%s'!",
                                 $fieldName,
                                 $className

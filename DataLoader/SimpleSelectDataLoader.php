@@ -61,7 +61,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
      */
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array
     {
-        /** @var string $className */
+        /** @var class-string $className */
         $className = get_class($entity);
 
         /** @var string $entityObjectHash */
@@ -75,6 +75,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         do {
             if (class_exists(ClassUtils::class)) {
                 $className = ClassUtils::getRealClass($className);
+                Assert::classExists($className);
             }
 
             if (!$entityManager->getMetadataFactory()->isTransient($className)) {
@@ -164,11 +165,12 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
      */
     public function storeDBALDataForEntity($entity, EntityManagerInterface $entityManager): void
     {
-        /** @var string $className */
+        /** @var class-string $className */
         $className = get_class($entity);
 
         if (class_exists(ClassUtils::class)) {
             $className = ClassUtils::getRealClass($className);
+            Assert::classExists($className);
         }
 
         do {

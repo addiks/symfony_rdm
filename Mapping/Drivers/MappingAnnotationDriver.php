@@ -32,6 +32,7 @@ use Addiks\RDMBundle\Mapping\ArrayMapping;
 use Addiks\RDMBundle\Mapping\Annotation\RDMObject;
 use Addiks\RDMBundle\Mapping\Annotation\RDMArray;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Webmozart\Assert\Assert;
 
 final class MappingAnnotationDriver implements MappingDriverInterface
 {
@@ -132,7 +133,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
                 $column->type = 'string';
                 $column->length = 255;
                 $column->precision = 10;
-                $column->nullable = (bool)$annotation->nullable;
+                $column->nullable = $annotation->nullable;
             }
 
             $dbalColumn = new DBALColumn(
@@ -201,8 +202,13 @@ final class MappingAnnotationDriver implements MappingDriverInterface
                 );
             }
 
+            /** @var class-string|null $objectMappingClassName */
+            $objectMappingClassName = $annotation->{"class"};
+
+            Assert::classExists($objectMappingClassName);
+
             $fieldMapping = new ObjectMapping(
-                $annotation->{"class"},
+                $objectMappingClassName,
                 $subFieldMappings,
                 null, # TODO: column
                 sprintf(

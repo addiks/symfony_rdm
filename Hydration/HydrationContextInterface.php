@@ -13,6 +13,7 @@
 namespace Addiks\RDMBundle\Hydration;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Addiks\RDMBundle\Exception\InvalidMappingException;
 
 /**
  * Represents the context of one hydration-process.
