@@ -1,6 +1,6 @@
 language: php
 php:
-  - 7.1
+  - 7.4
 notifications:
   email: notifications.github@addiks.de
 install:
