@@ -188,7 +188,7 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var class-string $className */
         $className = (string)$this->readAttributeValue($objectNode, "class");
 
-        Assert::classExists($className);
+        Assert::true(class_exists($className) || interface_exists($className));
 
         /** @var CallDefinitionInterface|null $factory */
         $factory = null;

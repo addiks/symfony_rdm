@@ -28,10 +28,11 @@ use Addiks\RDMBundle\Hydration\HydrationContext;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\Common\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Common\Persistence\Mapping\AbstractClassMetadataFactory;
-use Doctrine\Common\Persistence\Mapping\ReflectionService;
 use Addiks\RDMBundle\DataLoader\BlackMagic\BlackMagicReflectionServiceDecorator;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\Persistence\Mapping\RuntimeReflectionService;
+use Doctrine\Persistence\Mapping\ReflectionService;
 
 /**
  * This data-loader works by injecting fake doctrine columns into the doctrine class-metadata instance(s), where the injected
@@ -131,12 +132,12 @@ class BlackMagicDataLoader implements DataLoaderInterface
         $metadataFactory = $entityManager->getMetadataFactory();
 
         if ($metadataFactory instanceof AbstractClassMetadataFactory) {
-            /** @var ReflectionService $reflectionService */
+            /** @var ReflectionService|null $reflectionService */
             $reflectionService = $metadataFactory->getReflectionService();
 
             if (!$reflectionService instanceof BlackMagicReflectionServiceDecorator) {
                 $reflectionService = new BlackMagicReflectionServiceDecorator(
-                    $reflectionService,
+                    $reflectionService ?? new RuntimeReflectionService(),
                     $this->mappingDriver,
                     $entityManager,
                     $this

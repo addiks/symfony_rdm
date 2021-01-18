@@ -12,7 +12,6 @@
 
 namespace Addiks\RDMBundle\DataLoader\BlackMagic;
 
-use Doctrine\Common\Persistence\Mapping\ReflectionService;
 use ReflectionProperty;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +21,7 @@ use ReflectionException;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\DataLoader\BlackMagic\BlackMagicColumnReflectionPropertyMock;
 use Webmozart\Assert\Assert;
+use Doctrine\Persistence\Mapping\ReflectionService;
 
 final class BlackMagicReflectionServiceDecorator implements ReflectionService
 {

@@ -270,8 +270,9 @@ final class IntegrationTest extends TestCase
 
     /**
      * @test
+     * @dataProvider dataProviderForCanStoreAdditionalData
      */
-    public function canStoreAdditionalData()
+    public function canStoreAdditionalData(string $stability, bool $expectsUpdate): void
     {
         $annotationMap = array(
             'id' => [
@@ -326,19 +327,30 @@ final class IntegrationTest extends TestCase
             ]
         ]);
 
+        $this->container->setParameter('addiks_rdm.data_loader.stability', $stability);
         $this->container->set('a_service', $serviceA);
         $this->container->set('b_service', $serviceB);
 
-        $connection->expects($this->once())->method("update")->with(
-            $this->equalTo("some_table"),
-            $this->equalTo([
-                'bar_column' => 'a'
-            ])
-        );
+        if ($expectsUpdate) {
+            $connection->expects($this->once())->method("update")->with(
+                $this->equalTo("some_table"),
+                $this->equalTo([
+                    'bar_column' => 'a'
+                ])
+            );
+        }
 
         $eventListener->loadClassMetadata(new LoadClassMetadataEventArgs($classMetadata, $this->entityManager));
 
         $eventListener->postFlush(new PostFlushEventArgs($this->entityManager));
+    }
+
+    public function dataProviderForCanStoreAdditionalData(): array
+    {
+        return [
+            ["slow-and-stable", true],
+            ["fast-and-unstable", false],
+        ];
     }
 
     /**
