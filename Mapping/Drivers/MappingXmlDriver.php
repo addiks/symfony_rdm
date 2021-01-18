@@ -422,7 +422,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $defaultColumnName = $choiceDefaultColumnName;
 
             } elseif ($this->hasAttributeValue($choiceNode, "field")) {
-                $fieldName = (string)$this->readAttributeValue($choiceNode, "field");
+                $defaultColumnName = (string)$this->readAttributeValue($choiceNode, "field");
             }
 
             $choiceMapping = $this->readChoice($choiceNode, $mappingFile, $defaultColumnName);

@@ -182,6 +182,7 @@ class BlackMagicDataLoader implements DataLoaderInterface
                         [
                             'columnName' => $columnName,
                             'fieldName' => $fieldName,
+                            'nullable' => !$column->getNotnull(),
                         ]
                     );
 
