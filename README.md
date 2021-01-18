@@ -7,17 +7,10 @@ Symfony-RDM – Helper for using the Rich Domain Model in Symfony
 [![Code Coverage](https://scrutinizer-ci.com/g/addiks/symfony_rdm/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/addiks/symfony_rdm/?branch=master)
 
 ## What
-
 The goal of this project is to enrich the doctrine2-ORM mapping capabilities so that entities do not have to be
 developed *for* doctrine anymore, but make it possible to map **any** object from anywhere to a database using doctrine,
 even if it was not developed for that purpose. It add's a lot of new ways on how data can be mapped from the database to
 an object (and back).
-
-If you look for a deeper meaning or purpose of this project (you don't really have to, but some people just are that
-way), i would say that this project is to enrich the doctrine2-ORM in ways that allow the doctrine-entities to fulfill
-all the roles that classical entities should fulfill in a rich/fat domain model. This is meant to allow you (the
-developer) to put much more of your business-logic into the entities which until now would have to be on other objects
-and unreachable from within an entity (or would at least need some workarounds).
 
 The currently implemented features are the following:
  - [Load (symfony-) services into entity fields.](Resources/doc/service_mapping.md)
@@ -29,25 +22,18 @@ The currently implemented features are the following:
  - [Have a mapping always map to *NULL*.](Resources/doc/null_mapping.md)
  - [Import mapping from another file.](Resources/doc/import_mapping.md)
 
-The best part is that each of these above can be combined with any other, allowing for extremely dynamic ORM mapping.
-
-This was implemented with symfony 2.8 running on PHP 7.1 in mind because that is simply my use case. But i think it
-should work in all current stable versions (at least up until symfony 3.x, probably even further), i have however not
-tested this yet. It however does need PHP 7.1. When i get around to test more versions than symfony 2.8 i will update
-this paragraph.
+Each of these can be combined with any other, allowing for extremely dynamic ORM mapping capabilities.
 
 ## How
-
 It hooks into the events of doctrine and hydrates the marked fields with the described values.
 There are multiple ways of defining which mappings should be in what fields of the services:
 Per annotations, YAML, XML, PHP or Static PHP. YAML-Mapping is not fully implemented yet and may be removed soon.
 
-I would suggest you to use the XML or YAML mapping because entities should be framework-agnostic. I personally prefer
+I would suggest you to use the XML (or YAML) mapping because entities should be framework-agnostic. I personally prefer
 XML over YAML because with XML you at least have a schemata while with yaml you often have to guess what keys are
 allowed, what all the keys mean and who actually uses them. For more detauls see the linked documentations above.
 
 ## Setup
-
 To enable this functionality first install the project via composer (symfony normally comes with composer) using the
 following command: **composer require addiks/symfony_rdm**
 
@@ -92,8 +78,42 @@ return [
 After that this bundle should work. If not create an issue here and provide as much details about the environment this
 is being used in, i may be able to help.
 
-## Service-FormType
+## Two ways of retrieving data: safe or fast
+Using this extension to extend the ORM mapping of doctrine entities can (depending on the ORM mapping configuration) introduce new database
+columns that doctrine would normally not know about. When loading or storing the data for these additional columns, there are two ways to
+interact with them:
 
+### The safe but slow method
+The safe but slow way to deal with these additional database columns is to load them one by one outside of doctrine, every time an entity
+is hydrated and store (UPDATE / INSERT) all modified entities in the database when the doctrine entity-manager is flushed.
+This is safer as the faster approach because everything happens outside of doctrine's scope and changes to doctrine or other doctrine-
+plugins cannot interfere with the functionality of the loading and storing process. At the same time this approach is slower - often even
+MUCH slower - then the faster approach because now we may need to execute one extra select statement for every hydrated entity.
+**This can have a serious performance impact!**
+Nevertheless, this is the default approach because while being slower, it is also the safer approach.
+
+### The fast but instable way
+The alternative of loading and storing all data from and to the database outside of doctrine via extra SELECT statements is to let doctrine
+load and store these data for us in doctrine's own mechanisms. This way the performance is (nearly) the same as if these columns were
+native doctrine columns, no extra SELECT, UPDATE or INSERT statements need to be executed. The problematic part of this solution is that
+for this to work, we need to make doctrine aware of all these additional database columns so that doctrine can handle them for us
+**without** having doctrine actually using these data during it's own hydration of the entities. These are database-columns but **not**
+entity fields. If doctrine would try to map these columns to the entity fields on it's own, it would fail because they have no corresponding
+entity-fields by doctrines own logic. To prevent this from happening, this approach hooks deep into doctrine's own reflection mechanisms
+and fakes these entitiy-fields for doctrine. From doctrines point of view, these fields on the entities actually exist even if they are
+fake. This construct of hooking deep within doctrine makes a lot of assumptions about the internals of doctrine.
+**If any of these assumptions fail (because either doctrine changes them in a new version or another extension changes them) then this
+extension could fail to work properly!**
+Because of this instability /  uncertainty, this method is not default but opt-in. To use this method you must define a symfony service
+parameter called `addiks_rdm.data_loader.stability` and set it to `fast-and-unstable`.
+
+`app/config/config.yml`:
+```
+parameters:
+    addiks_rdm.data_loader.stability: 'fast-and-unstable'
+```
+
+## Service-FormType
 This bundle also provides an additional new form-type called "ServiceFormType" which should prove valuable in
 conjunction with the service-hydration-abilities of this bundle. It allows to specify a list of service-id's as choices
 that can be selected between in a form and the selected being set on the entity.
@@ -134,7 +154,3 @@ This project may be extended with more features in the future, here are some ide
 [4]: https://stackoverflow.com/questions/3691943
 [5]: https://stackoverflow.com/questions/35414300
 [6]: https://stackoverflow.com/questions/26968809
-
-The (probably unachievable) vision for this project is to free entity-design from all technical limitations of the
-doctrine mapping and allow to map, persist & load all types of objects from any PHP-library out there.
-*Especially* if they were *not* designed with (doctrine-) ORM in mind. **Viva la liberté!**
