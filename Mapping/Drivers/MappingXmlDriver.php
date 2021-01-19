@@ -180,8 +180,9 @@ final class MappingXmlDriver implements MappingDriverInterface
 
         if (!$this->hasAttributeValue($objectNode, "class")) {
             throw new InvalidMappingException(sprintf(
-                "Missing 'class' attribute on 'object' mapping in %s",
-                $mappingFile
+                "Missing 'class' attribute on 'object' mapping in %s in line %d",
+                $mappingFile,
+                $objectNode->getLineNo()
             ));
         }
 
@@ -215,19 +216,23 @@ final class MappingXmlDriver implements MappingDriverInterface
                 $this->serviceContainer,
                 $routineName,
                 $objectReference,
-                $argumentMappings
+                $argumentMappings,
+                false,
+                $mappingFile . " in line " . $objectNode->getLineNo()
             );
         }
 
         if ($this->hasAttributeValue($objectNode, "factory") && is_null($factory)) {
             $factory = $this->readCallDefinition(
-                (string)$this->readAttributeValue($objectNode, "factory")
+                (string)$this->readAttributeValue($objectNode, "factory"),
+                $mappingFile . " in line " . $objectNode->getLineNo()
             );
         }
 
         if ($this->hasAttributeValue($objectNode, "serialize")) {
             $serializer = $this->readCallDefinition(
-                (string)$this->readAttributeValue($objectNode, "serialize")
+                (string)$this->readAttributeValue($objectNode, "serialize"),
+                $mappingFile . " in line " . $objectNode->getLineNo()
             );
         }
 
@@ -296,8 +301,9 @@ final class MappingXmlDriver implements MappingDriverInterface
             $fieldMappings,
             $dbalColumn,
             sprintf(
-                "in file '%s'",
-                $mappingFile
+                "in file '%s' in line %d",
+                $mappingFile,
+                $objectNode->getLineNo()
             ),
             $factory,
             $serializer,
@@ -306,8 +312,10 @@ final class MappingXmlDriver implements MappingDriverInterface
         );
     }
 
-    private function readCallDefinition(string $callDefinition): CallDefinitionInterface
-    {
+    private function readCallDefinition(
+        string $callDefinition,
+        string $origin = "unknown"
+    ): CallDefinitionInterface {
         /** @var string $routineName */
         $routineName = $callDefinition;
 
@@ -331,7 +339,8 @@ final class MappingXmlDriver implements MappingDriverInterface
             $routineName,
             $objectReference,
             [],
-            $isStaticCall
+            $isStaticCall,
+            $origin
         );
     }
 
@@ -376,8 +385,9 @@ final class MappingXmlDriver implements MappingDriverInterface
         }
 
         return new ChoiceMapping($column, $choiceMappings, sprintf(
-            "in file '%s'",
-            $mappingFile
+            "in file '%s' in line %d",
+            $mappingFile,
+            $choiceNode->getLineNo()
         ));
     }
 
@@ -466,7 +476,7 @@ final class MappingXmlDriver implements MappingDriverInterface
 
                 $fieldMappings[$fieldName] = new FieldMapping(
                     $column,
-                    sprintf("in file '%s'", $mappingFile)
+                    sprintf("in file '%s' in line %d", $mappingFile, $fieldNode->getLineNo())
                 );
             }
         }
@@ -522,10 +532,18 @@ final class MappingXmlDriver implements MappingDriverInterface
                 /** @var string $fieldName */
                 $fieldName = (string)$this->readAttributeValue($nullNode, "field");
 
-                $fieldMappings[$fieldName] = new NullMapping("in file '{$mappingFile}'");
+                $fieldMappings[$fieldName] = new NullMapping(sprintf(
+                    "in file '%s' in line %d",
+                    $mappingFile,
+                    $nullNode->getLineNo()
+                ));
 
             } else {
-                $fieldMappings[] = new NullMapping("in file '{$mappingFile}'");
+                $fieldMappings[] = new NullMapping(sprintf(
+                    "in file '%s' in line %d",
+                    $mappingFile,
+                    $nullNode->getLineNo()
+                ));
             }
         }
 
@@ -591,8 +609,9 @@ final class MappingXmlDriver implements MappingDriverInterface
             $serviceId,
             $lax,
             sprintf(
-                "in file '%s'",
-                $mappingFile
+                "in file '%s' in line %d",
+                $mappingFile,
+                $serviceNode->getLineNo()
             )
         );
     }
@@ -626,8 +645,9 @@ final class MappingXmlDriver implements MappingDriverInterface
         }
 
         return new ArrayMapping($entryMappings, sprintf(
-            "in file '%s'",
-            $mappingFile
+            "in file '%s' in line %d",
+            $mappingFile,
+            $arrayNode->getLineNo()
         ));
     }
 
@@ -657,8 +677,9 @@ final class MappingXmlDriver implements MappingDriverInterface
         );
 
         return new ListMapping($column, array_values($entryMappings)[0], sprintf(
-            "in file '%s'",
-            $mappingFile
+            "in file '%s' in line %d",
+            $mappingFile,
+            $listNode->getLineNo()
         ));
     }
 
@@ -702,8 +723,7 @@ final class MappingXmlDriver implements MappingDriverInterface
             "in file '%s' at line %d",
             $mappingFile,
             $nullableNode->getLineNo()
-        ),
-            $strict);
+        ), $strict);
     }
 
     private function readDoctrineField(DOMNode $fieldNode): Column

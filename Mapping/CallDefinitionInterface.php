@@ -19,7 +19,7 @@ interface CallDefinitionInterface
 {
 
     /**
-     * @param array<scalar> $dataFromAdditionalColumns
+     * @param array<array-key, mixed> $dataFromAdditionalColumns
      *
      * @return mixed
      */

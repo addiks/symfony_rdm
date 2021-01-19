@@ -18,6 +18,7 @@ use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Exception;
 use Webmozart\Assert\Assert;
+use Doctrine\ORM\ORMException;
 
 final class ChoiceMapping implements MappingInterface
 {
@@ -163,6 +164,8 @@ final class ChoiceMapping implements MappingInterface
         foreach ($this->choiceMappings as $choiceDeterminatorValue => $choiceMapping) {
             /** @var MappingInterface $choiceMapping */
 
+            $choiceValue = null;
+
             try {
                 /** @var array<scalar> $choiceData */
                 $choiceData = $choiceMapping->revertValue($context, $valueFromEntityField);
@@ -177,6 +180,14 @@ final class ChoiceMapping implements MappingInterface
                     $data = $choiceData;
                     break;
                 }
+
+            } catch (ORMException $exception) {
+                throw new ORMException(sprintf(
+                    "For ORM-choice defined %s (option '%s'): %s",
+                    $this->originDescription,
+                    $choiceDeterminatorValue,
+                    $exception->getMessage()
+                ), 0, $exception);
 
             } catch (Exception $exception) {
                 # This mapping did not match, continue with the next

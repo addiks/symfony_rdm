@@ -182,14 +182,16 @@ final class ObjectMapping implements MappingInterface
                 /** @var string $columnName */
                 $columnName = $this->column->getName();
 
-                if (isset($dataFromAdditionalColumns[$columnName])) {
+                if (array_key_exists($columnName, $dataFromAdditionalColumns)) {
                     /** @var Connection $connection */
                     $connection = $context->getEntityManager()->getConnection();
 
-                    $dataFromAdditionalColumns[$columnName] = $type->convertToPHPValue(
-                        $dataFromAdditionalColumns[$columnName],
-                        $connection->getDatabasePlatform()
-                    );
+                    if (!is_null($dataFromAdditionalColumns[$columnName])) {
+                        $dataFromAdditionalColumns[$columnName] = $type->convertToPHPValue(
+                            $dataFromAdditionalColumns[$columnName],
+                            $connection->getDatabasePlatform()
+                        );
+                    }
 
                     $factoryData[""] = $dataFromAdditionalColumns[$columnName];
                 }

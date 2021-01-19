@@ -82,102 +82,102 @@ final class MappingXmlDriverTest extends TestCase
         $mappingImportFilePath = __DIR__ . "/EntityExampleImport.orm.xml";
 
         $expectedMapping = new EntityMapping(EntityExample::class, [
-            'foo' => new ServiceMapping($this->container, 'some_service', false, "in file '{$mappingFilePath}'"),
-            'bar' => new ServiceMapping($this->container, 'other_service', false, "in file '{$mappingFilePath}'"),
+            'foo' => new ServiceMapping($this->container, 'some_service', false, "in file '{$mappingFilePath}' in line 14"),
+            'bar' => new ServiceMapping($this->container, 'other_service', false, "in file '{$mappingFilePath}' in line 15"),
             'baz' => new ChoiceMapping('baz_column', [
-                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping($this->container, "ipsum_service", true, "in file '{$mappingFilePath}'"),
-            ], "in file '{$mappingFilePath}'"),
+                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}' in line 19"),
+                'ipsum' => new ServiceMapping($this->container, "ipsum_service", true, "in file '{$mappingFilePath}' in line 22"),
+            ], "in file '{$mappingFilePath}' in line 17"),
             'faz' => new ChoiceMapping(new Column("faz_column", Type::getType('string'), ['notnull' => true]), [
-                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping($this->container, "ipsum_service", false, "in file '{$mappingFilePath}'"),
-            ], "in file '{$mappingFilePath}'"),
+                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}' in line 29"),
+                'ipsum' => new ServiceMapping($this->container, "ipsum_service", false, "in file '{$mappingFilePath}' in line 32"),
+            ], "in file '{$mappingFilePath}' in line 26"),
             'far' => new ChoiceMapping(new Column("far_column", Type::getType('string'), ['notnull' => false]), [
-                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}'"),
-                'ipsum' => new ServiceMapping($this->container, "ipsum_service", false, "in file '{$mappingFilePath}'"),
+                'lorem' => new ServiceMapping($this->container, "lorem_service", false, "in file '{$mappingFilePath}' in line 42"),
+                'ipsum' => new ServiceMapping($this->container, "ipsum_service", false, "in file '{$mappingFilePath}' in line 45"),
                 'dolor' => new ObjectMapping(
                     ValueObjectExample::class,
                     [],
                     null,
-                    "in file '{$mappingFilePath}'",
-                    new CallDefinition($this->container, "createFromJson", "self", [], true),
-                    new CallDefinition($this->container, "serializeJson")
+                    "in file '{$mappingFilePath}' in line 52",
+                    new CallDefinition($this->container, "createFromJson", "self", [], true, "{$mappingFilePath} in line 52"),
+                    new CallDefinition($this->container, "serializeJson", null, [], false, "{$mappingFilePath} in line 52")
                 ),
-            ], "in file '{$mappingFilePath}'"),
+            ], "in file '{$mappingFilePath}' in line 39"),
             'boo' => new ObjectMapping(ValueObjectExample::class, [
                 'scalarValue' => new FieldMapping(
                     new Column("scalarValue", Type::getType('string'), ['notnull' => false]),
-                    "in file '{$mappingFilePath}'"
+                    "in file '{$mappingFilePath}' in line 57"
                 ),
                 'lorem' => new FieldMapping(
                     new Column("lorem", Type::getType('string'), ['notnull' => false]),
-                    "in file '{$mappingFilePath}'"
+                    "in file '{$mappingFilePath}' in line 58"
                 ),
                 'dolor' => new FieldMapping(
                     new Column("dolor", Type::getType('integer'), ['notnull' => false]),
-                    "in file '{$mappingFilePath}'"
+                    "in file '{$mappingFilePath}' in line 59"
                 ),
-            ], null, "in file '{$mappingFilePath}'"),
+            ], null, "in file '{$mappingFilePath}' in line 56"),
             'abc' => new ObjectMapping(
                 ValueObjectExample::class,
                 [],
                 null,
-                "in file '{$mappingFilePath}'",
-                new CallDefinition($this->container, "createFromJson", "self", [], true),
-                new CallDefinition($this->container, "serializeJson")
+                "in file '{$mappingFilePath}' in line 67",
+                new CallDefinition($this->container, "createFromJson", "self", [], true, "{$mappingFilePath} in line 67"),
+                new CallDefinition($this->container, "serializeJson", null, [], false, "{$mappingFilePath} in line 67")
             ),
             'def' => new ObjectMapping(
                 ValueObjectExample::class,
                 [
                     'lorem' => new FieldMapping(
                         new Column("lorem", Type::getType('string'), ['notnull' => false]),
-                        "in file '{$mappingFilePath}'"
+                        "in file '{$mappingFilePath}' in line 76"
                     ),
                     'dolor' => new FieldMapping(
                         new Column("dolor", Type::getType('integer'), ['notnull' => false]),
-                        "in file '{$mappingFilePath}'"
+                        "in file '{$mappingFilePath}' in line 77"
                     ),
                 ],
                 null,
-                "in file '{$mappingFilePath}'",
+                "in file '{$mappingFilePath}' in line 72",
                 new CallDefinition($this->container, "createValueObject", "@value_object.factory", [
                     new FieldMapping(
                         new Column("def", Type::getType('integer'), ['notnull' => false]),
-                        "in file '{$mappingFilePath}'"
+                        "in file '{$mappingFilePath}' in line 74"
                     )
-                ])
+                ], false, "{$mappingFilePath} in line 72")
             ),
             'ghi' => new ObjectMapping(
                 ValueObjectExample::class,
                 [],
                 null,
-                "in file '{$mappingFilePath}'",
+                "in file '{$mappingFilePath}' in line 83",
                 new CallDefinition($this->container, "createValueObject", "@value_object.factory", [
                     new ChoiceMapping('baz_column', [
                         'lorem' => new ServiceMapping(
                             $this->container,
                             "lorem_service",
                             false,
-                            "in file '{$mappingFilePath}'"
+                            "in file '{$mappingFilePath}' in line 87"
                         ),
                         'ipsum' => new ServiceMapping(
                             $this->container,
                             "ipsum_service",
                             true,
-                            "in file '{$mappingFilePath}'"
+                            "in file '{$mappingFilePath}' in line 90"
                         ),
-                    ], "in file '{$mappingFilePath}'")
-                ])
+                    ], "in file '{$mappingFilePath}' in line 85")
+                ], false, "{$mappingFilePath} in line 83")
             ),
             'jkl' => new ArrayMapping(
                 [
-                    new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}'"),
+                    new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}' in line 97"),
                     new ObjectMapping(ValueObjectExample::class, [
-                        'qwe' => new ArrayMapping([], "in file '{$mappingFilePath}'")
-                    ], null, "in file '{$mappingFilePath}'"),
-                    new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}'"),
+                        'qwe' => new ArrayMapping([], "in file '{$mappingFilePath}' in line 99")
+                    ], null, "in file '{$mappingFilePath}' in line 98"),
+                    new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}' in line 101"),
                 ],
-                "in file '{$mappingFilePath}'"
+                "in file '{$mappingFilePath}' in line 96"
             ),
             'mno' => new ArrayMapping(
                 [
@@ -185,15 +185,15 @@ final class MappingXmlDriverTest extends TestCase
                         $this->container,
                         'some_service',
                         false,
-                        "in file '{$mappingFilePath}'"
+                        "in file '{$mappingFilePath}' in line 106"
                     ),
                     'bar' => new ServiceMapping(
                         $this->container,
                         'other_service',
                         false,
-                        "in file '{$mappingFilePath}'"
+                        "in file '{$mappingFilePath}' in line 109"
                     ),
-                    'baz' => new NullMapping("in file '{$mappingFilePath}'"),
+                    'baz' => new NullMapping("in file '{$mappingFilePath}' in line 113"),
                     'maz' => new ListMapping(
                         new Column("maz_column", Type::getType('string'), ['notnull' => true]),
                         new ObjectMapping(
@@ -203,41 +203,41 @@ final class MappingXmlDriverTest extends TestCase
                                 'length' => 255,
                                 'default' => '#DEFAULT#'
                             ]),
-                            "in file '{$mappingFilePath}'"
+                            "in file '{$mappingFilePath}' in line 121"
                         ),
-                        "in file '{$mappingFilePath}'"
+                        "in file '{$mappingFilePath}' in line 116"
                     ),
                 ],
-                "in file '{$mappingFilePath}'"
+                "in file '{$mappingFilePath}' in line 104"
             ),
             'pqr' => new NullableMapping(
-                new ServiceMapping($this->container, 'some_service', false, "in file '{$mappingFilePath}'"),
+                new ServiceMapping($this->container, 'some_service', false, "in file '{$mappingFilePath}' in line 127"),
                 new Column("pqr_column", Type::getType('boolean'), ['notnull' => false]),
                 "in file '{$mappingFilePath}' at line 126"
             ),
             'stu' => new ListMapping(
                 new Column("stu_column", Type::getType('string'), ['notnull' => true]),
-                new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}'"),
-                "in file '{$mappingFilePath}'"
+                new ObjectMapping(ValueObjectExample::class, [], null, "in file '{$mappingFilePath}' in line 131"),
+                "in file '{$mappingFilePath}' in line 130"
             ),
             'vwx' => new ObjectMapping(ValueObjectExample::class, [
                 'foo' => new ServiceMapping(
                     $this->container,
                     'some_service',
                     false,
-                    "in file '{$mappingImportFilePath}'"
+                    "in file '{$mappingImportFilePath}' in line 9"
                 ),
                 'bar' => new ServiceMapping(
                     $this->container,
                     'other_service',
                     false,
-                    "in file '{$mappingImportFilePath}'"
+                    "in file '{$mappingImportFilePath}' in line 10"
                 ),
             ], new Column(
                 "vwx_column",
                 Type::getType('integer'),
                 ['notnull' => true, 'length' => 255]
-            ), "in file '{$mappingImportFilePath}'")
+            ), "in file '{$mappingImportFilePath}' in line 8")
         ]);
 
         $this->fileLocator->method('fileExists')->willReturn(true);

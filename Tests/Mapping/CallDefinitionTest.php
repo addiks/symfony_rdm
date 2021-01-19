@@ -328,6 +328,7 @@ final class CallDefinitionTest extends TestCase
             'routineName',
             'argumentMappings',
             'isStaticCall',
+            'origin',
         ], $this->callDefinition->__sleep());
     }
 

@@ -17,6 +17,9 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\ORM\ORMException;
+use Doctrine\Common\Util\ClassUtils;
+use ArgumentCountError;
 
 final class CallDefinition implements CallDefinitionInterface
 {
@@ -46,17 +49,24 @@ final class CallDefinition implements CallDefinitionInterface
      */
     private $isStaticCall;
 
+    /**
+     * @var string
+     */
+    private $origin;
+
     public function __construct(
         ContainerInterface $container,
         string $routineName,
         string $objectReference = null,
         array $argumentMappings = array(),
-        bool $isStaticCall = false
+        bool $isStaticCall = false,
+        string $origin = "unknown"
     ) {
         $this->routineName = $routineName;
         $this->objectReference = $objectReference;
         $this->isStaticCall = $isStaticCall;
         $this->container = $container;
+        $this->origin = $origin;
 
         foreach ($argumentMappings as $argumentMapping) {
             /** @var MappingInterface $argumentMapping */
@@ -74,6 +84,7 @@ final class CallDefinition implements CallDefinitionInterface
             'routineName',
             'argumentMappings',
             'isStaticCall',
+            'origin',
         ];
     }
 
@@ -97,17 +108,46 @@ final class CallDefinition implements CallDefinitionInterface
             $dataFromAdditionalColumns
         );
 
-        if (is_null($callee) && !empty($this->objectReference)) {
-            $result = null;
+        try {
+            if (is_null($callee) && !empty($this->objectReference)) {
+                $result = null;
 
-        } elseif (is_null($callee)) {
-            $result = call_user_func_array($this->routineName, $arguments);
+            } elseif (is_null($callee)) {
+                $result = call_user_func_array($this->routineName, $arguments);
 
-        } elseif (is_string($callee)) {
-            $result = call_user_func_array("{$callee}::{$this->routineName}", $arguments);
+            } elseif (is_string($callee)) {
+                $result = call_user_func_array("{$callee}::{$this->routineName}", $arguments);
 
-        } else {
-            $result = call_user_func_array([$callee, $this->routineName], $arguments);
+            } else {
+                $result = call_user_func_array([$callee, $this->routineName], $arguments);
+            }
+
+        } catch (ArgumentCountError $exception) {
+            /** @var string $calleeDescription */
+            $calleeDescription = "";
+
+            if (is_object($callee)) {
+                $calleeDescription = get_class($callee);
+
+                if (class_exists(ClassUtils::class)) {
+                    $calleeDescription = ClassUtils::getRealClass($calleeDescription);
+                }
+
+            } elseif (is_string($callee)) {
+                $calleeDescription = $callee;
+            }
+
+            if (!empty($calleeDescription)) {
+                $calleeDescription .= $this->isStaticCall ?'::' :'->';
+            }
+
+            throw new ORMException(sprintf(
+                "Wrong number of arguments passed to routine '%s%s' in %s: %s",
+                $calleeDescription,
+                $this->routineName,
+                $this->origin,
+                $exception->getMessage()
+            ), 0, $exception);
         }
 
         return $result;
@@ -191,7 +231,7 @@ final class CallDefinition implements CallDefinitionInterface
         /** @var array<mixed> $arguments */
         $arguments = array();
 
-        if (isset($dataFromAdditionalColumns[''])) {
+        if (array_key_exists('', $dataFromAdditionalColumns)) {
             $arguments[] = $dataFromAdditionalColumns[''];
             unset($dataFromAdditionalColumns['']);
         }
