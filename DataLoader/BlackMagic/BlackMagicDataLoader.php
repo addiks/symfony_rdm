@@ -228,11 +228,16 @@ class BlackMagicDataLoader implements DataLoaderInterface
         $dbalColumns = array();
 
         if (is_object($entity)) {
-            if ($entity === $this->entityDataCacheSource) {
+            if ($entity === $this->entityDataCacheSource
+            && is_array($this->entityDataCached)
+            && array_key_exists($columnName, $this->entityDataCached)) {
                 # This caching mechanism stores only the data of the current entity
                 # and relies on doctrine only reading one entity at a time.
+
                 $entityData = $this->entityDataCached;
                 $dbalColumns = $this->dbalColumnsCached;
+
+                unset($this->entityDataCached[$columnName]);
 
             } else {
                 /** @var class-string $className */
