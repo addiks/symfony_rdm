@@ -106,8 +106,11 @@ class BlackMagicDataLoader implements DataLoaderInterface
                     /** @var string $fieldName */
                     $fieldName = $this->columnToFieldName($column);
 
-                    if (isset($originalEntityData[$fieldName])) {
+                    if (array_key_exists($fieldName, $originalEntityData)) {
                         $dbalData[$columnName] = $originalEntityData[$fieldName];
+
+                    } elseif (array_key_exists($columnName, $originalEntityData)) {
+                        $dbalData[$columnName] = $originalEntityData[$columnName];
                     }
                 }
             }

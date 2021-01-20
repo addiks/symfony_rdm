@@ -208,46 +208,46 @@ final class ObjectMapping implements MappingInterface
             }
         }
 
-        Assert::object($object);
+        if (is_object($object)) {
+            // Replace the class-name with the created object on top of the hydration stack
+            $context->popFromObjectHydrationStack();
+            $context->pushOnObjectHydrationStack($object);
 
-        // Replace the class-name with the created object on top of the hydration stack
-        $context->popFromObjectHydrationStack();
-        $context->pushOnObjectHydrationStack($object);
-
-        if (!empty($this->id) && !$context->hasRegisteredValue($this->id)) {
-            $context->registerValue($this->id, $object);
-        }
-
-        foreach ($this->fieldMappings as $fieldName => $fieldMapping) {
-            /** @var MappingInterface $fieldMapping */
-
-            /** @var mixed $fieldValue */
-            $fieldValue = $fieldMapping->resolveValue(
-                $context,
-                $dataFromAdditionalColumns
-            );
-
-            /** @var ReflectionClass $propertyReflectionClass */
-            $propertyReflectionClass = $reflectionClass;
-
-            while (is_object($propertyReflectionClass) && !$propertyReflectionClass->hasProperty($fieldName)) {
-                $propertyReflectionClass = $propertyReflectionClass->getParentClass();
+            if (!empty($this->id) && !$context->hasRegisteredValue($this->id)) {
+                $context->registerValue($this->id, $object);
             }
 
-            if (!is_object($propertyReflectionClass)) {
-                throw new ReflectionException(sprintf(
-                    "Property '%s' does not exist on class '%s' as defined at '%s'",
-                    $fieldName,
-                    $reflectionClass->getName(),
-                    $reflectionClass->getFileName()
-                ));
+            foreach ($this->fieldMappings as $fieldName => $fieldMapping) {
+                /** @var MappingInterface $fieldMapping */
+
+                /** @var mixed $fieldValue */
+                $fieldValue = $fieldMapping->resolveValue(
+                    $context,
+                    $dataFromAdditionalColumns
+                );
+
+                /** @var ReflectionClass $propertyReflectionClass */
+                $propertyReflectionClass = $reflectionClass;
+
+                while (is_object($propertyReflectionClass) && !$propertyReflectionClass->hasProperty($fieldName)) {
+                    $propertyReflectionClass = $propertyReflectionClass->getParentClass();
+                }
+
+                if (!is_object($propertyReflectionClass)) {
+                    throw new ReflectionException(sprintf(
+                        "Property '%s' does not exist on class '%s' as defined at '%s'",
+                        $fieldName,
+                        $reflectionClass->getName(),
+                        $reflectionClass->getFileName()
+                    ));
+                }
+
+                /** @var ReflectionProperty $reflectionProperty */
+                $reflectionProperty = $propertyReflectionClass->getProperty($fieldName);
+
+                $reflectionProperty->setAccessible(true);
+                $reflectionProperty->setValue($object, $fieldValue);
             }
-
-            /** @var ReflectionProperty $reflectionProperty */
-            $reflectionProperty = $propertyReflectionClass->getProperty($fieldName);
-
-            $reflectionProperty->setAccessible(true);
-            $reflectionProperty->setValue($object, $fieldValue);
         }
 
         $context->popFromObjectHydrationStack();
