@@ -33,6 +33,7 @@ use Doctrine\Common\Util\ClassUtils;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\Persistence\Mapping\RuntimeReflectionService;
 use Doctrine\Persistence\Mapping\ReflectionService;
+use DateTime;
 
 /**
  * This data-loader works by injecting fake doctrine columns into the doctrine class-metadata instance(s), where the injected
@@ -280,7 +281,27 @@ class BlackMagicDataLoader implements DataLoaderInterface
             /** @var Column $column */
             $column = $dbalColumns[$columnName];
 
-            $value = $column->getType()->convertToPHPValue($value, $platform);
+            /** @var Type $type */
+            $type = $column->getType();
+
+            $value = $type->convertToPHPValue($value, $platform);
+
+            if (is_int($value) && $type->getName() === 'string') {
+                $value = (string)$value;
+
+            } elseif ($value instanceof DateTime) {
+                /** @var UnitOfWork $unitOfWork */
+                $unitOfWork = $entityManager->getUnitOfWork();
+
+                /** @var mixed $originalValue */
+                $originalValue = null;
+
+                if ($this->isDateTimeEqualToValueFromUnitOfWorkButNotSame($value, $unitOfWork, $column, $entity, $originalValue)) {
+                    # Because doctrine uses '===' to compute changesets when compaing original with actual,
+                    # we need to keep the identity of DateTime objects if they are actually the "same".
+                    $value = $originalValue;
+                }
+            }
         }
 
         return $value;
@@ -295,6 +316,44 @@ class BlackMagicDataLoader implements DataLoaderInterface
         $fieldName = '__COLUMN__' . $columnName;
 
         return $fieldName;
+    }
+
+    private function isDateTimeEqualToValueFromUnitOfWorkButNotSame(
+        DateTime $value,
+        UnitOfWork $unitOfWork,
+        Column $column,
+        object $entity,
+        &$originalValue
+    ) {
+        /** @var bool $isDateTimeEqualToValueFromUnitOfWorkButNotSame */
+        $isDateTimeEqualToValueFromUnitOfWorkButNotSame = false;
+
+        /** @var string $fieldName */
+        $fieldName = $this->columnToFieldName($column);
+
+        /** @var array<string, mixed> $originalEntityData */
+        $originalEntityData = $unitOfWork->getOriginalEntityData($entity);
+
+        if (isset($originalEntityData[$fieldName])) {
+            /** @var mixed $originalValue */
+            $originalValue = $originalEntityData[$fieldName];
+
+            if (is_object($originalValue) && get_class($originalValue) === get_class($value)) {
+                /** @var DateTime $originalDateTime */
+                $originalDateTime = $originalValue;
+
+                if ($originalDateTime !== $value) {
+                    /** @var array<string, int|float> $diff */
+                    $diff = (array)$value->diff($originalDateTime);
+
+                    if (!empty($diff) && 0 === (int)array_sum($diff) && 0 === (int)max($diff)) {
+                        $isDateTimeEqualToValueFromUnitOfWorkButNotSame = true;
+                    }
+                }
+            }
+        }
+
+        return $isDateTimeEqualToValueFromUnitOfWorkButNotSame;
     }
 
 }
