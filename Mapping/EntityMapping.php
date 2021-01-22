@@ -37,6 +37,9 @@ final class EntityMapping implements EntityMappingInterface
      */
     private $fieldMappings = array();
 
+    /** @var array<Column>|null */
+    private $dbalColumnsCache;
+
     /** @param class-string $className */
     public function __construct(string $className, array $fieldMappings)
     {
@@ -78,19 +81,23 @@ final class EntityMapping implements EntityMappingInterface
 
     public function collectDBALColumns(): array
     {
-        /** @var array<Column> $additionalColumns */
-        $additionalColumns = array();
+        if (is_null($this->dbalColumnsCache)) {
+            /** @var array<Column> $additionalColumns */
+            $additionalColumns = array();
 
-        foreach ($this->fieldMappings as $fieldMapping) {
-            /** @var MappingInterface $fieldMapping */
+            foreach ($this->fieldMappings as $fieldMapping) {
+                /** @var MappingInterface $fieldMapping */
 
-            $additionalColumns = array_merge(
-                $additionalColumns,
-                $fieldMapping->collectDBALColumns()
-            );
+                $additionalColumns = array_merge(
+                    $additionalColumns,
+                    $fieldMapping->collectDBALColumns()
+                );
+            }
+
+            $this->dbalColumnsCache = $additionalColumns;
         }
 
-        return $additionalColumns;
+        return $this->dbalColumnsCache;
     }
 
     public function getFactory(): ?CallDefinitionInterface
