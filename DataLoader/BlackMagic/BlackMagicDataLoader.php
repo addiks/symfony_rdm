@@ -169,6 +169,20 @@ class BlackMagicDataLoader implements DataLoaderInterface
                 /** @var string $fieldName */
                 $fieldName = $this->columnToFieldName($column);
 
+                /** @psalm-suppress DeprecatedProperty */
+                if (isset ($classMetadata->fieldNames) && isset($classMetadata->fieldNames[$columnName])) {
+                    # This is a native doctrine column, do not touch! Otherwise the column might get unwanted UPDATE's.
+                    continue;
+                }
+
+                /** @psalm-suppress DeprecatedProperty */
+                $classMetadata->fieldNames[$columnName] = $fieldName;
+
+                /** @psalm-suppress DeprecatedProperty */
+                if (isset ($classMetadata->columnNames) && !isset($classMetadata->columnNames[$fieldName])) {
+                    $classMetadata->columnNames[$fieldName] = $columnName;
+                }
+
                 if (!isset($classMetadata->reflFields[$fieldName])) {
                     $classMetadata->reflFields[$fieldName] = new BlackMagicColumnReflectionPropertyMock(
                         $entityManager,
@@ -196,16 +210,6 @@ class BlackMagicDataLoader implements DataLoaderInterface
 
                     #$classMetadata->mapField($mapping);
                     $classMetadata->fieldMappings[$fieldName] = $mapping;
-                }
-
-                /** @psalm-suppress DeprecatedProperty */
-                if (isset ($classMetadata->fieldNames) && !isset($classMetadata->fieldNames[$columnName])) {
-                    $classMetadata->fieldNames[$columnName] = $fieldName;
-                }
-
-                /** @psalm-suppress DeprecatedProperty */
-                if (isset ($classMetadata->columnNames) && !isset($classMetadata->columnNames[$fieldName])) {
-                    $classMetadata->columnNames[$fieldName] = $columnName;
                 }
             }
         }
