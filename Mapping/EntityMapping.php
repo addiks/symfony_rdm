@@ -173,7 +173,11 @@ final class EntityMapping implements EntityMappingInterface
                 $reflectionProperty->setAccessible(true);
 
                 /** @var mixed $valueFromEntityField */
-                $valueFromEntityField = $reflectionProperty->getValue($entity);
+                $valueFromEntityField = null;
+
+                if ($reflectionProperty->isInitialized($entity)) {
+                    $valueFromEntityField = $reflectionProperty->getValue($entity);
+                }
 
                 $additionalData = array_merge(
                     $additionalData,

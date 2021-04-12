@@ -289,11 +289,12 @@ final class ObjectMapping implements MappingInterface
 
             /** @var ReflectionProperty $reflectionProperty */
             $reflectionProperty = $propertyReflectionClass->getProperty($fieldName);
-
             $reflectionProperty->setAccessible(true);
+
+            /** @var mixed $valueFromField */
             $valueFromField = null;
 
-            if (is_object($valueFromEntityField)) {
+            if (is_object($valueFromEntityField) && $reflectionProperty->isInitialized($valueFromEntityField)) {
                 $valueFromField = $reflectionProperty->getValue($valueFromEntityField);
             }
 
