@@ -114,8 +114,9 @@ final class EntityHydrator implements EntityHydratorInterface
 
                 } catch (Throwable $exception) {
                     throw new MappingException(sprintf(
-                        "Exception during hydration %s!",
-                        $processDescription
+                        "Exception during hydration %s: '%s'!",
+                        $processDescription,
+                        $exception->getMessage()
                     ), 0, $exception);
                 }
             }
