@@ -246,11 +246,11 @@ final class MappingAnnotationDriver implements MappingDriverInterface
             /** @var DBALColumn $dbalColumn */
             $dbalColumn = new DBALColumn(
                 $annotation->name,
-                Type::getType($annotation->type),
+                Type::getType($annotation->type ?? 'string'),
                 [
                     'notnull'   => !$annotation->nullable,
                     'length'    => $annotation->length,
-                    'precision' => $annotation->precision,
+                    'precision' => $annotation->precision ?? 0,
                     'scale'     => $annotation->scale,
                 ]
             );

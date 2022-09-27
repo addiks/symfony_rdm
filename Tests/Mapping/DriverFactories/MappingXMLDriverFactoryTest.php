@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingXMLDriverFactory;
 use Addiks\RDMBundle\Mapping\Drivers\MappingXmlDriver;
 use Doctrine\ORM\Mapping\Driver\XmlDriver;
-use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
+use Doctrine\Persistence\Mapping\Driver\FileLocator;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

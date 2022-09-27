@@ -11,7 +11,7 @@
 namespace Addiks\RDMBundle\Mapping\Drivers;
 
 use ErrorException;
-use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
+use Doctrine\Persistence\Mapping\Driver\FileLocator;
 use Symfony\Component\Yaml\Yaml;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;

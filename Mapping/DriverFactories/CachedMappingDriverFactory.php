@@ -11,7 +11,7 @@
 namespace Addiks\RDMBundle\Mapping\DriverFactories;
 
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
+use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Psr\Cache\CacheItemPoolInterface;
 use Addiks\RDMBundle\Mapping\Drivers\CachedMappingDriver;

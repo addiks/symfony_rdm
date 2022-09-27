@@ -10,8 +10,8 @@
 
 namespace Addiks\RDMBundle\Mapping\DriverFactories;
 
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
-use Doctrine\Common\Persistence\Mapping\Driver\AnnotationDriver;
+use Doctrine\Persistence\Mapping\Driver\MappingDriver;
+use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingAnnotationDriver;

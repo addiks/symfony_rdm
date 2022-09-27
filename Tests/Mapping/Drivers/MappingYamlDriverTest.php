@@ -13,12 +13,12 @@ namespace Addiks\RDMBundle\Tests\Mapping\Drivers;
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
-use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
 use Addiks\RDMBundle\Mapping\Drivers\MappingYamlDriver;
 use Addiks\RDMBundle\Mapping\EntityMapping;
 use Addiks\RDMBundle\Mapping\ServiceMapping;
 use Addiks\RDMBundle\Mapping\ChoiceMapping;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Doctrine\Persistence\Mapping\Driver\FileLocator;
 
 final class MappingYamlDriverTest extends TestCase
 {

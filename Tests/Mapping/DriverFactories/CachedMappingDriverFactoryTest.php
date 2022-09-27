@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\DriverFactories\CachedMappingDriverFactory;
 use Psr\Cache\CacheItemPoolInterface;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
+use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\Drivers\CachedMappingDriver;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;

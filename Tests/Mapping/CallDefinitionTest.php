@@ -309,6 +309,8 @@ final class CallDefinitionTest extends TestCase
         $context = $this->createMock(HydrationContextInterface::class);
 
         $this->setUp("get", "@some_service", false, false);
+        
+        $this->argumentMappingA->method('resolveValue')->willReturn('some_service');
 
         $container->method("has")->willReturn(true);
         $container->method("get")->willReturn($container);

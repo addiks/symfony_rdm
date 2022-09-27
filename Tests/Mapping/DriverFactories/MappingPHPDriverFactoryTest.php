@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingPHPDriverFactory;
 use Doctrine\ORM\Mapping\Driver\PHPDriver;
 use Addiks\RDMBundle\Mapping\Drivers\MappingPHPDriver;
-use Doctrine\Common\Persistence\Mapping\Driver\FileLocator;
+use Doctrine\Persistence\Mapping\Driver\FileLocator;
 
 final class MappingPHPDriverFactoryTest extends TestCase
 {

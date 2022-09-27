@@ -11,12 +11,12 @@
 namespace Addiks\RDMBundle\Tests\Mapping\DriverFactories;
 
 use PHPUnit\Framework\TestCase;
+use Doctrine\Persistence\Mapping\Driver\MappingDriver;
+use Doctrine\Persistence\Mapping\Driver\MappingDriverChain as DoctrineMappingDriverChain;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
-use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverChainFactory;
+use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverChain as RdmMappingDriverChain;
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain as DoctrineMappingDriverChain;
 use Addiks\RDMBundle\Tests\Hydration\EntityExample;
 
 final class MappingDriverChainFactoryTest extends TestCase

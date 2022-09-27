@@ -12,7 +12,7 @@ namespace Addiks\RDMBundle\Tests\Mapping\DriverFactories;
 
 use PHPUnit\Framework\TestCase;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
+use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryLazyLoadProxy;
 use Symfony\Component\DependencyInjection\ContainerInterface;

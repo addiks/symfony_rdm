@@ -11,7 +11,7 @@
 namespace Addiks\RDMBundle\Mapping\DriverFactories;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Doctrine\Common\Persistence\Mapping\Driver\MappingDriver;
+use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use ErrorException;
