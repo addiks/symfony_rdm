@@ -151,6 +151,11 @@ final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
         return false;
     }
 
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
     public function isStatic(): bool
     {
         return false;

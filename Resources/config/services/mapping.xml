@@ -17,7 +17,7 @@
         >
             <factory service="addiks_rdm.mapping.driver_factory" method="createRDMMappingDriver" />
             <argument type="service">
-                <service class="Doctrine\Common\Persistence\Mapping\Driver\MappingDriver">
+                <service class="Doctrine\Persistence\Mapping\Driver\MappingDriver">
                     <factory service="addiks_rdm.doctrine.orm.configuration" method="getMetadataDriverImpl" />
                 </service>
             </argument>
