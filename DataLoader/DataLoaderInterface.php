@@ -15,6 +15,8 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 
 interface DataLoaderInterface
 {
+    /** To be called at the start of the process */
+    public function boot(EntityManagerInterface $entityManager): void;
 
     /**
      * @var array<string>

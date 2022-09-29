@@ -40,6 +40,11 @@ final class DataLoaderLazyLoadProxy implements DataLoaderInterface
         $this->serviceId = $serviceId;
     }
 
+    public function boot(EntityManagerInterface $entityManager): void
+    {
+        return $this->loadDataLoader()->boot($entityManager);
+    }
+
     /**
      * @param object $entity
      */

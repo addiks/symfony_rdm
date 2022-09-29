@@ -56,6 +56,10 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         $this->mappingDriver = $mappingDriver;
     }
 
+    public function boot(EntityManagerInterface $entityManager): void
+    {
+    }
+
     /**
      * @param object $entity
      */
