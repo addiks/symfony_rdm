@@ -67,7 +67,7 @@ final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
         return $this->fieldName;
     }
 
-    public function getValue($object = null)
+    public function getValue(?object $object = null): mixed
     {
         return $this->dataLoader->onColumnValueRequestedFromEntity(
             $this->entityManager,
@@ -96,12 +96,12 @@ final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
         }
     }
 
-    public function getDefaultValue()
+    public function getDefaultValue(): mixed
     {
         return null;
     }
 
-    public function getDocComment()
+    public function getDocComment(): string|false
     {
         return false;
     }
