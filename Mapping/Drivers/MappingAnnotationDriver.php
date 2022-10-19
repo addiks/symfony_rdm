@@ -137,7 +137,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
             }
 
             $dbalColumn = new DBALColumn(
-                $column->name,
+                (string) $column->name,
                 Type::getType($column->type),
                 [
                     'notnull'   => !$column->nullable,
@@ -245,7 +245,7 @@ final class MappingAnnotationDriver implements MappingDriverInterface
         } elseif ($annotation instanceof ColumnAnnotation && $convertFieldsOnRootLevel) {
             /** @var DBALColumn $dbalColumn */
             $dbalColumn = new DBALColumn(
-                $annotation->name,
+                (string) $annotation->name,
                 Type::getType($annotation->type ?? 'string'),
                 [
                     'notnull'   => !$annotation->nullable,

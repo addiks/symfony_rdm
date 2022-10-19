@@ -14,9 +14,9 @@
     ],
 
     "require": {
-        "php": ">=7.4.0",
-        "doctrine/orm": "2.5.* || 2.6.* || 2.13.*",
-        "doctrine/dbal": "2.5.* || 2.6.* || 2.13.*",
+        "php": "^8.0.0 || ^8.1.0",
+        "doctrine/orm": "2.13.*",
+        "doctrine/dbal": "2.13.*",
         "symfony/yaml": "^4.2",
         "psr/cache": "1.0.*",
         "symfony/framework-bundle": "^4.2",

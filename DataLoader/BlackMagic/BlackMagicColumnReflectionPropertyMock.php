@@ -20,27 +20,22 @@ use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\DataLoader\BlackMagic\BlackMagicDataLoader;
 use Doctrine\ORM\EntityManagerInterface;
 use ReflectionObject;
+use Webmozart\Assert\Assert;
 
 /** @see BlackMagicDataLoader */
 final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
 {
-    /** @var EntityManagerInterface */
-    private $entityManager;
+    private EntityManagerInterface $entityManager;
 
-    /** @var ClassMetadata */
-    private $classMetadata;
+    private ClassMetadata $classMetadata;
 
-    /** @var ReflectionClass */
-    private $classMetadataReflection;
+    private ReflectionClass $classMetadataReflection;
 
-    /** @var Column */
-    private $column;
+    private Column $column;
 
-    /** @var string */
-    private $fieldName;
+    private string $fieldName;
 
-    /** @var BlackMagicDataLoader $dataLoader */
-    private $dataLoader;
+    private BlackMagicDataLoader $dataLoader;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -59,6 +54,11 @@ final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
 
     public function getDeclaringClass(): ReflectionClass
     {
+        Assert::notNull($this->classMetadata->reflClass, sprintf(
+            'Tried to get declaring class of property "%s" when class-metadata reflection has not been initialized!',
+            $this->classMetadata->name . '#' . $this->fieldName
+        ));
+        
         return $this->classMetadata->reflClass;
     }
 
@@ -111,6 +111,10 @@ final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
         return 0;
     }
 
+    /** 
+     * @psalm-suppress MissingImmutableAnnotation https://github.com/vimeo/psalm/issues/8604
+     * @psalm-immutable 
+     */
     public function getType(): ?ReflectionType
     {
         return null;

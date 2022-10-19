@@ -46,7 +46,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
     private $mappingDriver;
 
     /**
-     * @var array<array<scalar>>
+     * @var array<array<string, string>>
      */
     private $originalData = array();
 
@@ -62,6 +62,8 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
 
     /**
      * @param object $entity
+     *
+     * @return array<string, string>
      */
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array
     {

@@ -18,9 +18,7 @@ interface DataLoaderInterface
     /** To be called at the start of the process */
     public function boot(EntityManagerInterface $entityManager): void;
 
-    /**
-     * @var array<string>
-     */
+    /** @return array<string, string> */
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array;
 
     /**

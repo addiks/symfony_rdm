@@ -47,6 +47,8 @@ final class DataLoaderLazyLoadProxy implements DataLoaderInterface
 
     /**
      * @param object $entity
+     * 
+     * @return array<string, string>
      */
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array
     {

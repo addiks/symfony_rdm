@@ -15,6 +15,7 @@ namespace Addiks\RDMBundle\DataLoader\BlackMagic;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\UnitOfWork;
 use Doctrine\DBAL\Schema\Column;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
@@ -48,6 +49,7 @@ use DateTime;
  *  ###          If you use this data-loader and bad things happen, it is YOUR FAULT! ###
  *  #####################################################################################
  *
+ * @psalm-import-type FieldMapping from ClassMetadataInfo
  */
 class BlackMagicDataLoader implements DataLoaderInterface
 {
@@ -205,7 +207,7 @@ class BlackMagicDataLoader implements DataLoaderInterface
                 }
 
                 if (!isset($classMetadata->fieldMappings[$fieldName])) {
-                    /** @var array<string, mixed> $mapping */
+                    /** @var FieldMapping $mapping */
                     $mapping = array_merge(
                         $column->toArray(),
                         [

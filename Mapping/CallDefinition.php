@@ -17,7 +17,7 @@ use Addiks\RDMBundle\Mapping\MappingInterface;
 use Webmozart\Assert\Assert;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Doctrine\ORM\ORMException;
+use Doctrine\ORM\Exception\ORMException;
 use Doctrine\Common\Util\ClassUtils;
 use ArgumentCountError;
 

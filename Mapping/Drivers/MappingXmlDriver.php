@@ -127,9 +127,14 @@ final class MappingXmlDriver implements MappingDriverInterface
                 is_string($parentMappingFile) ?sprintf(", referenced in file '%s'", $parentMappingFile) :''
             ));
         }
+        
+        /** @var string|null $mappingXml */
+        $mappingXml = file_get_contents($mappingFile);
+        
+        Assert::notEmpty($mappingXml, sprintf('ORM-Mapping file "%s" is empty!', $mappingFile));
 
         $dom = new DOMDocument();
-        $dom->loadXML(file_get_contents($mappingFile));
+        $dom->loadXML($mappingXml);
 
         /** @var DOMXPath $xpath */
         $xpath = $this->createXPath($dom->documentElement);
@@ -742,7 +747,7 @@ final class MappingXmlDriver implements MappingDriverInterface
             'column-definition' => 'columnDefinition',
         );
 
-        /** @var string $columnName */
+        /** @var string|null $columnName */
         $columnName = null;
 
         /** @var Type $type */
@@ -766,7 +771,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                     }
 
                 } elseif ($key === 'type') {
-                    $type = Type::getType($attributeValue);
+                    $type = Type::getType((string) $attributeValue);
 
                 } elseif (isset($keyMap[$key])) {
                     if ($key === 'nullable') {
@@ -778,6 +783,8 @@ final class MappingXmlDriver implements MappingDriverInterface
                 }
             }
         }
+        
+        Assert::notEmpty($columnName, 'Column name cannot be empty!');
 
         $column = new Column(
             $columnName,
