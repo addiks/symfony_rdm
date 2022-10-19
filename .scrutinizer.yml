@@ -10,7 +10,7 @@ build:
             version: 8.1
     tests:
         override:
-            - command: 'vendor/bin/phpunit --coverage-clover=some-file'
+            - command: 'vendor/bin/phpunit -d xdebug.mode=coverage --coverage-clover=some-file'
               coverage:
                 file: 'some-file'
                 format: 'clover'
