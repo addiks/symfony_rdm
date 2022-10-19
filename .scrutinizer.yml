@@ -14,3 +14,10 @@ build:
               coverage:
                 file: 'some-file'
                 format: 'clover'
+
+build:
+  nodes:
+    analysis:
+      tests:
+        override:
+          - php-scrutinizer-run
