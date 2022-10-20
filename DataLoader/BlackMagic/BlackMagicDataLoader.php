@@ -66,8 +66,6 @@ class BlackMagicDataLoader implements DataLoaderInterface
     /** @var object|null */
     private $entityDataCacheSource;
 
-    private bool $hasBooted = false;
-
     public function __construct(MappingDriverInterface $mappingDriver)
     {
         $this->mappingDriver = $mappingDriver;
@@ -75,26 +73,22 @@ class BlackMagicDataLoader implements DataLoaderInterface
 
     public function boot(EntityManagerInterface $entityManager): void
     {
-        if (!$this->hasBooted) {
-            $this->hasBooted = true;
+        /** @var ClassMetadataFactory $metadataFactory */
+        $metadataFactory = $entityManager->getMetadataFactory();
 
-            /** @var ClassMetadataFactory $metadataFactory */
-            $metadataFactory = $entityManager->getMetadataFactory();
+        if ($metadataFactory instanceof AbstractClassMetadataFactory) {
+            /** @var ReflectionService|null $reflectionService */
+            $reflectionService = $metadataFactory->getReflectionService();
 
-            if ($metadataFactory instanceof AbstractClassMetadataFactory) {
-                /** @var ReflectionService|null $reflectionService */
-                $reflectionService = $metadataFactory->getReflectionService();
+            if (!$reflectionService instanceof BlackMagicReflectionServiceDecorator) {
+                $reflectionService = new BlackMagicReflectionServiceDecorator(
+                    $reflectionService ?? new RuntimeReflectionService(),
+                    $this->mappingDriver,
+                    $entityManager,
+                    $this
+                );
 
-                if (!$reflectionService instanceof BlackMagicReflectionServiceDecorator) {
-                    $reflectionService = new BlackMagicReflectionServiceDecorator(
-                        $reflectionService ?? new RuntimeReflectionService(),
-                        $this->mappingDriver,
-                        $entityManager,
-                        $this
-                    );
-
-                    $metadataFactory->setReflectionService($reflectionService);
-                }
+                $metadataFactory->setReflectionService($reflectionService);
             }
         }
     }
