@@ -118,6 +118,9 @@ final class CallDefinition implements CallDefinitionInterface
             } elseif (is_string($callee)) {
                 $result = call_user_func_array("{$callee}::{$this->routineName}", $arguments);
 
+            } elseif (property_exists($callee, $this->routineName) && !method_exists($callee, $this->routineName)) {
+                $result = $callee->{$this->routineName};
+
             } else {
                 $result = call_user_func_array([$callee, $this->routineName], $arguments);
             }
