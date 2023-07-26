@@ -7,9 +7,12 @@ use Psr\Container\ContainerInterface;
 use Webmozart\Assert\Assert;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Composer\Autoload\ClassLoader;
 
 class AddiksRDMBundle extends Bundle
 {
+    private static ClassLoader|null $classLoader = null;
+
     public function boot()
     {
         Assert::isInstanceOf($this->container, ContainerInterface::class);
@@ -25,5 +28,15 @@ class AddiksRDMBundle extends Bundle
         Assert::isInstanceOf($entityManager, EntityManagerInterface::class);
 
         $dataLoader->boot($entityManager);
+    }
+
+    public static function classLoader(): ClassLoader|null
+    {
+        return self::$classLoader;
+    }
+
+    public static function registerClassLoader(ClassLoader $classLoader): void
+    {
+        self::$classLoader = $classLoader;
     }
 }

@@ -21,6 +21,7 @@ use Addiks\RDMBundle\DataLoader\BlackMagic\BlackMagicDataLoader;
 use Doctrine\ORM\EntityManagerInterface;
 use ReflectionObject;
 use Webmozart\Assert\Assert;
+use ReflectionException;
 
 /** @see BlackMagicDataLoader */
 final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
@@ -50,6 +51,14 @@ final class BlackMagicColumnReflectionPropertyMock extends ReflectionProperty
         $this->column = $column;
         $this->fieldName = $fieldName;
         $this->dataLoader = $dataLoader;
+
+        try {
+            # This might fail if cache was not built yet
+            parent::__construct($classMetadata->getName(), $fieldName);
+
+        } catch (ReflectionException $exception) {
+            # Do nothing
+        }
     }
 
     public function getDeclaringClass(): ReflectionClass

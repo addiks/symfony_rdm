@@ -19,7 +19,7 @@ interface EntityMappingInterface extends MappingInterface
     public function getEntityClassName(): string;
 
     /**
-     * @return array<MappingInterface>
+     * @return array<string, MappingInterface>  Array-key is the field-name.
      */
     public function getFieldMappings(): array;
 

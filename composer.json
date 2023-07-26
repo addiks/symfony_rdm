@@ -36,7 +36,8 @@
     "autoload": {
         "psr-4": {
             "Addiks\\RDMBundle\\":  ""
-        }
+        },
+        "files": ["composer_hook.php"]
     },
 
     "extra": {
