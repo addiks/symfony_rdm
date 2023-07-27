@@ -65,7 +65,7 @@ final class BlackMagicEntityCodeGenerator
             /** @var string $fieldName */
             $fieldName = $this->dataLoader->columnToFieldName($column);
             
-            if (isset($writtenFieldNames[$fieldName])) {
+            if (isset($writtenFieldNames[$fieldName]) || str_contains($entityPHP, $fieldName)) {
                 continue;
             }
             
