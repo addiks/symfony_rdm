@@ -113,6 +113,35 @@ parameters:
     addiks_rdm.data_loader.stability: 'fast-and-unstable'
 ```
 
+After that, you should also call a setup function named `symfony_rdm_composer_hook` in your entry scripts (`index.php`,
+`bin/console`, `app.php`, `app_dev.php`, ...) after composers `vendor/autoload.php` was included and after the symfony
+kernel was created. The composer `vendor/autoload.php` file returnes the class-loader object, this should be passed
+together with the symfony kernel to the mentioned function.
+
+Example:
+
+```php
+# ...
+use Composer\Autoload\ClassLoader;
+use function Addiks\SymfonyRDM\symfony_rdm_composer_hook;
+# ...
+/** @var ClassLoader $loader */
+$loader = require('/vendor/autoload.php');
+# ...
+$kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
+# ...
+symfony_rdm_composer_hook($loader, $kernel);
+# ...
+```
+
+This function `symfony_rdm_composer_hook` is declared in a file `composer_hook.php` in this projects root folder.
+Under normal circumstances, this file should always be included automatically by composer. If not, you might get an
+error message that this function is unknown. In this case, you might (temporarely) include that file manually:
+
+```php
+require_once('vendor/addiks/symfony_rdm/composer_hook.php');
+```
+
 ## Service-FormType
 This bundle also provides an additional new form-type called "ServiceFormType" which should prove valuable in
 conjunction with the service-hydration-abilities of this bundle. It allows to specify a list of service-id's as choices
