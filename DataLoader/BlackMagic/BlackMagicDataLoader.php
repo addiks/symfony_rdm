@@ -329,6 +329,11 @@ class BlackMagicDataLoader implements DataLoaderInterface
         return $fieldName;
     }
 
+    public function isFakedFieldName(string $fieldName): bool
+    {
+        return str_starts_with($fieldName, '__COLUMN__');
+    }
+
     private function isDateTimeEqualToValueFromUnitOfWorkButNotSame(
         DateTime $value,
         UnitOfWork $unitOfWork,

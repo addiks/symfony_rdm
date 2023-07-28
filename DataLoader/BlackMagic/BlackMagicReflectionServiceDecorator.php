@@ -75,12 +75,7 @@ final class BlackMagicReflectionServiceDecorator implements ReflectionService
         /** @var ReflectionProperty|null $propertyReflection */
         $propertyReflection = null;
 
-        try {
-            $propertyReflection = $this->innerReflectionService->getAccessibleProperty($class, $property);
-
-        } catch (ReflectionException $exception) {
-            Assert::classExists($class);
-
+        if ($this->dataLoader->isFakedFieldName($property)) {
             /** @var EntityMappingInterface|null $entityMapping */
             $entityMapping = $this->mappingDriver->loadRDMMetadataForClass($class);
 
@@ -105,6 +100,9 @@ final class BlackMagicReflectionServiceDecorator implements ReflectionService
                     }
                 }
             }
+            
+        } else {
+            $propertyReflection = $this->innerReflectionService->getAccessibleProperty($class, $property);
         }
 
         return $propertyReflection;
