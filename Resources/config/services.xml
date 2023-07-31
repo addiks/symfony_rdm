@@ -61,7 +61,7 @@
             <argument type="service" id="addiks_rdm.mapping.driver" />
             <argument type="service" id="addiks_rdm.data_loader.black_magic" />
             <argument>symfony_rdm_entities</argument>
-            <argument>%kernel.root_dir%</argument>
+            <argument>%kernel.project_dir%</argument>
         </service>
 
     </services>

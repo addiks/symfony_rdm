@@ -65,7 +65,7 @@ final class RDMBlackMagickCacheWarmer implements CacheWarmerInterface
                     AddiksRDMBundle::classLoader()
                 );
 
-                if (!empty($this->projectRootFolder)) {
+                if (!empty($this->projectRootFolder) && !empty($processedEntityFilePath)) {
                     $processedEntityFilePath = realpath($processedEntityFilePath);
 
                     if (str_starts_with($processedEntityFilePath, $this->projectRootFolder)) {
