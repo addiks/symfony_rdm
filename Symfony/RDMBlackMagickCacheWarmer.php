@@ -28,8 +28,12 @@ final class RDMBlackMagickCacheWarmer implements CacheWarmerInterface
         private DoctrineMappingDriver $doctrineMappingDriver,
         private RDMMappingDriver $rdmMappingDriver,
         private BlackMagicDataLoader $dataLoader,
-        public readonly string $folderNameInCache = 'symfony_rdm_entities'
+        public readonly string $folderNameInCache = 'symfony_rdm_entities',
+        public readonly string|null $projectRootFolder = null
     ) {
+        if (!empty($this->projectRootFolder)) {
+            $this->projectRootFolder = realpath($projectRootFolder) . '/';
+        }
     }
     
     public function warmUp($cacheDirectory): array
@@ -60,7 +64,18 @@ final class RDMBlackMagickCacheWarmer implements CacheWarmerInterface
                     $mapping, 
                     AddiksRDMBundle::classLoader()
                 );
-                
+
+                if (!empty($this->projectRootFolder)) {
+                    $processedEntityFilePath = realpath($processedEntityFilePath);
+
+                    if (str_starts_with($processedEntityFilePath, $this->projectRootFolder)) {
+                        $processedEntityFilePath = substr(
+                            $processedEntityFilePath,
+                            strlen($this->projectRootFolder)
+                        );
+                    }
+                }
+
                 if (is_string($processedEntityFilePath)) {
                     $classmap[] = [$entityClass, $processedEntityFilePath];
                 }
