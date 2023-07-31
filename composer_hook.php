@@ -35,6 +35,10 @@ function symfony_rdm_composer_hook(ClassLoader $classLoader, KernelInterface $ke
             
             [$className, $filePath] = explode(":", $classmapLine);
             
+            if ($filePath[0] !== '/') {
+                $filePath = $cacheDir . '/' . $filePath;
+            }
+
             $classMap[$className] = $filePath;
         }
         

@@ -28,22 +28,18 @@ final class RDMBlackMagickCacheWarmer implements CacheWarmerInterface
         private DoctrineMappingDriver $doctrineMappingDriver,
         private RDMMappingDriver $rdmMappingDriver,
         private BlackMagicDataLoader $dataLoader,
-        public readonly string $folderNameInCache = 'symfony_rdm_entities',
-        private string|null $projectRootFolder = null
+        public readonly string $folderNameInCache = 'symfony_rdm_entities'
     ) {
-        if (!empty($this->projectRootFolder)) {
-            $this->projectRootFolder = realpath($projectRootFolder) . '/';
-        }
     }
     
     public function warmUp($cacheDirectory): array
     {
+        if (!str_ends_with($cacheDirectory, '/')) {
+            $cacheDirectory .= '/';
+        }
+
         /** @var mixed $entitiesFolder */
-        $entitiesFolder = sprintf(
-            '%s/%s',
-            $cacheDirectory,
-            $this->folderNameInCache
-        );
+        $entitiesFolder = $cacheDirectory . $this->folderNameInCache;
         
         $codeGenerator = new BlackMagicEntityCodeGenerator(
             $entitiesFolder,
@@ -65,13 +61,13 @@ final class RDMBlackMagickCacheWarmer implements CacheWarmerInterface
                     AddiksRDMBundle::classLoader()
                 );
 
-                if (!empty($this->projectRootFolder) && !empty($processedEntityFilePath)) {
+                if (!empty($processedEntityFilePath)) {
                     $processedEntityFilePath = realpath($processedEntityFilePath);
 
-                    if (str_starts_with($processedEntityFilePath, $this->projectRootFolder)) {
+                    if (str_starts_with($processedEntityFilePath, $cacheDirectory)) {
                         $processedEntityFilePath = substr(
                             $processedEntityFilePath,
-                            strlen($this->projectRootFolder)
+                            strlen($cacheDirectory)
                         );
                     }
                 }
