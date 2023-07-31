@@ -29,7 +29,7 @@ final class RDMBlackMagickCacheWarmer implements CacheWarmerInterface
         private RDMMappingDriver $rdmMappingDriver,
         private BlackMagicDataLoader $dataLoader,
         public readonly string $folderNameInCache = 'symfony_rdm_entities',
-        public readonly string|null $projectRootFolder = null
+        private string|null $projectRootFolder = null
     ) {
         if (!empty($this->projectRootFolder)) {
             $this->projectRootFolder = realpath($projectRootFolder) . '/';
