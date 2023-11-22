@@ -15,6 +15,7 @@ use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Addiks\RDMBundle\Mapping\DriverFactories\MappingDriverFactoryInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use ErrorException;
+use Doctrine\Bundle\DoctrineBundle\Mapping\MappingDriver as DoctrineBundleMappingDriver;
 
 /**
  * Circumvents the symfony "circular reference" error by lazy-loading.
@@ -63,6 +64,10 @@ final class MappingDriverFactoryLazyLoadProxy implements MappingDriverFactoryInt
                     MappingDriverFactoryInterface::class
                 ));
             }
+        }
+        
+        if ($mappingDriver instanceof DoctrineBundleMappingDriver) {
+            $mappingDriver = $mappingDriver->getDriver();
         }
 
         return $this->actualMappingDriverFactory->createRDMMappingDriver($mappingDriver);

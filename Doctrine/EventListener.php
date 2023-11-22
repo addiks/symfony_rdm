@@ -158,10 +158,15 @@ final class EventListener
                 $columnName = $column->getName();
 
                 if (!$table->hasColumn($columnName)) {
+                    
+                    /** @var array<string, mixed> $columnConfig */
+                    $columnConfig = $column->toArray();
+                    unset($columnConfig['name']);
+                    
                     $table->addColumn(
                         $columnName,
                         $column->getType()->getName(),
-                        $column->toArray()
+                        $columnConfig
                     );
                 }
             }
