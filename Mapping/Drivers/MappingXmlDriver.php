@@ -39,6 +39,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use ErrorException;
 use DOMElement;
 use Webmozart\Assert\Assert;
+use Addiks\RDMBundle\Mapping\FixNativeMapping;
 
 final class MappingXmlDriver implements MappingDriverInterface
 {
@@ -285,7 +286,7 @@ final class MappingXmlDriver implements MappingDriverInterface
                 [
                     'notnull' => $notnull,
                     'length' => $length,
-                    'default' => $default
+                    'default' => $default,
                 ]
             );
         }
@@ -414,8 +415,8 @@ final class MappingXmlDriver implements MappingDriverInterface
         /** @var array<MappingInterface> $fieldMappings */
         $fieldMappings = array();
 
+        /** @var DOMNode $serviceNode */
         foreach ($xpath->query('./rdm:service', $parentNode) as $serviceNode) {
-            /** @var DOMNode $serviceNode */
 
             $serviceMapping = $this->readService($serviceNode, $mappingFile);
 
@@ -430,8 +431,8 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
+        /** @var DOMNode $choiceNode */
         foreach ($xpath->query('./rdm:choice', $parentNode) as $choiceNode) {
-            /** @var DOMNode $choiceNode */
 
             /** @var string $defaultColumnName */
             $defaultColumnName = "";
@@ -456,8 +457,8 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
+        /** @var DOMNode $objectNode */
         foreach ($xpath->query('./rdm:object', $parentNode) as $objectNode) {
-            /** @var DOMNode $objectNode */
 
             /** @var ObjectMapping $objectMapping */
             $objectMapping = $this->readObject($objectNode, $mappingFile);
@@ -474,8 +475,8 @@ final class MappingXmlDriver implements MappingDriverInterface
         }
 
         if ($readFields) {
+            /** @var DOMNode $fieldNode */
             foreach ($xpath->query('./orm:field', $parentNode) as $fieldNode) {
-                /** @var DOMNode $fieldNode */
 
                 /** @var Column $column */
                 $column = $this->readDoctrineField($fieldNode);
@@ -489,8 +490,8 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
+        /** @var DOMNode $arrayNode */
         foreach ($xpath->query('./rdm:array', $parentNode) as $arrayNode) {
-            /** @var DOMNode $arrayNode */
 
             /** @var ArrayMapping $arrayMapping */
             $arrayMapping = $this->readArray($arrayNode, $mappingFile);
@@ -506,8 +507,8 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
+        /** @var DOMNode $listNode */
         foreach ($xpath->query('./rdm:list', $parentNode) as $listNode) {
-            /** @var DOMNode $listNode */
 
             /** @var string $defaultColumnName */
             $defaultColumnName = "";
@@ -533,8 +534,8 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
+        /** @var DOMNode $nullNode */
         foreach ($xpath->query('./rdm:null', $parentNode) as $nullNode) {
-            /** @var DOMNode $nullNode */
 
             if ($this->hasAttributeValue($nullNode, "field")) {
                 /** @var string $fieldName */
@@ -555,8 +556,8 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
+        /** @var DOMNode $nullableNode */
         foreach ($xpath->query('./rdm:nullable', $parentNode) as $nullableNode) {
-            /** @var DOMNode $nullableNode */
 
             /** @var NullableMapping $nullableMapping */
             $nullableMapping = $this->readNullable($nullableNode, $mappingFile);
@@ -572,8 +573,8 @@ final class MappingXmlDriver implements MappingDriverInterface
             }
         }
 
+        /** @var DOMNode $importNode */
         foreach ($xpath->query('./rdm:import', $parentNode) as $importNode) {
-            /** @var DOMNode $importNode */
 
             /** @var string $path */
             $path = (string)$this->readAttributeValue($importNode, "path");
@@ -600,8 +601,50 @@ final class MappingXmlDriver implements MappingDriverInterface
                 }
             }
         }
+        
+        foreach ($xpath->query('./rdm:fix', $parentNode) as $fixNode) {
+            
+            /** @var FixNativeMapping $fixMapping */
+            $fixMapping = $this->readFixMapping($fixNode, $mappingFile);
+            
+            if ($this->hasAttributeValue($fixNode, "field")) {
+                /** @var string $fieldName */
+                $fieldName = (string)$this->readAttributeValue($fixNode, "field");
+
+                $fieldMappings[$fieldName] = $fixMapping;
+
+            } else {
+                $fieldMappings[] = $fixMapping;
+            }
+        }
 
         return $fieldMappings;
+    }
+    
+    private function readFixMapping(DOMNode $fixNode, string $mappingFile): FixNativeMapping
+    {
+        /** @var string $jsonSerializedValue */
+        $jsonSerializedValue = "";
+        
+        if ($this->hasAttributeValue($fixNode, "json")) {
+            $jsonSerializedValue = (string) $this->readAttributeValue($fixNode, "json");
+        }
+        
+        if ($this->hasAttributeValue($fixNode, "string")) {
+            $jsonSerializedValue = sprintf(
+                '"%s"',
+                addslashes((string) $this->readAttributeValue($fixNode, "string"))
+            );
+        }
+        
+        return new FixNativeMapping(
+            $jsonSerializedValue,
+            sprintf(
+                "in file '%s' in line %d",
+                $mappingFile,
+                $fixNode->getLineNo()
+            )
+        );
     }
 
     private function readService(DOMNode $serviceNode, string $mappingFile): ServiceMapping
@@ -678,11 +721,14 @@ final class MappingXmlDriver implements MappingDriverInterface
             $columnOptions['length'] = (int)$this->readAttributeValue($listNode, "column-length", "0");
         }
 
-        $column = new Column(
-            $columnName,
-            Type::getType("string"),
-            $columnOptions
-        );
+        /** @var Type $type */
+        $type = Type::getType("string");
+
+        if ($columnOptions['length'] ?? 0 >= 255) {
+            $type = Type::getType("text");
+        }
+
+        $column = new Column($columnName, $type, $columnOptions);
 
         return new ListMapping($column, array_values($entryMappings)[0], sprintf(
             "in file '%s' in line %d",
