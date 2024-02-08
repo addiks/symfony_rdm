@@ -8,6 +8,8 @@ use Webmozart\Assert\Assert;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Composer\Autoload\ClassLoader;
+use Addiks\RDMBundle\DependencyInjection\RDMCompilerPass;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class AddiksRDMBundle extends Bundle
 {
@@ -15,19 +17,11 @@ class AddiksRDMBundle extends Bundle
 
     public function boot()
     {
-        Assert::isInstanceOf($this->container, ContainerInterface::class);
+    }
 
-        /** @var DataLoaderInterface $dataLoader */
-        $dataLoader = $this->container->get('addiks_rdm.data_loader');
-
-        Assert::isInstanceOf($dataLoader, DataLoaderInterface::class);
-
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = $this->container->get('doctrine.orm.entity_manager');
-
-        Assert::isInstanceOf($entityManager, EntityManagerInterface::class);
-
-        $dataLoader->boot($entityManager);
+    public function build(ContainerBuilder $container)
+    {
+        $container->addCompilerPass(new RDMCompilerPass());
     }
 
     public static function classLoader(): ClassLoader|null

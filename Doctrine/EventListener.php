@@ -25,6 +25,8 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Proxy\Proxy;
 use Doctrine\DBAL\Schema\Column;
+use PDOException;
+use Doctrine\DBAL\Exception\ConnectionException;
 
 /**
  * Hooks into the event's of doctrine2-ORM and forwards the entities to other objects.
@@ -123,7 +125,15 @@ final class EventListener
         /** @var ClassMetadata $classMetadata */
         $classMetadata = $arguments->getClassMetadata();
 
-        $this->dbalDataLoader->prepareOnMetadataLoad($entityManager, $classMetadata);
+        try {
+            $this->dbalDataLoader->prepareOnMetadataLoad($entityManager, $classMetadata);
+
+        } catch (PDOException | ConnectionException $exception) {
+            var_dump($exception->getMessage());
+            if (!str_contains($exception->getMessage(), 'No such file or directory')) {
+                throw $exception;
+            }
+        }
     }
 
     /**

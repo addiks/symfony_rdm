@@ -13,6 +13,7 @@ namespace Addiks\RDMBundle\DataLoader;
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
 use Addiks\RDMBundle\Mapping\Drivers\MappingDriverInterface;
 use Addiks\RDMBundle\Mapping\EntityMappingInterface;
+use Closure;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Connection;
@@ -56,7 +57,7 @@ final class SimpleSelectDataLoader implements DataLoaderInterface
         $this->mappingDriver = $mappingDriver;
     }
 
-    public function boot(EntityManagerInterface $entityManager): void
+    public function boot(EntityManagerInterface|Closure $entityManager): void
     {
     }
 

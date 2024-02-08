@@ -22,6 +22,7 @@ use Addiks\RDMBundle\Mapping\EntityMappingInterface;
 use Addiks\RDMBundle\DataLoader\BlackMagic\BlackMagicColumnReflectionPropertyMock;
 use Webmozart\Assert\Assert;
 use Doctrine\Persistence\Mapping\ReflectionService;
+use ReflectionClass;
 
 final class BlackMagicReflectionServiceDecorator implements ReflectionService
 {
@@ -50,27 +51,27 @@ final class BlackMagicReflectionServiceDecorator implements ReflectionService
         $this->dataLoader = $dataLoader;
     }
 
-    public function getParentClasses($class)
+    public function getParentClasses($class): array
     {
         return $this->innerReflectionService->getParentClasses($class);
     }
 
-    public function getClassShortName($class)
+    public function getClassShortName($class): string
     {
         return $this->innerReflectionService->getClassShortName($class);
     }
 
-    public function getClassNamespace($class)
+    public function getClassNamespace($class): string
     {
         return $this->innerReflectionService->getClassNamespace($class);
     }
 
-    public function getClass($class)
+    public function getClass($class): ?ReflectionClass
     {
         return $this->innerReflectionService->getClass($class);
     }
 
-    public function getAccessibleProperty($class, $property)
+    public function getAccessibleProperty($class, $property): ?ReflectionProperty
     {
         /** @var ReflectionProperty|null $propertyReflection */
         $propertyReflection = null;
@@ -108,7 +109,7 @@ final class BlackMagicReflectionServiceDecorator implements ReflectionService
         return $propertyReflection;
     }
 
-    public function hasPublicMethod($class, $method)
+    public function hasPublicMethod($class, $method): bool
     {
         return $this->innerReflectionService->hasPublicMethod($class, $method);
     }

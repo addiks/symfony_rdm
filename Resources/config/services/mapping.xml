@@ -6,9 +6,11 @@
 >
     <services>
 
+<!--
         <service id="addiks_rdm.doctrine.orm.configuration" class="Doctrine\ORM\Configuration">
             <factory service="doctrine.orm.entity_manager" method="getConfiguration" />
         </service>
+-->
 
         <service
             id="addiks_rdm.mapping.driver"

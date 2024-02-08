@@ -22,6 +22,7 @@
             </argument>
             <argument>addiks_rdm.data_loader.stability</argument>
             <argument>addiks_rdm.data_loader.simple</argument>
+            <argument>doctrine.orm.entity_manager</argument>
         </service>
 
         <service

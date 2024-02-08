@@ -10,13 +10,14 @@
 
 namespace Addiks\RDMBundle\DataLoader;
 
+use Closure;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 
 interface DataLoaderInterface
 {
     /** To be called at the start of the process */
-    public function boot(EntityManagerInterface $entityManager): void;
+    public function boot(EntityManagerInterface|Closure $entityManager): void;
 
     /** @return array<string, string> */
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array;

@@ -13,6 +13,7 @@
 namespace Addiks\RDMBundle\DataLoader\BlackMagic;
 
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
+use Closure;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
@@ -66,35 +67,44 @@ class BlackMagicDataLoader implements DataLoaderInterface
     /** @var object|null */
     private $entityDataCacheSource;
 
+    private Closure|null $entityManagerLoader = null;
+
     public function __construct(MappingDriverInterface $mappingDriver)
     {
         $this->mappingDriver = $mappingDriver;
     }
 
-    public function boot(EntityManagerInterface $entityManager): void
+    public function boot(EntityManagerInterface|Closure $entityManager): void
     {
-        /** @var ClassMetadataFactory $metadataFactory */
-        $metadataFactory = $entityManager->getMetadataFactory();
+        if ($entityManager instanceof EntityManagerInterface) {
+            /** @var ClassMetadataFactory $metadataFactory */
+            $metadataFactory = $entityManager->getMetadataFactory();
 
-        if ($metadataFactory instanceof AbstractClassMetadataFactory) {
-            /** @var ReflectionService|null $reflectionService */
-            $reflectionService = $metadataFactory->getReflectionService();
+            if ($metadataFactory instanceof AbstractClassMetadataFactory) {
+                /** @var ReflectionService|null $reflectionService */
+                $reflectionService = $metadataFactory->getReflectionService();
 
-            if (!$reflectionService instanceof BlackMagicReflectionServiceDecorator) {
-                $reflectionService = new BlackMagicReflectionServiceDecorator(
-                    $reflectionService ?? new RuntimeReflectionService(),
-                    $this->mappingDriver,
-                    $entityManager,
-                    $this
-                );
+                if (!$reflectionService instanceof BlackMagicReflectionServiceDecorator) {
+                    $reflectionService = new BlackMagicReflectionServiceDecorator(
+                        $reflectionService ?? new RuntimeReflectionService(),
+                        $this->mappingDriver,
+                        $entityManager,
+                        $this
+                    );
 
-                $metadataFactory->setReflectionService($reflectionService);
+                    $metadataFactory->setReflectionService($reflectionService);
+                }
             }
+
+        } else {
+            $this->entityManagerLoader = $entityManager;
         }
     }
-
+    
     public function loadDBALDataForEntity($entity, EntityManagerInterface $entityManager): array
     {
+        $this->ensureBooted();
+
         /** @var array<string, string> $dbalData */
         $dbalData = array();
 
@@ -236,6 +246,8 @@ class BlackMagicDataLoader implements DataLoaderInterface
         $entity,
         string $columnName
     ) {
+        $this->ensureBooted();
+        
         /** @var array<string, mixed> $entityData */
         $entityData = array();
 
@@ -332,6 +344,19 @@ class BlackMagicDataLoader implements DataLoaderInterface
     public function isFakedFieldName(string $fieldName): bool
     {
         return str_starts_with($fieldName, '__COLUMN__');
+    }
+
+    private function ensureBooted(): void
+    {
+        if (!is_null($this->entityManagerLoader)) {
+            /** @var EntityManagerInterface $entityManager */
+            $entityManager = ($this->entityManagerLoader)();
+            $this->entityManagerLoader = null;
+
+            Assert::isInstanceOf($entityManager, EntityManagerInterface::class);
+
+            $this->boot($entityManager);
+        }
     }
 
     private function isDateTimeEqualToValueFromUnitOfWorkButNotSame(

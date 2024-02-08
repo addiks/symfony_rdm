@@ -36,7 +36,8 @@ final class ChoosingDataLoaderFactory implements DataLoaderFactoryInterface
         ContainerInterface $container,
         array $serviceIdMap,
         string $choosingParameterName,
-        string $defaultServiceId
+        string $defaultServiceId,
+        private string|null $entityManagerServiceId = null
     ) {
         if ($container->hasParameter($choosingParameterName)) {
             /** @var string $determinator */
@@ -81,6 +82,12 @@ final class ChoosingDataLoaderFactory implements DataLoaderFactoryInterface
                 $this->serviceId,
                 DataLoaderInterface::class
             ));
+        }
+        
+        if (!empty($this->entityManagerServiceId)) {
+            $dataLoader->boot(function () {
+                return $this->container->get($this->entityManagerServiceId);
+            });
         }
 
         return $dataLoader;

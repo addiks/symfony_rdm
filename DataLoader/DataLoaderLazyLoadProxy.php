@@ -11,6 +11,7 @@
 namespace Addiks\RDMBundle\DataLoader;
 
 use Addiks\RDMBundle\DataLoader\DataLoaderInterface;
+use Closure;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -40,7 +41,7 @@ final class DataLoaderLazyLoadProxy implements DataLoaderInterface
         $this->serviceId = $serviceId;
     }
 
-    public function boot(EntityManagerInterface $entityManager): void
+    public function boot(EntityManagerInterface|Closure $entityManager): void
     {
         $this->loadDataLoader()->boot($entityManager);
     }
