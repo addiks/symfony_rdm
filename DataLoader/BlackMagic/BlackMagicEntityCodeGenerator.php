@@ -50,9 +50,17 @@ final class BlackMagicEntityCodeGenerator
         if ($filePath === false) {
             return null;
         }
-        
-        /** @var string $entityPHP */
-        $entityPHP = file_get_contents($filePath);
+
+        do {
+            /** @var string $entityPHP */
+            $entityPHP = file_get_contents($filePath);
+
+            if (1 === preg_match("#\/\*\* \@addiks-original-file ([^\*]*) \*\/#is", $entityPHP, $matches)) {
+                $filePath = trim($matches[1]);
+                continue;
+            }
+            break;
+        } while (true);
         
         /** @var int $classStartPosition */
         $classStartPosition = self::findClassStartPosition($fullClassName, $entityPHP);
@@ -65,12 +73,6 @@ final class BlackMagicEntityCodeGenerator
             /** @var string $fieldName */
             $fieldName = $this->dataLoader->columnToFieldName($column);
             
-            if (isset($writtenFieldNames[$fieldName]) || str_contains($entityPHP, $fieldName)) {
-                continue;
-            }
-            
-            $writtenFieldNames[$fieldName] = $column;
-            
             /** @var string $fieldPHP */
             $fieldPHP = sprintf(
                 "\n%spublic $%s;\n",
@@ -78,6 +80,12 @@ final class BlackMagicEntityCodeGenerator
                 $fieldName
             );
             
+            if (isset($writtenFieldNames[$fieldName]) || str_contains($entityPHP, $fieldPHP)) {
+                continue;
+            }
+
+            $writtenFieldNames[$fieldName] = $column;
+
             $entityPHP = sprintf(
                 '%s%s%s',
                 substr($entityPHP, 0, $classStartPosition),
@@ -86,6 +94,11 @@ final class BlackMagicEntityCodeGenerator
             );
         }
         
+        $entityPHP .= sprintf(
+            "\n\n/** @addiks-original-file %s */\n",
+            $filePath
+        );
+
         $targetFilePath = sprintf(
             '%s/%s.php',
             $this->targetDirectory,
