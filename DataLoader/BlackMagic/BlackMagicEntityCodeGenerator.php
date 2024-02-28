@@ -51,12 +51,20 @@ final class BlackMagicEntityCodeGenerator
             return null;
         }
 
+        /** @var array<string, bool> $walkedFiles */
+        $walkedFiles = [$filePath => true];
+
         do {
             /** @var string $entityPHP */
             $entityPHP = file_get_contents($filePath);
 
             if (1 === preg_match("#\/\*\* \@addiks-original-file ([^\*]*) \*\/#is", $entityPHP, $matches)) {
                 $filePath = trim($matches[1]);
+
+                if (isset($walkedFiles[$filePath])) {
+                    break; # Circular reference detected
+                }
+                $walkedFiles[$filePath] = true;
                 continue;
             }
             break;

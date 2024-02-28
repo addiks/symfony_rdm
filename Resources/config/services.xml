@@ -13,6 +13,15 @@
 
     <services>
 
+        <service
+            id="addiks_rdm.entity_manager_decorator"
+            decorates="doctrine.orm.entity_manager"
+            class="Addiks\RDMBundle\Doctrine\EntityManagerDecorator"
+        >
+            <argument type="service" id="addiks_rdm.entity_manager_decorator.inner" />
+            <argument type="service" id="addiks_rdm.data_loader" />
+        </service>
+
         <service id="addiks_rdm.listener" class="Addiks\RDMBundle\Doctrine\EventListener">
             <tag name="doctrine.event_listener" event="prePersist" />
             <tag name="doctrine.event_listener" event="postLoad" />
