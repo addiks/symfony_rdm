@@ -20,21 +20,27 @@ final class RDMCompilerPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container)
     {
+        $container->setAlias(
+            'addiks_rdm.doctrine.orm.configuration', 
+            new Alias(sprintf(
+                'doctrine.orm.%s_configuration',
+                $this->findDoctrineConnectionName($container) ?? 'default'
+            ))
+        );
+    }
+    
+    private function findDoctrineConnectionName(ContainerBuilder $container): ?string
+    {
         /** @var array<int, array<string, mixed>> $doctrineConfigs */
         $doctrineConfigs = $container->getExtensionConfig('doctrine');
         
         foreach ($doctrineConfigs as $doctrineConfig) {
-            foreach ($doctrineConfig['dbal']['connections'] as $name => $connection) {
-                
-                $container->setAlias(
-                    'addiks_rdm.doctrine.orm.configuration', 
-                    new Alias(sprintf(
-                        'doctrine.orm.%s_configuration',
-                        $name
-                    ))
-                );
-                break 2;
+            foreach ($doctrineConfig['dbal']['connections'] ?? [] as $name => $connection) {
+                return $name;
             }
         }
+        
+        return null;
     }
+    
 }
