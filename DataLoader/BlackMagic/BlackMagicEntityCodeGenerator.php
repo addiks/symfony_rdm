@@ -53,12 +53,21 @@ final class BlackMagicEntityCodeGenerator
 
         /** @var array<string, bool> $walkedFiles */
         $walkedFiles = [$filePath => true];
+        
+        /** @var string $safeFilePath */
+        $safeFilePath = $filePath;
 
         do {
+            if (!file_exists($filePath)) {
+                $filePath = $safeFilePath;
+                break;
+            }
+            
             /** @var string $entityPHP */
             $entityPHP = file_get_contents($filePath);
 
             if (1 === preg_match("#\/\*\* \@addiks-original-file ([^\*]*) \*\/#is", $entityPHP, $matches)) {
+                $safeFilePath = $filePath;
                 $filePath = trim($matches[1]);
 
                 if (isset($walkedFiles[$filePath])) {

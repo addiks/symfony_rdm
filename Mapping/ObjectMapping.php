@@ -24,6 +24,8 @@ use ReflectionException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Connection;
+use BackedEnum;
+use UnitEnum;
 
 final class ObjectMapping implements MappingInterface
 {
@@ -163,6 +165,9 @@ final class ObjectMapping implements MappingInterface
         /** @var object|null $object */
         $object = null;
 
+        /** @var string $columnName */
+        $columnName = $this->column?->getName() ?? '';
+
         # During creation of an object, the class-name is on the top of that creation stack
         $context->pushOnObjectHydrationStack($this->className);
 
@@ -178,9 +183,6 @@ final class ObjectMapping implements MappingInterface
             if ($this->column instanceof Column && !array_key_exists("", $factoryData)) {
                 /** @var Type $type */
                 $type = $this->column->getType();
-
-                /** @var string $columnName */
-                $columnName = $this->column->getName();
 
                 if (array_key_exists($columnName, $dataFromAdditionalColumns)) {
                     /** @var Connection $connection */
@@ -201,6 +203,13 @@ final class ObjectMapping implements MappingInterface
                 $context,
                 $factoryData
             );
+            
+        } elseif (is_a($this->className, BackedEnum::class, true)) {
+            $object = call_user_func($this->className . '::from', $dataFromAdditionalColumns[$columnName]);
+#            $object = {$this->className}::from($dataFromAdditionalColumns[$columnName]);
+
+        } elseif (is_a($this->className, UnitEnum::class, true)) {
+            $object = constant(sprintf('%s::%s', $this->className, $dataFromAdditionalColumns[$columnName]));
 
         } else {
             if ($reflectionClass->isInstantiable()) {
@@ -312,14 +321,14 @@ final class ObjectMapping implements MappingInterface
             $data = array_merge($data, $fieldData);
         }
 
+        /** @var string $columnName */
+        $columnName = '';
+
+        if ($this->column instanceof Column) {
+            $columnName = $this->column->getName();
+        }
+
         if ($this->serializer instanceof CallDefinitionInterface) {
-            /** @var string $columnName */
-            $columnName = '';
-
-            if ($this->column instanceof Column) {
-                $columnName = $this->column->getName();
-            }
-
             $data[$columnName] = $this->serializer->execute(
                 $context,
                 array_merge($data, ['' => $valueFromEntityField])
@@ -337,6 +346,12 @@ final class ObjectMapping implements MappingInterface
                     $connection->getDatabasePlatform()
                 );
             }
+            
+        } elseif (is_a($this->className, BackedEnum::class, true)) {
+            $data[$columnName] = $valueFromEntityField->value;
+
+        } elseif (is_a($this->className, UnitEnum::class, true)) {
+            $data[$columnName] = $valueFromEntityField->name;
         }
 
         $context->popFromObjectHydrationStack();
@@ -366,6 +381,12 @@ final class ObjectMapping implements MappingInterface
 
         if ($this->serializer instanceof CallDefinitionInterface) {
             $this->serializer->wakeUpCall($container);
+        }
+        
+        foreach ($this->fieldMappings as $fieldName => $fieldMapping) {
+            /** @var MappingInterface $fieldMapping */
+
+            $fieldMapping->wakeUpMapping($container);
         }
     }
 
