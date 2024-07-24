@@ -14,6 +14,7 @@ namespace Addiks\RDMBundle\Mapping;
 
 use Addiks\RDMBundle\Mapping\CallDefinitionInterface;
 use Addiks\RDMBundle\Mapping\MappingInterface;
+use BackedEnum;
 use Webmozart\Assert\Assert;
 use Addiks\RDMBundle\Hydration\HydrationContextInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -120,6 +121,9 @@ final class CallDefinition implements CallDefinitionInterface
 
             } elseif (property_exists($callee, $this->routineName) && !method_exists($callee, $this->routineName)) {
                 $result = $callee->{$this->routineName};
+
+            } elseif ($callee instanceof BackedEnum && $this->routineName === '__toString') {
+                $result = $callee->value;
 
             } else {
                 $result = call_user_func_array([$callee, $this->routineName], $arguments);
