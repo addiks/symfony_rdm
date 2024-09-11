@@ -180,7 +180,9 @@ final class ObjectMapping implements MappingInterface
             /** @var array<string, string> $factoryData */
             $factoryData = $dataFromAdditionalColumns;
 
-            if ($this->column instanceof Column && !array_key_exists("", $factoryData)) {
+            if ($this->column instanceof Column 
+            # && !array_key_exists("", $factoryData)
+            ) {
                 /** @var Type $type */
                 $type = $this->column->getType();
 
@@ -232,7 +234,7 @@ final class ObjectMapping implements MappingInterface
                 /** @var mixed $fieldValue */
                 $fieldValue = $fieldMapping->resolveValue(
                     $context,
-                    $dataFromAdditionalColumns
+                    $dataFromAdditionalColumns[''] ?? $dataFromAdditionalColumns
                 );
 
                 /** @var ReflectionClass $propertyReflectionClass */
