@@ -111,17 +111,17 @@ final class BlackMagicEntityCodeGenerator
             );
         }
         
-        $entityPHP .= sprintf(
-            "\n\n/** @addiks-original-file %s */\n",
-            self::relativePathFromTo($targetFilePath, $filePath)
-        );
-
         $targetFilePath = sprintf(
             '%s/%s.php',
             $this->targetDirectory,
             str_replace('\\', '_', $fullClassName)
         );
         
+        $entityPHP .= sprintf(
+            "\n\n/** @addiks-original-file %s */\n",
+            self::relativePathFromTo($targetFilePath, $filePath)
+        );
+
         if (!is_dir($this->targetDirectory)) {
             mkdir($this->targetDirectory, 0777, true);
         }
