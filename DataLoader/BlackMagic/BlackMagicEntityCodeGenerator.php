@@ -70,6 +70,15 @@ final class BlackMagicEntityCodeGenerator
                 $safeFilePath = $filePath;
                 $filePath = trim($matches[1]);
 
+                if (!file_exists($filePath)) {
+                    /** @var string $relativePath */
+                    $relativePath = dirname($safeFilePath) . '/' . $filePath;
+
+                    if (file_exists($relativePath)) {
+                        $filePath = realpath($relativePath);
+                    }
+                }
+
                 if (isset($walkedFiles[$filePath])) {
                     break; # Circular reference detected
                 }
@@ -119,7 +128,7 @@ final class BlackMagicEntityCodeGenerator
         
         $entityPHP .= sprintf(
             "\n\n/** @addiks-original-file %s */\n",
-            self::relativePathFromTo($targetFilePath, $filePath)
+            self::relativePathFromTo($targetFilePath, realpath($filePath))
         );
 
         if (!is_dir($this->targetDirectory)) {
