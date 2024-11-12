@@ -113,7 +113,7 @@ final class BlackMagicEntityCodeGenerator
         
         $entityPHP .= sprintf(
             "\n\n/** @addiks-original-file %s */\n",
-            $filePath
+            self::relativePathFromTo($targetFilePath, $filePath)
         );
 
         $targetFilePath = sprintf(
@@ -131,6 +131,27 @@ final class BlackMagicEntityCodeGenerator
         return $targetFilePath;
     }
     
+    private static function relativePathFromTo(string $originPath, string $targetPath): string
+    {
+        /** @var array<int, string> $originPathSteps */
+        $originPathSteps = explode('/', $originPath);
+
+        /** @var mixed $targetPathSteps */
+        $targetPathSteps = explode('/', $targetPath);
+
+        while ($originPathSteps[0] === $targetPathSteps[0]) {
+            array_shift($originPathSteps);
+            array_shift($targetPathSteps);
+        }
+
+        $relativePathSteps = array_merge(
+            array_pad([], count($originPathSteps) - 1, '..'),
+            $targetPathSteps
+        );
+
+        return implode('/', $relativePathSteps);
+    }
+
     private static function findClassStartPosition(
         string $fullClassName, 
         string $entityPHP
